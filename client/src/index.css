@@ -30,6 +30,7 @@
     --chart-5: 27 87% 67%;
     --radius: 0.5rem
   }
+
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -62,7 +63,176 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
+
   }
+}
+
+body {
+  position: relative;
+  background-color: #fff;
+  overflow: hidden;
+  border: 10px solid #166086;
+  /* Màu viền xanh giống hình */
+  border-radius: 10px;
+  /* Bo góc viền */
+}
+
+
+
+/* Hình tròn lớn bên phải */
+.circle-right {
+  position: absolute;
+  width: 350px;
+  height: 350px;
+  background-color: rgba(46, 164, 214, 0.15);
+  border-radius: 50%;
+  right: -120px;
+  top: -30px;
+  z-index: -1;
+}
+
+
+.container {
+  overflow: auto;
+  /* Vẫn có thể cuộn */
+  scrollbar-width: none;
+  /* Ẩn trên Firefox */
+  -ms-overflow-style: none;
+  /* Ẩn trên IE/Edge */
+}
+
+.container::-webkit-scrollbar {
+  display: none
+}
+
+.logoTitle {
+  margin-top: 70px;
+  margin-right: 60px;
+}
+
+.logoTitle .logoText {
+  font-size: 30px;
+  font-weight: 700;
+  margin-top: 7px;
+}
+
+.logoTitle img {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+}
+
+.welcomeText {
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.welcomeText h3 {
+  font-size: 23px;
+  font-weight: 700;
+  margin-top: 70px;
+}
+
+
+.googleAccount button {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  background: #fff;
+  color: #000;
+  box-shadow: none;
+}
+
+.googleAccount button:hover {
+  color: #fff;
+  background: #028090;
+
+}
+
+.googleAccount span {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* Form */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+}
+
+.formGroup label {
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.formGroup input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+
+/* Role Selection */
+.roleSelection {
+  display: flex;
+  gap: 10px;
+}
+
+.roleButton {
+  flex: 1;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.roleButton.active {
+  border-color: #42c2f1;
+  color: #42c2f1;
+}
+
+/* Submit Button */
+.signupButton {
+  width: 100%;
+  background-color: #0C4A6E;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.signupButton:hover {
+  background-color: #028090;
+}
+
+/* Sign In */
+.signinText {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.signinText a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.signinText a:hover {
+  text-decoration: underline;
 }
