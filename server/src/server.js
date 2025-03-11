@@ -1,10 +1,17 @@
-import express from "express";
-import cors from "cors";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
+import express from "express";
+import morgan from "morgan";
+import dotenv from "dotenv";
+import cors from "cors";
+
+import connectMongoDB from "./config/db.config.js";
+import routes from "./routes/index.js";
+
+dotenv.config();
 
 const app = express();
-const PORT = 8000 || 8080;
+const PORT = process.env.PORT || 8080;
 
 const startServer = () => {
   app.use(cors());
@@ -12,13 +19,18 @@ const startServer = () => {
   app.use(cookieParser());
   app.use(express.json());
 
-  app.get("/", (req, res) => {
-    res.send("API Capstone 2 Project - C2SE.02");
-  });
+  // app.get("/", (req, res) => {
+  //   res.send("API Capstone 2 Project - C2SE.02");
+  // });
+
+  app.use(process.env.API_PREFIX, routes);
+
+  app.use(morgan("dev"));
 
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(` 🌐 Local: http://localhost:${PORT}/`);
+    connectMongoDB();
   });
 };
 
