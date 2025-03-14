@@ -5,6 +5,7 @@ import MainLayout from "@/layouts/main-layout";
 import AuthLayout from "@/layouts/auth-layout";
 const HomePage = lazy(() => import("@/pages/home-page"));
 const SigninPage = lazy(() => import("@/pages/signin-page"));
+const SignupPage = lazy(() => import("@/pages/signup-page"));
 
 const routes = createBrowserRouter([
   {
@@ -23,7 +24,7 @@ const routes = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       { path: "/login", element: <SigninPage /> },
-      { path: "/register", element: <div>Register Page</div> }
+      { path: "/register", element: <SignupPage /> }
     ]
   }
 ]);
