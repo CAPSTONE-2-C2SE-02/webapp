@@ -36,7 +36,7 @@ export default function UserNav() {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/profile">
+            <Link to="/createtour">
               <SquarePen />
               New Tour
             </Link>

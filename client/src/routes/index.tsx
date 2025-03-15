@@ -3,6 +3,7 @@ import { Suspense, lazy } from "react";
 import ProtectedRoute from "./protected-route";
 import MainLayout from "@/layouts/main-layout";
 import AuthLayout from "@/layouts/auth-layout";
+import CreateTour from "@/components/form/createtour-form";
 const HomePage = lazy(() => import("@/pages/home-page"));
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
@@ -15,7 +16,8 @@ const routes = createBrowserRouter([
       {
         element: <MainLayout />,
         children: [
-          { path: "/", element: <HomePage /> }
+          { path: "/", element: <HomePage /> },
+          { path: "/createtour", element: <CreateTour /> }
         ]
       }
     ]
@@ -24,7 +26,9 @@ const routes = createBrowserRouter([
     element: <AuthLayout />,
     children: [
       { path: "/login", element: <SigninPage /> },
-      { path: "/register", element: <SignupPage /> }
+      { path: "/register", element: <SignupPage /> },
+
+
     ]
   }
 ]);
