@@ -3,6 +3,8 @@ import { Suspense, lazy } from "react";
 import ProtectedRoute from "./protected-route";
 import MainLayout from "@/layouts/main-layout";
 import AuthLayout from "@/layouts/auth-layout";
+import ProfileLayout from "@/layouts/profile-layout";
+import UserProfilePage from "@/pages/userprofile-page";
 const HomePage = lazy(() => import("@/pages/home-page"));
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
@@ -15,7 +17,13 @@ const routes = createBrowserRouter([
       {
         element: <MainLayout />,
         children: [
-          { path: "/", element: <HomePage /> }
+          { path: "/", element: <HomePage /> },
+          {
+            element: <ProfileLayout />,
+            children: [
+              { path: "/users/:userId", element: <UserProfilePage /> },
+            ]
+          }
         ]
       }
     ]
