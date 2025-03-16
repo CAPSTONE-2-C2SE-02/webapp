@@ -13,7 +13,7 @@ const TourRecommendCard = ({ tour }: { tour: Tour }) => {
       <div className="px-1 pb-1 pt-2 w-full flex items-center gap-1">
         <div>
           <div className="line-clamp-1 text-base font-semibold mb-1">
-            {tour.name}
+            {tour.title}
           </div>
           <div className="flex items-center gap-1">
             <MapPin className="size-4 text-primary" />

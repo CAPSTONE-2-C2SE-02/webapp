@@ -79,4 +79,8 @@
     -ms-overflow-style: none; /* IE and Edge */
     scrollbar-width: none; /* Firefox */
   }
+
+  .empty\:before\:content-\[attr\(data-placeholder\)\]:empty::before {
+    content: attr(data-placeholder);
+  }
 }

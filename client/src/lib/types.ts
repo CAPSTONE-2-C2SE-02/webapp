@@ -1,6 +1,7 @@
 export type Tour = {
   _id: string;
-  name: string;
+  title: string;
+  description: string;
   photo: string[];
   overalReview: number;
   destination: string;
