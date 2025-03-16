@@ -1,6 +1,6 @@
 import CreateTour from '@/components/form/createtour-form'
 
-const SigninPage = () => {
+const CreateTourPage = () => {
     return (
         <div>
             <CreateTour />
@@ -8,4 +8,4 @@ const SigninPage = () => {
     )
 }
 
-export default SigninPage
+export default CreateTourPage
