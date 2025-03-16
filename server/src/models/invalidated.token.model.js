@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 
-//Anh Tuan
 const invalidatedTokenSchema = new mongoose.Schema({
     token: {
         type: String,
