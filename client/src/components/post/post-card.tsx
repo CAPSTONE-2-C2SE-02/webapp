@@ -6,13 +6,14 @@ import {
   EllipsisVertical,
   Forward,
   Heart,
-  MapPin,
   MessageSquareMore,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import SharePostModal from "../modals/share-post-modal";
+import TourAttachment from "../tour/tour-attachment";
+import { mockTours } from "@/lib/mock-data";
 
 const PostCard = () => {
   const [isLike, setIsLike] = useState(false);
@@ -113,73 +114,21 @@ const PostCard = () => {
           <div className="w-[618px] mt-3">
             <div className="overflow-y-hidden overflow-x-hidden w-[calc(100%+24px)]">
               <div className="flex flex-row gap-1 overflow-x-auto cursor-grab translate-x-0">
-                <div className="min-w-60 h-auto rounded-lg border border-slate-300 overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1741462434929-0ea63a52917c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                    alt="photo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="min-w-60 h-auto rounded-lg border border-slate-300 overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1741462434929-0ea63a52917c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                    alt="photo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="min-w-60 h-auto rounded-lg border border-slate-300 overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1741462434929-0ea63a52917c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                    alt="photo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="min-w-60 h-auto rounded-lg border border-slate-300 overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1741462434929-0ea63a52917c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                    alt="photo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="min-w-60 h-auto rounded-lg border border-slate-300 overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1741462434929-0ea63a52917c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                    alt="photo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
+                {Array.from({ length: 5 }).fill(0).map(() => (
+                  <div className="min-w-60 h-auto rounded-lg border border-slate-300 overflow-hidden">
+                    <img
+                      src="https://placehold.co/400x600"
+                      alt="photo"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                ))}
                 <div className="w-6 h-full flex-shrink-0" />
               </div>
             </div>
           </div>
           {/* Tour Attachment */}
-          <Link to={`/tours/tourId?fromPost=true`} className="group">
-            <div className="w-full p-2 rounded-3xl border border-slate-200 bg-slate-50 flex items-center gap-6 mt-2 group-hover:shadow">
-              <div className="w-60 h-32 rounded-2xl overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1741462434929-0ea63a52917c?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                  alt="photo"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-medium text-primary">
-                  Ha Giang Loop and Dong Van Kast Plateau Amazing 2 Days Car
-                  Tour
-                </h3>
-                <div className="flex items-center gap-1 mt-1">
-                  <MapPin className="size-4" />
-                  <span className="text-sm">Ha Giang</span>
-                </div>
-                <p className="text-xs line-clamp-2 mt-1">
-                  Explore the rural wonders of Cao Bang and Ha Giang. Explore
-                  the most famous places in the North such as Ban Gioc
-                  Waterfall, Nguom Ngao Cave, Nho Que River, Dong Van Stone
-                  Plateau,...
-                </p>
-              </div>
-            </div>
-          </Link>
+          <TourAttachment tour={mockTours[0]} />
           {/* Post Action */}
           <div className="w-full flex items-center justify-between px-10 mt-3">
             <Button

@@ -1,43 +1,5 @@
 import { Link } from "react-router";
-
-const hashtagsMockData = [
-  {
-    name: "banahill",
-    numberOfPost: 43,
-  },
-  {
-    name: "danang",
-    numberOfPost: 34,
-  },
-  {
-    name: "hoian",
-    numberOfPost: 25,
-  },
-  {
-    name: "hanoi",
-    numberOfPost: 22,
-  },
-  {
-    name: "hagiang",
-    numberOfPost: 20,
-  },
-  {
-    name: "caobang",
-    numberOfPost: 15,
-  },
-  {
-    name: "hochiminh",
-    numberOfPost: 12,
-  },
-  {
-    name: "vungtau",
-    numberOfPost: 6,
-  },
-  {
-    name: "khanhhoa",
-    numberOfPost: 3,
-  },
-];
+import { hashtagsMockData } from "@/lib/mock-data";
 
 const TrendingTopics = () => {
   return (
