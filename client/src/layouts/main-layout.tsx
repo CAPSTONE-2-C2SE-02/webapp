@@ -3,9 +3,9 @@ import { Outlet } from "react-router";
 
 const MainLayout = () => {
   return (
-    <div>
+    <div className="flex flex-col w-full">
       <Header />
-      <main>
+      <main className="max-w-7xl w-full mx-auto">
         <Outlet />
       </main>
     </div>
