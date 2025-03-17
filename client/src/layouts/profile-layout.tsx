@@ -6,7 +6,6 @@ import { UserRoundCheck } from "lucide-react"
 import { Mail } from "lucide-react";
 import { Phone } from "lucide-react";
 import { MapPin } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -67,7 +66,7 @@ const ProfileLayout = () => {
                             className={({ isActive }) =>
                                 cn(
                                   "bg-white px-4 py-2 font-medium text-sm",
-                                  isActive ? "border-b border-b-2 border-primary" : "text-muted-foreground"
+                                  isActive ? "border-b-2 border-primary" : "text-muted-foreground"
                                 )
                             }
                         >
@@ -78,7 +77,7 @@ const ProfileLayout = () => {
                             className={({ isActive }) =>
                                 cn(
                                   "bg-white px-4 py-2 font-medium text-sm",
-                                  isActive ? "border-b border-b-2 border-primary" : "text-muted-foreground"
+                                  isActive ? "border-b-2 border-primary" : "text-muted-foreground"
                                 )
                             }
                         >
@@ -89,7 +88,7 @@ const ProfileLayout = () => {
                             className={({ isActive }) =>
                                 cn(
                                   "bg-white px-4 py-2 font-medium text-sm",
-                                  isActive ? "border-b border-b-2 border-primary" : "text-muted-foreground"
+                                  isActive ? "border-b-2 border-primary" : "text-muted-foreground"
                                 )
                             }
                         >
@@ -100,7 +99,7 @@ const ProfileLayout = () => {
                             className={({ isActive }) =>
                                 cn(
                                   "bg-white px-4 py-2 font-medium text-sm",
-                                  isActive ? "border-b border-b-2 border-primary" : "text-muted-foreground"
+                                  isActive ? "border-b-2 border-primary" : "text-muted-foreground"
                                 )
                             }
                         >
@@ -111,7 +110,7 @@ const ProfileLayout = () => {
                             className={({ isActive }) =>
                                 cn(
                                   "bg-white px-4 py-2 font-medium text-sm",
-                                  isActive ? "border-b border-b-2 border-primary" : "text-muted-foreground"
+                                  isActive ? "border-b-2 border-primary" : "text-muted-foreground"
                                 )
                             }
                         >
