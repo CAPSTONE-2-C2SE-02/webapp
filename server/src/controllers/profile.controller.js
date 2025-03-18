@@ -173,9 +173,7 @@ class ProfileController {
     // [GET] /api/v1/profiles/:id
     async myInfo(req, res) {
         try {
-            const token = req.header("Authorization")?.split(" ")[1];
-            const decoded = await decodeToken(token);
-            const profile = await Profile.findOne({ userId: decoded.userId });
+            const profile = await Profile.findOne({ userId: req.user.userId });
 
             if (!profile)
                 return res.status(StatusCodes.NOT_FOUND).json({

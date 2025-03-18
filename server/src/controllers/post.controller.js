@@ -19,7 +19,6 @@ class PostController {
                 createdBy: request.profileId,
                 hashtag: request.hashtag,
                 taggedUser: request.taggedUser,
-                title: request.title,
                 content: request.content,
                 location: request.location,
                 mediaUrls: mediaUrls,
@@ -135,7 +134,6 @@ class PostController {
                 id,
                 {
                     $set: {
-                        title: requestData.title || post.title,
                         hashtag: requestData.hashtag || post.hashtag,
                         taggedUser: requestData.taggedUser || post.taggedUser,
                         content: requestData.content || post.content,
@@ -192,7 +190,17 @@ class PostController {
     // [POST] /api/v1/post/like
     async likePost(req, res) {
         try {
-            const { profileId, postId } = req.body;
+            const { postId } = req.body;
+
+            const userId = req.user.userId;
+            const profile = await Profile.findOne({ userId: userId });
+
+            if (!profile) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Profile not found",
+                });
+            }
 
             const post = await Post.findOne({ _id: postId });
 
@@ -203,10 +211,10 @@ class PostController {
                 });
             }
 
-            const index = post.likedBy.indexOf(profileId);
+            const index = post.likedBy.indexOf(profile._id);
 
             if (index === -1) {
-                post.likedBy.push(profileId);
+                post.likedBy.push(profile._id);
             } else {
                 post.likedBy.splice(index, 1);
             }
@@ -268,10 +276,7 @@ class PostController {
     // [GET] /api/v1/post/my-posts
     async getAllMyPosts(req, res) {
         try {
-            const token = req.header("Authorization")?.split(" ")[1];
-            const decoded = await decodeToken(token);
-
-            const profile = await Profile.findOne({ userId: decoded.userId });
+            const profile = await Profile.findOne({ userId: req.user.userId });
             const posts = await Post.find({ createdBy: profile._id });
 
             if (!posts) {

@@ -170,10 +170,7 @@ class TourController {
     // [GET] /api/v1/tours/my-tours
     async getMyTours(req, res) {
         try {
-            const token = req.header("Authorization")?.split(" ")[1];
-            const decoded = await decodeToken(token);
-
-            const profile = await Profile.findOne({ userId: decoded.userId });
+            const profile = await Profile.findOne({ userId: req.user.userId });
             const tours = await Tour.find({ guide: profile._id });
 
             return res.status(StatusCodes.OK).json({
