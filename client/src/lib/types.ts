@@ -6,3 +6,17 @@ export type Tour = {
   overalReview: number;
   destination: string;
 }
+
+export type UserInfo = {
+  fullName: string;
+  username: string;
+  email: string;
+  phoneNumber: string;
+}
+
+export interface ApiResponse {
+  success: boolean;
+  message?: string;
+  token?: string;
+  error?: string;
+}
