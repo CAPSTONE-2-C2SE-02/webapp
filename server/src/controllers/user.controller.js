@@ -4,8 +4,8 @@ import Profile from "../models/profile.model.js";
 import RoleModel from "../models/role.model.js";
 import User from "../models/user.model.js";
 import { comparePassword, hashPassword } from "../utils/password.util.js";
-import { userSchema } from "../validations/user.validation.js";
 import { profileSchema } from "../validations/profile.validation.js";
+import { userSchema } from "../validations/user.validation.js";
 
 class UserController {
 

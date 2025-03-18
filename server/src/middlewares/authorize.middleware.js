@@ -2,6 +2,8 @@ import { StatusCodes } from "http-status-codes";
 import User from "../models/user.model.js";
 import { verifyToken } from "../utils/token.util.js";
 import Profile from "../models/profile.model.js";
+import Post from "../models/post.model.js";
+import Tour from "../models/tour.model.js";
 
 export const authorize = (...roles) => {
     return (req, res, next) => {
@@ -100,3 +102,54 @@ export const checkOwnerProfileId = async (req, res, next) => {
         });
     }
 };
+
+export const checkOwnerPost = async (req, res, next) => {
+    try {
+        if (req.user.role === "ADMIN") {
+            return next();
+        }
+
+        const post = await Post.findOne({ _id: req.params.id });
+        const profile = await Profile.findOne({ _id: post.createdBy });
+
+        if (!post || profile.userId.toString() !== req.user.userId) {
+            return res.status(StatusCodes.FORBIDDEN).json({
+                success: false,
+                message: "You do not have permission to perform this action.",
+            });
+        }
+
+        next();
+    } catch (error) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
+};
+
+export const checkOwnerTour = async (req, res, next) => {
+    try {
+        if (req.user.role === "ADMIN") {
+            return next();
+        }
+
+        const tour = await Tour.findOne({ _id: req.params.id });
+        const profile = await Profile.findOne({ _id: tour.guide });
+
+        if (!tour || profile.userId.toString() !== req.user.userId) {
+            return res.status(StatusCodes.FORBIDDEN).json({
+                success: false,
+                message: "You do not have permission to perform this action.",
+            });
+        }
+
+        next();
+    } catch (error) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
+};
+

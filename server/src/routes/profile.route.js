@@ -8,6 +8,7 @@ router.get("/", authenticated, authorize("ADMIN"), profileController.getAllProfi
 router.put("/:id", authenticated, authorize("ADMIN", "TOUR_GUIDE", "TRAVELER"), checkOwnerProfileId, profileController.updateProfile);
 router.delete("/:id", authenticated, authorize("ADMIN", "TOUR_GUIDE", "TRAVELER"), checkOwnerProfileId, profileController.deleteProfile);
 router.post("/active", authenticated, authorize("ADMIN"), profileController.activeProfile);
+router.get("/myInfo", authenticated, profileController.myInfo);
 router.get("/:id", authenticated, authorize("ADMIN", "TOUR_GUIDE", "TRAVELER"), checkOwnerProfileId, profileController.getProfileById);
 
 export default router;

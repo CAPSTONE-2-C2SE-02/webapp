@@ -1,6 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import Profile from "../models/profile.model.js";
 import User from "../models/user.model.js";
+import { decodeToken } from "../utils/token.util.js";
 import { profileSchema } from "../validations/profile.validation.js";
 
 class ProfileController {
@@ -150,6 +151,31 @@ class ProfileController {
         try {
             const id = req.params.id;
             const profile = await Profile.findOne({ _id: id });
+
+            if (!profile)
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    message: "Profile not found.",
+                });
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: profile,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                message: error
+            });
+        }
+    };
+
+    // [GET] /api/v1/profiles/:id
+    async myInfo(req, res) {
+        try {
+            const token = req.header("Authorization")?.split(" ")[1];
+            const decoded = await decodeToken(token);
+            const profile = await Profile.findOne({ userId: decoded.userId });
 
             if (!profile)
                 return res.status(StatusCodes.NOT_FOUND).json({
