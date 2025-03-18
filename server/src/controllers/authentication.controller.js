@@ -31,11 +31,16 @@ class AuthenticationController {
                 return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: "Wrong password." });
 
             const token = await generateToken(user);
+            const userObject = user.toObject();
+            delete userObject.password;
 
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: "Authentication successful.",
-                result: token,
+                result: {
+                    token: token,
+                    data: userObject
+                },
             });
 
         } catch (error) {

@@ -4,6 +4,7 @@ import { verifyToken } from "../utils/token.util.js";
 import Profile from "../models/profile.model.js";
 import Post from "../models/post.model.js";
 import Tour from "../models/tour.model.js";
+import Comment from "../models/comment.model.js";
 
 export const authorize = (...roles) => {
     return (req, res, next) => {
@@ -138,6 +139,31 @@ export const checkOwnerTour = async (req, res, next) => {
         const profile = await Profile.findOne({ _id: tour.guide });
 
         if (!tour || profile.userId.toString() !== req.user.userId) {
+            return res.status(StatusCodes.FORBIDDEN).json({
+                success: false,
+                message: "You do not have permission to perform this action.",
+            });
+        }
+
+        next();
+    } catch (error) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
+};
+
+export const checkOwnerComment = async (req, res, next) => {
+    try {
+        if (req.user.role === "ADMIN") {
+            return next();
+        }
+
+        const comment = await Comment.findOne({ _id: req.params.id });
+        const profile = await Profile.findOne({ _id: comment.profileId });
+
+        if (!comment || profile.userId.toString() !== req.user.userId) {
             return res.status(StatusCodes.FORBIDDEN).json({
                 success: false,
                 message: "You do not have permission to perform this action.",
