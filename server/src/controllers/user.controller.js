@@ -32,7 +32,7 @@ class UserController {
             );
 
             if (errorProfile) {
-                return res.status(400).json({
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     message: "Profile validation error.",
                     errors: errorProfile.details.map(err => err.message),
