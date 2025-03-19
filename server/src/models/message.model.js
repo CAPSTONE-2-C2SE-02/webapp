@@ -12,11 +12,6 @@ const messageSchema = new mongoose.Schema(
       ref: "Profile",
       required: true,
     },
-    receiver: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Profile",
-      required: true,
-    },
     content: {
       type: String,
       required: true,

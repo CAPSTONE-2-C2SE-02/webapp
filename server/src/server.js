@@ -50,15 +50,19 @@ const startServer = () => {
   io.on("connection", (socket) => {
     console.log(`⚡ New client connected: ${socket.id}`);
 
+    socket.on("joinConversation", (conversationId) => {
+      socket.join(conversationId);
+      console.log(`Client joined conversation: ${conversationId}`);
+    });
     //Listen event client send message
-    socket.on("sendMessage", async ({ conversationId, sender, receiver, content }) => {
+    socket.on("sendMessage", async ({ conversationId, sender, content }) => {
       try {
-        const message = new Message({ conversationId, sender, receiver, content });
+        const message = new Message({ conversationId, sender, content });
         await message.save();
 
         // receive message
-        io.to(sender).emit("receiveMessage", message);
-        io.to(receiver).emit("receiveMessage", message);
+        io.to(conversationId).emit("receiveMessage", message);
+
       } catch (error) {
         console.error("Error sending message:", error);
       }

@@ -14,7 +14,10 @@ class ChatMessage {
           error: "conversationId is required"
         });
       }
-      const messages = await Message.find({ conversationId }).sort({ createdAt: 1 }).populate("sender receiver");
+      const messages = await Message.find({ conversationId })
+        .sort({ createdAt: 1 })
+        .skip((page - 1) * limit)
+        .limit(parseInt(limit));
 
 
       res.status(StatusCodes.OK).json({
@@ -32,10 +35,22 @@ class ChatMessage {
 
   async sendMessage(req, res) {
     try {
-      const { sender, receiver, content } = req.body;
+      const { conversationId, sender, content } = req.body;
 
-      const message = new Message({ sender, receiver, content });
+      //check conversation
+      const conversation = await Conversation.findById(conversationId);
+      if (!conversation) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          error: "Conversation not found"
+        });
+      }
+
+      const message = new Message({ conversationId, sender, content });
       await message.save();
+
+      io.to(conversationId).emit("receiveMessage", message);
+
 
       res.status(StatusCodes.CREATED).json({
         success: true,
@@ -66,7 +81,7 @@ class ChatMessage {
 
       res.status(StatusCodes.OK).json({
         success: true,
-        conversationID: conversation._id
+        conversationId: conversation._id
       });
     } catch (error) {
       console.error("Error creating/getting conversation:", error);
