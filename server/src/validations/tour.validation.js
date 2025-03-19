@@ -5,7 +5,6 @@ import StatusTour from "../enums/statusTour.enum.js";
 const tourSchema = yup.object({
     title: yup.string().min(5).max(100).required("Title is required"),
     description: yup.string().min(10).required("Description is required"),
-    profileId: yup.string().required("Guide ID is required"),
     location: yup.string().required("Location is required"),
     itinerary: yup.array().of(
         yup.object({

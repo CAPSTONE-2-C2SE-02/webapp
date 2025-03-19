@@ -11,18 +11,27 @@ class PostController {
     // [POST] /api/v1/posts
     async createPost(req, res) {
         try {
+            const profile = await Profile.findOne({ userId: req.user.userId });
+            if (!profile) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Profile not found",
+                });
+            }
             const request = req.body;
 
             const mediaUrls = req.files ? await uploadImage(req.files) : [];
 
             const newPost = {
-                createdBy: request.profileId,
+                createdBy: profile._id,
                 hashtag: request.hashtag,
                 taggedUser: request.taggedUser,
                 content: request.content,
                 location: request.location,
                 mediaUrls: mediaUrls,
                 visibility: request.visibility,
+                activeComment: request.activeComment,
+                tourId: request.tourId
             }
 
             await Post.create(newPost);
@@ -42,10 +51,7 @@ class PostController {
     // [GET] /api/v1/posts
     async getAllPosts(req, res) {
         try {
-            const token = req.header("Authorization")?.split(" ")[1];
-            const decoded = await decodeToken(token);
-
-            const role = decoded?.role || false;
+            const role = req.user?.role || false;
             let filter = { visibility: Visibility.PUBLIC };
             if (role == Role.ADMIN) {
                 filter = {};
@@ -79,10 +85,7 @@ class PostController {
     // [GET] /api/v1/posts/:id
     async getPostById(req, res) {
         try {
-            const token = req.header("Authorization")?.split(" ")[1];
-            const decoded = await decodeToken(token);
-
-            const role = decoded?.role || false;
+            const role = req.user?.role || false;
             const id = req.params.id;
             const filter = { _id: id };
             if (role !== Role.ADMIN) {
@@ -141,6 +144,7 @@ class PostController {
                         visibility: requestData.visibility || post.visibility,
                         activeComment: requestData.activeComment || post.activeComment,
                         mediaUrls: mediaUrls,
+                        tourId: requestData.tourId
                     },
                 },
                 { new: true }
@@ -192,9 +196,7 @@ class PostController {
         try {
             const { postId } = req.body;
 
-            const userId = req.user.userId;
-            const profile = await Profile.findOne({ userId: userId });
-
+            const profile = await Profile.findOne({ userId: req.user.userId });
             if (!profile) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -277,8 +279,14 @@ class PostController {
     async getAllMyPosts(req, res) {
         try {
             const profile = await Profile.findOne({ userId: req.user.userId });
-            const posts = await Post.find({ createdBy: profile._id });
+            if (!profile) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Profile not found",
+                });
+            }
 
+            const posts = await Post.find({ createdBy: profile._id });
             if (!posts) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -298,6 +306,48 @@ class PostController {
         }
     }
 
+    // [POST] /api/v1/posts/share
+    async rePost(req, res) {
+        try {
+            const { postId, caption, visibility } = req.body;
+
+            const originalPost = await Post.findById(postId);
+            if (!originalPost) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Post not found"
+                });
+            }
+
+            const profile = await Profile.findOne({ userId: req.user.userId });
+            if (!profile) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Profile not found",
+                });
+            }
+
+            const newPost = await Post.create({
+                createdBy: profile._id,
+                content: "",
+                caption: caption || "",
+                mediaUrls: [],
+                sharedFrom: postId,
+                visibility: visibility || Visibility.PUBLIC,
+            });
+
+            return res.status(StatusCodes.CREATED).json({
+                success: true,
+                message: "Post shared successfully",
+                result: newPost,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message
+            })
+        }
+    }
 }
 
 export default new PostController;

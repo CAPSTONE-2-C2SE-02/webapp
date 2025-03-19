@@ -1,26 +1,24 @@
 import { StatusCodes } from "http-status-codes";
 
-export const validateFormData = (schema, isUpdate = false) => async (req, res, next) => {
+export const validateFormData = (schema) => async (req, res, next) => {
     try {
         let request;
         try {
             request = JSON.parse(req.body.request);
         } catch (err) {
             return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
                 message: "Invalid JSON format in request body",
-                error: err.message
+                error: err.message,
             });
         }
 
-        const validatedData = isUpdate
-            ? schema.omit(["profileId"]).validate(request, { abortEarly: false })
-            : schema.validate(request, { abortEarly: false });
-
-        req.body = await validatedData;
+        req.body = await schema.validate(request, { abortEarly: false });
 
         next();
     } catch (error) {
         return res.status(StatusCodes.BAD_REQUEST).json({
+            success: false,
             message: "Validation failed",
             errors: error.inner.map((err) => ({
                 field: err.path,
@@ -30,14 +28,10 @@ export const validateFormData = (schema, isUpdate = false) => async (req, res, n
     }
 };
 
-
-export const validateJsonBody = (schema, isUpdate = false) => async (req, res, next) => {
+export const validateJsonBody = (schema) => async (req, res, next) => {
     try {
-        const validatedData = isUpdate
-            ? schema.omit(["profileId"]).validate(req.body, { abortEarly: false })
-            : schema.validate(req.body, { abortEarly: false });
+        req.body = await schema.validate(req.body, { abortEarly: false });
 
-        req.body = await validatedData;
         next();
     } catch (error) {
         return res.status(StatusCodes.BAD_REQUEST).json({

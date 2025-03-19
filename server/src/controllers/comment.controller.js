@@ -8,14 +8,19 @@ class CommentController {
     async createComment(req, res) {
         try {
             const { postId, content, parentComment } = req.body;
-            const userId = req.user.userId;
 
             const post = await Post.findById(postId);
             if (!post) {
                 return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Post not found" });
             }
 
-            const profile = await Profile.findOne({ userId: userId });
+            const profile = await Profile.findOne({ userId: req.user.userId });
+            if (!profile) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Profile not found",
+                });
+            }
             const profileId = profile._id;
 
             const newComment = await Comment.create({
@@ -57,7 +62,6 @@ class CommentController {
         try {
             const { id } = req.params;
             const { content } = req.body;
-            const user = req.user;
 
             const comment = await Comment.findById(id);
             if (!comment) {

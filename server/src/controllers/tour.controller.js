@@ -11,11 +11,19 @@ class TourController {
     // [POST] /api/v1/tours
     async createTour(req, res) {
         try {
+            const profile = await Profile.findOne({ userId: req.user.userId });
+            if (!profile) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Profile not found",
+                });
+            }
+
             const request = req.body;
             const mediaUrls = req.files ? await uploadImage(req.files) : [];
 
             const newTour = {
-                guide: request.profileId,
+                guide: profile._id,
                 title: request.title,
                 description: request.description,
                 location: request.location,
@@ -46,9 +54,7 @@ class TourController {
     // [GET] /api/v1/tours
     async getAllTours(req, res) {
         try {
-            const token = req.header("Authorization")?.split(" ")[1];
-            const decoded = await decodeToken(token);
-            const role = decoded?.role || false;
+            const role = req.user?.role || false;
             let filter = { visibility: Visibility.PUBLIC };
             if (role === Role.ADMIN) {
                 filter = {};
@@ -171,6 +177,13 @@ class TourController {
     async getMyTours(req, res) {
         try {
             const profile = await Profile.findOne({ userId: req.user.userId });
+            if (!profile) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Profile not found",
+                });
+            }
+
             const tours = await Tour.find({ guide: profile._id });
 
             return res.status(StatusCodes.OK).json({

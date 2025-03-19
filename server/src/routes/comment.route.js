@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post("/", authenticated, validateJsonBody(commentSchema), commentController.createComment);
 router.get("/:postId", commentController.getCommentsByPost);
-router.put("/:id", authenticated, validateJsonBody(commentSchema, true), checkOwnerComment, commentController.updateComment);
+router.put("/:id", authenticated, validateJsonBody(commentSchema), checkOwnerComment, commentController.updateComment);
 router.delete("/:id", authenticated, commentController.deleteComment);
 router.post("/like", authenticated, commentController.likeComment);
 

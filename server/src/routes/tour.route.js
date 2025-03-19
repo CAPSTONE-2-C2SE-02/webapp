@@ -11,7 +11,7 @@ router.post("/", authenticated, upload.array("images"), authorize("TOUR_GUIDE"),
 router.get("/", tourController.getAllTours);
 router.get("/my-tours", authenticated, authorize("TOUR_GUIDE"), tourController.getMyTours);
 router.get("/:id", tourController.getTourById);
-router.put("/:id", authenticated, upload.array("images"), authorize("TOUR_GUIDE"), validateFormData(tourSchema, true), checkOwnerTour, tourController.updateTour);
+router.put("/:id", authenticated, upload.array("images"), authorize("TOUR_GUIDE"), validateFormData(tourSchema), checkOwnerTour, tourController.updateTour);
 router.delete("/:id", authenticated, authorize("TOUR_GUIDE"), checkOwnerTour, tourController.deleteTour);
 
 

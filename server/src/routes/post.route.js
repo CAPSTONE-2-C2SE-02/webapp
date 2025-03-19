@@ -11,9 +11,10 @@ router.post("/", authenticated, upload.array("images"), validateFormData(postSch
 router.get("/", postController.getAllPosts);
 router.get("/my-post/get", authenticated, postController.getAllMyPosts);
 router.get("/:id", postController.getPostById);
-router.put("/:id", authenticated, upload.array("images"), validateFormData(postSchema, true), checkOwnerPost, postController.updatePost);
+router.put("/:id", authenticated, upload.array("images"), validateFormData(postSchema), checkOwnerPost, postController.updatePost);
 router.delete("/:id", authenticated, checkOwnerPost, postController.deletePost);
 router.post("/like", authenticated, authorize("TOUR_GUIDE", "TRAVELER"), postController.likePost);
+router.post("/re-post", authenticated, postController.rePost);
 router.post("/privacy/:id", authenticated, authorize("TOUR_GUIDE", "TRAVELER"), checkOwnerPost, postController.setPrivacy);
 
 export default router;

@@ -8,7 +8,8 @@ const postSchema = new mongoose.Schema({
         ref: 'Profile',
     },
     hashtag: {
-        type: String,
+        type: [String],
+        default: [],
     },
     taggedUser: {
         type: [mongoose.Schema.Types.ObjectId],
@@ -37,7 +38,21 @@ const postSchema = new mongoose.Schema({
     activeComment: {
         type: Boolean,
         default: true,
-    }
+    },
+    tourId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Tour",
+        default: null
+    },
+    sharedFrom: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+        default: null
+    },
+    caption: {
+        type: String,
+        default: "",
+    },
 },
     { timestamps: true }
 );
