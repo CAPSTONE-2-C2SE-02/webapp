@@ -2,7 +2,7 @@ import express from 'express';
 import { StatusCodes } from "http-status-codes";
 
 import cloudinary from '../config/cloudinary.config.js';
-import upload from '../middlewares/multer.middlerware.js';
+import upload from '../middlewares/multer.middleware.js';
 
 const uploadRouter = express.Router();
 
