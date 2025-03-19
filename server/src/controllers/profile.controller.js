@@ -192,6 +192,45 @@ class ProfileController {
             });
         }
     };
+
+    // [GET] /api/v1/profiles/search?name=
+    async searchProfiles(req, res) {
+        try {
+            const searchQuery = req.query.name?.trim();
+            if (!searchQuery) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Search query is required",
+                });
+            }
+
+            const formattedQuery = searchQuery.replace(/[^a-zA-Z0-9 ]/g, " ");
+            let profiles = await Profile.find(
+                { $text: { $search: formattedQuery } },
+                { score: { $meta: "textScore" } }
+            ).sort({ score: { $meta: "textScore" } });
+
+
+            if (profiles.length === 0) {
+                const regexPattern = searchQuery.split("").join(".*");
+                profiles = await Profile.find({
+                    fullName: { $regex: regexPattern, $options: "i" },
+                }).limit(10);
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: profiles,
+                message: "Profiles found",
+            });
+
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    };
 };
 
 export default new ProfileController;
