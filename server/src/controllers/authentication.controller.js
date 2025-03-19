@@ -131,7 +131,7 @@ class AuthenticationController {
                 profile = new Profile({
                     fullName: "Google account",
                     email: email,
-                    phoneNumber: "657-895-6753",
+                    phoneNumber: "1867891596",
                     userId: userCreated._id,
                     googleId: sub,
                 });

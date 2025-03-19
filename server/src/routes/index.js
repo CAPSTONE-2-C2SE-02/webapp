@@ -7,6 +7,7 @@ import uploadRouter from "./upload.route.js";
 import postRouter from "./post.route.js";
 import tourRouter from "./tour.route.js";
 import commentRouter from "./comment.route.js";
+import chatRouter from "./chat.route.js";
 
 
 const router = express.Router();
@@ -18,5 +19,6 @@ router.use('/uploads', uploadRouter);
 router.use('/posts', postRouter);
 router.use('/comments', commentRouter);
 router.use('/tours', tourRouter);
+router.use('/chat', chatRouter);
 
 export default router;
