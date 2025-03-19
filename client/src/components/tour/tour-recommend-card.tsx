@@ -27,7 +27,7 @@ const TourRecommendCard = ({ tour }: { tour: Tour }) => {
       </div>
       {/* link icon */}
       <Link
-        to={"/"}
+        to={"/tourdetail"}
         className="bg-primary size-12 flex items-center justify-center text-white rounded-full absolute top-0 right-0 border-[6px] border-white"
       >
         <ArrowUpRight />
