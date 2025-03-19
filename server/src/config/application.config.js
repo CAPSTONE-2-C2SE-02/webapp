@@ -5,6 +5,8 @@ import Role from "../enums/role.enum.js";
 import RoleModel from "../models/role.model.js";
 import User from "../models/user.model.js";
 import Profile from "../models/profile.model.js";
+import { hashPassword } from "../utils/password.util.js";
+
 
 const initialRoles = async () => {
     try {

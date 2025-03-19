@@ -19,14 +19,18 @@ const PORT = process.env.PORT || 8080;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
 
 
 const startServer = () => {
-  app.use(cors());
+  app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  }));
   app.use(bodyParser.json());
   app.use(cookieParser());
   app.use(express.json());
@@ -38,7 +42,7 @@ const startServer = () => {
 
   connectMongoDB();
 
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     console.log(` 🌐 Local: http://localhost:${PORT}/`);
   });
@@ -47,12 +51,13 @@ const startServer = () => {
     console.log(`⚡ New client connected: ${socket.id}`);
 
     //Listen event client send message
-    socket.on("sendMessage", async ({ sender, receiver, content }) => {
+    socket.on("sendMessage", async ({ conversationId, sender, receiver, content }) => {
       try {
-        const message = new Message({ sender, receiver, content });
+        const message = new Message({ conversationId, sender, receiver, content });
         await message.save();
 
         // receive message
+        io.to(sender).emit("receiveMessage", message);
         io.to(receiver).emit("receiveMessage", message);
       } catch (error) {
         console.error("Error sending message:", error);
