@@ -1,8 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import Profile from "../models/profile.model.js";
 import User from "../models/user.model.js";
-import { decodeToken } from "../utils/token.util.js";
-import { profileSchema } from "../validations/profile.validation.js";
+import { uploadSingleImage } from "../utils/uploadImage.util.js";
 
 class ProfileController {
 
@@ -29,7 +28,7 @@ class ProfileController {
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: error
+                error: error
             });
         }
     };
@@ -38,19 +37,7 @@ class ProfileController {
     async updateProfile(req, res) {
         try {
             const id = req.params.id;
-            const { fullName, email, phoneNumber, address, bio, profilePicture } = req.body;
-
-            const { error: errors } = profileSchema.validate(
-                { fullName, email, phoneNumber },
-                { abortEarly: false }
-            );
-
-            if (errors) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: errors.details.map(err => err.message),
-                });
-            }
+            const request = req.body;
 
             const profile = await Profile.findOne({ _id: id });
 
@@ -60,24 +47,35 @@ class ProfileController {
                     message: "Profile not found.",
                 });
 
-            const exitsProfile = await Profile.findOne({ $or: [{ email }, { phoneNumber }] })
-            if (exitsProfile) {
-                const errors = [];
-                if (exitsProfile.email == email)
-                    errors.push("Email already exist.")
-                if (exitsProfile.phoneNumber == phoneNumber)
-                    errors.push("Phone number already exist.")
-                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: errors });
+            if (request.email != profile.email || request.phoneNumber != profile.phoneNumber) {
+                const existingProfile = await Profile.findOne({
+                    $or: [{ email: request.email }, { phoneNumber: request.phoneNumber }],
+                    _id: { $ne: id }
+                });
+
+                if (existingProfile) {
+                    const errors = [];
+                    if (existingProfile.email === request.email) errors.push("Email already exists.");
+                    if (existingProfile.phoneNumber === request.phoneNumber) errors.push("Phone number already exists.");
+
+                    return res.status(StatusCodes.BAD_REQUEST).json({ success: false, errors });
+                }
             }
 
-            profile.fullName = fullName || profile.fullName;
-            profile.email = email || profile.email;
-            profile.phoneNumber = phoneNumber || profile.phoneNumber;
-            profile.address = address || profile.address;
-            profile.bio = bio || profile.bio;
-            profile.profilePicture = profilePicture || profile.profilePicture;
+            const image = req.files ? await uploadSingleImage(req.files) : profile.profilePicture;
 
-            await profile.save();
+            const updatedProfile = await Profile.findByIdAndUpdate(
+                id,
+                {
+                    fullName: request.fullName || profile.fullName,
+                    email: request.email || profile.email,
+                    phoneNumber: request.phoneNumber || profile.phoneNumber,
+                    address: request.address || profile.address,
+                    bio: request.bio || profile.bio,
+                    profilePicture: image,
+                },
+                { new: true }
+            );
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -101,7 +99,7 @@ class ProfileController {
             if (!profile)
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    message: "Profile not found.",
+                    error: "Profile not found.",
                 });
 
             await Profile.delete({ _id: profile._id });
@@ -114,7 +112,7 @@ class ProfileController {
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: error
+                error: error
             });
         }
     };
@@ -141,7 +139,7 @@ class ProfileController {
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: error
+                error: error
             });
         }
     };
@@ -155,7 +153,7 @@ class ProfileController {
             if (!profile)
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    message: "Profile not found.",
+                    error: "Profile not found.",
                 });
 
             return res.status(StatusCodes.OK).json({
@@ -165,7 +163,7 @@ class ProfileController {
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: error
+                error: error
             });
         }
     };
@@ -178,7 +176,7 @@ class ProfileController {
             if (!profile)
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    message: "Profile not found.",
+                    error: "Profile not found.",
                 });
 
             return res.status(StatusCodes.OK).json({
@@ -188,12 +186,14 @@ class ProfileController {
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: error
+                error: error
             });
         }
     };
 
     // [GET] /api/v1/profiles/search?name=
+
+    // db.profiles.createIndex({ fullName: "text" }) để tìm kiếm
     async searchProfiles(req, res) {
         try {
             const searchQuery = req.query.name?.trim();
@@ -215,13 +215,12 @@ class ProfileController {
                 const regexPattern = searchQuery.split("").join(".*");
                 profiles = await Profile.find({
                     fullName: { $regex: regexPattern, $options: "i" },
-                }).limit(10);
+                });
             }
 
             return res.status(StatusCodes.OK).json({
                 success: true,
                 result: profiles,
-                message: "Profiles found",
             });
 
         } catch (error) {

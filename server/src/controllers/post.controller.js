@@ -3,8 +3,7 @@ import Role from "../enums/role.enum.js";
 import Visibility from "../enums/visibility.enum.js";
 import Post from "../models/post.model.js";
 import Profile from "../models/profile.model.js";
-import { decodeToken } from "../utils/token.util.js";
-import { uploadImage } from "../utils/uploadImage.util.js";
+import { uploadImages } from "../utils/uploadImage.util.js";
 
 class PostController {
 
@@ -20,7 +19,7 @@ class PostController {
             }
             const request = req.body;
 
-            const mediaUrls = req.files ? await uploadImage(req.files) : [];
+            const mediaUrls = req.files ? await uploadImages(req.files) : [];
 
             const newPost = {
                 createdBy: profile._id,
@@ -130,7 +129,7 @@ class PostController {
 
             let mediaUrls = post.mediaUrls;
             if (req.files && req.files.length > 0) {
-                mediaUrls = await uploadImage(req.files);
+                mediaUrls = await uploadImages(req.files);
             }
 
             const updatedPost = await Post.findByIdAndUpdate(

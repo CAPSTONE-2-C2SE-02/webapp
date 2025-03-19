@@ -3,8 +3,7 @@ import Role from "../enums/role.enum.js";
 import Visibility from "../enums/visibility.enum.js";
 import Profile from "../models/profile.model.js";
 import Tour from "../models/tour.model.js";
-import { decodeToken } from "../utils/token.util.js";
-import { uploadImage } from "../utils/uploadImage.util.js";
+import { uploadImages } from "../utils/uploadImage.util.js";
 
 class TourController {
 
@@ -20,7 +19,7 @@ class TourController {
             }
 
             const request = req.body;
-            const mediaUrls = req.files ? await uploadImage(req.files) : [];
+            const mediaUrls = req.files ? await uploadImages(req.files) : [];
 
             const newTour = {
                 guide: profile._id,
@@ -125,7 +124,7 @@ class TourController {
             const requestData = req.body;
             let images = tour.images;
             if (req.files && req.files.length > 0) {
-                images = await uploadImage(req.files);
+                images = await uploadImages(req.files);
             }
 
             await Tour.findByIdAndUpdate(
@@ -190,6 +189,44 @@ class TourController {
                 success: true,
                 result: tours
             });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    // [GET] /api/v1/tours/search?q=
+
+    // db.tours.createIndex({ location: "text" })
+    async findByLocation(req, res) {
+        try {
+            const searchQuery = req.query.q?.trim();
+            if (!searchQuery) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Search query is required",
+                });
+            }
+
+            const formattedQuery = searchQuery.replace(/[^a-zA-Z0-9 ]/g, " ");
+            let tours = await Tour.find(
+                { $text: { $search: formattedQuery } }
+            );
+
+            if (tours.length === 0) {
+                const regexPattern = searchQuery.split("").join(".*");
+                tours = await Tour.find({
+                    location: { $regex: regexPattern, $options: "i" },
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: tours,
+            });
+
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,

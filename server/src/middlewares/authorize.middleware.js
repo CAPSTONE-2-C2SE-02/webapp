@@ -179,3 +179,23 @@ export const checkOwnerComment = async (req, res, next) => {
     }
 };
 
+export const checkOwnerCalendar = async (req, res, next) => {
+    try {
+        const calendar = await Calendar.findOne({ _id: req.params.id });
+        const profile = await Profile.findOne({ _id: calendar.tourGuideId });
+
+        if (!calendar || !profile || profile.userId.toString() !== req.user.userId) {
+            return res.status(StatusCodes.FORBIDDEN).json({
+                success: false,
+                error: "You do not have permission to perform this action.",
+            });
+        }
+
+        next();
+    } catch (error) {
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            error: "Internal Server Error",
+        });
+    }
+};
