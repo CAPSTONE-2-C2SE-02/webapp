@@ -45,7 +45,7 @@ class CommentController {
         try {
             const { postId } = req.params;
             const comments = await Comment.find({ postId })
-                .populate("userId", "username avatar")
+                .populate("profileId", "fullName profilePicture")
                 .sort({ createdAt: -1 });
 
             return res.status(StatusCodes.OK).json({
