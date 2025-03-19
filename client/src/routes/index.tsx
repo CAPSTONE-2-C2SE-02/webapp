@@ -9,6 +9,7 @@ import UserProfilePage from "@/pages/userprofile-page";
 const HomePage = lazy(() => import("@/pages/home-page"));
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
+const ToursPage = lazy(() => import("@/pages/tours-page"));
 
 const routes = createBrowserRouter([
   {
@@ -20,6 +21,7 @@ const routes = createBrowserRouter([
         children: [
           { path: "/", element: <HomePage /> },
           { path: "/createtour", element: <CreateTour /> },
+          { path: "/tours", element: <ToursPage /> },
           {
             element: <ProfileLayout />,
             children: [
@@ -35,8 +37,6 @@ const routes = createBrowserRouter([
     children: [
       { path: "/login", element: <SigninPage /> },
       { path: "/register", element: <SignupPage /> },
-
-
     ]
   }
 ]);

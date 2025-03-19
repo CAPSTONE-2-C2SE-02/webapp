@@ -32,7 +32,7 @@ const TourAttachment = ({ tour, onRemove }: TourAttachmentProps) => {
           </h3>
           <div className="flex items-center gap-1 mt-1 text-emerald-600 font-medium">
             <MapPin className="size-3" />
-            <span className="text-sm">{tour.destination}</span>
+            <span className="text-sm">{tour.location}</span>
           </div>
           <p className="text-xs line-clamp-2 mt-1">
             {tour.description}
