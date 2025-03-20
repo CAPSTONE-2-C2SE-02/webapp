@@ -3,6 +3,8 @@ export type Tour = {
   title: string;
   description: string;
   photo: string[];
-  overalReview: number;
-  destination: string;
+  rating: number;
+  location: string;
+  price: number;
+  duration: string;
 }
