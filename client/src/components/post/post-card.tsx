@@ -13,7 +13,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import SharePostModal from "../modals/share-post-modal";
 import TourAttachment from "../tour/tour-attachment";
-import { mockTours } from "@/lib/mock-data";
+import { tours } from "@/lib/mock-data";
 
 const PostCard = () => {
   const [isLike, setIsLike] = useState(false);
@@ -128,7 +128,7 @@ const PostCard = () => {
             </div>
           </div>
           {/* Tour Attachment */}
-          <TourAttachment tour={mockTours[0]} />
+          <TourAttachment tour={tours[0]} />
           {/* Post Action */}
           <div className="w-full flex items-center justify-between px-10 mt-3">
             <Button
