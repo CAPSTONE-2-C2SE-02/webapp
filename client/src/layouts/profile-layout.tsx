@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 const ProfileLayout = () => {
     return (
         <div className="w-full flex flex-col gap-5">
-            <div className="relative w-full py-8">
+            <div className="relative w-full pt-6">
                 <img src="https://placehold.co/1920x400" className="rounded-t-2xl"/>
                 <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] [16px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
@@ -62,7 +62,8 @@ const ProfileLayout = () => {
                 <div className="flex justify-between border-t px-8 py-1 border-slate-200  rounded-b-2xl bg-white">
                     <div className="flex items-center">
                         <NavLink 
-                            to={`/users/userId`}
+                            to={`/username`}
+                            end
                             className={({ isActive }) =>
                                 cn(
                                   "bg-white px-4 py-2 font-medium text-sm",
@@ -73,7 +74,8 @@ const ProfileLayout = () => {
                             Posts
                         </NavLink>
                         <NavLink 
-                            to={`/users/userId/follow`}
+                            to={`/username/follow`}
+                            end
                             className={({ isActive }) =>
                                 cn(
                                   "bg-white px-4 py-2 font-medium text-sm",
@@ -84,7 +86,8 @@ const ProfileLayout = () => {
                             Follow
                         </NavLink>
                         <NavLink 
-                            to={`/users/userId/images`}
+                            to={`/username/images`}
+                            end
                             className={({ isActive }) =>
                                 cn(
                                   "bg-white px-4 py-2 font-medium text-sm",
@@ -95,7 +98,8 @@ const ProfileLayout = () => {
                             Images
                         </NavLink>
                         <NavLink 
-                            to={`/users/userId/tours`}
+                            to={`/username/tours`}
+                            end
                             className={({ isActive }) =>
                                 cn(
                                   "bg-white px-4 py-2 font-medium text-sm",
@@ -106,7 +110,8 @@ const ProfileLayout = () => {
                             Tours
                         </NavLink>
                         <NavLink 
-                            to={`/users/userId/reviews`}
+                            to={`/username/reviews`}
+                            end
                             className={({ isActive }) =>
                                 cn(
                                   "bg-white px-4 py-2 font-medium text-sm",
