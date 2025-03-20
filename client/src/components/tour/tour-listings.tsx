@@ -28,17 +28,15 @@ const TourListing = () => {
             <Filter className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant={viewType === "grid" ? "default" : "outline"}
             size="icon"
-            className={viewType === "grid" ? "bg-primary text-white" : ""}
             onClick={() => setViewType("grid")}
           >
             <Grid className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
+            variant={viewType === "list" ? "default" : "outline"}
             size="icon"
-            className={viewType === "list" ? "bg-primary text-white" : ""}
             onClick={() => setViewType("list")}
           >
             <List className="h-4 w-4" />
@@ -61,7 +59,7 @@ const TourListing = () => {
         </div>
       </div>
       {/* Tour Cards */}
-      <div className={viewType === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" : "space-y-6"}>
+      <div className={viewType === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" : "space-y-3"}>
         {tours.map((tour) => (
           <TourCard key={tour._id} tour={tour} type={viewType} />
         ))}

@@ -32,7 +32,7 @@ const ToursPage = () => {
       {/* main part */}
       <div className="flex items-start flex-col lg:flex-row gap-5">
         {/* Filter Sidebar */}
-        <div className="bg-white px-2 py-3 max-w-80 rounded-xl border border-slate-200 shadow-sm space-y-2 items-center">
+        <div className="bg-white px-2 py-3 max-w-80 rounded-xl border border-slate-200 shadow-sm space-y-2 items-center sticky left-0 top-[88px]">
           <div className="flex items-center justify-between mx-5">
             <h5 className="text-sm">Filter</h5>
             <Button size={"sm"} variant={"ghost"}>Reset Filter</Button>

@@ -24,7 +24,7 @@ const LocationFilter = ({ value, setValue }: LocationFilterProps) => {
           >
             <div className="flex gap-2 items-center">
               <MapPinned className="size-4" />
-              <span>{value ? "Da Nang" : "Select Location"}</span>
+              <span className="font-normal">{value ? "Da Nang" : "Select Location"}</span>
             </div>
             <ChevronsUpDown className="opacity-50" />
           </Button>
