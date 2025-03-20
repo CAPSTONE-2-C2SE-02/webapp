@@ -22,18 +22,20 @@ class TourController {
             const mediaUrls = req.files ? await uploadImages(req.files) : [];
 
             const newTour = {
-                guide: profile._id,
-                title: request.title,
-                description: request.description,
-                location: request.location,
-                itinerary: request.itinerary,
-                price: request.price,
+                tourGuideId: profile._id,
+                nameOfTour: request.nameOfTour,
+                introduction: request.introduction,
+                destination: request.destination,
+                departureLocation: request.departureLocation,
+                schedule: request.schedule,
+                priceForAdult: request.priceForAdult,
+                priceForYoung: request.priceForYoung,
+                priceForChildren: request.priceForChildren,
                 maxParticipants: request.maxParticipants,
-                startDate: request.startDate,
-                endDate: request.endDate,
                 duration: request.duration,
+                include: request.include,
+                notInclude: request.notInclude,
                 images: mediaUrls,
-                visibility: request.visibility,
             };
 
             await Tour.create(newTour);
@@ -183,7 +185,7 @@ class TourController {
                 });
             }
 
-            const tours = await Tour.find({ guide: profile._id });
+            const tours = await Tour.find({ tourGuideId: profile._id });
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -199,8 +201,8 @@ class TourController {
 
     // [GET] /api/v1/tours/search?q=
 
-    // db.tours.createIndex({ location: "text" })
-    async findByLocation(req, res) {
+    // db.tours.createIndex({ destination: "text" })
+    async findByDestination(req, res) {
         try {
             const searchQuery = req.query.q?.trim();
             if (!searchQuery) {

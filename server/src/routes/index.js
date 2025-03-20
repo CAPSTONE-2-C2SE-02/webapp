@@ -8,6 +8,7 @@ import postRouter from "./post.route.js";
 import tourRouter from "./tour.route.js";
 import commentRouter from "./comment.route.js";
 import calendarRouter from "./calendar.route.js";
+import bookingRouter from "./booking.route.js";
 
 
 const router = express.Router();
@@ -20,5 +21,6 @@ router.use('/posts', postRouter);
 router.use('/comments', commentRouter);
 router.use('/tours', tourRouter);
 router.use('/calendars', calendarRouter);
+router.use('/bookings', bookingRouter);
 
 export default router;
