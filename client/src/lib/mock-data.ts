@@ -131,3 +131,84 @@ export const tours: Tour[] = [
     photo: ["https://placehold.co/600x400"],
   },
 ]
+
+export const userData = {
+  name: "Ngoc Anh",
+  username: "anh312",
+  email: "ptanh125@gmail.com",
+  phone: "09568896",
+  follower: [
+    {
+      name: "Minh Khang",
+      role: "traveler",
+      isFollow: true,
+      avatar: "https://ui-avatars.com/api/?name=Minh+Khang&size=128&background=random",
+      followers: 3500,
+    },
+    {
+      name: "Hoang Nam",
+      role: "tour guide",
+      isFollow: false,
+      avatar: "https://ui-avatars.com/api/?name=Hoang+Nam&size=128&background=random",
+      followers: 1200,
+    },
+    {
+      name: "Lan Phuong",
+      role: "traveler",
+      isFollow: true,
+      avatar: "https://ui-avatars.com/api/?name=Lan+Phuong&size=128&background=random",
+      followers: 5000,
+    },
+    {
+      name: "Binh An",
+      role: "traveler",
+      isFollow: false,
+      avatar: "https://ui-avatars.com/api/?name=Binh+An&size=128&background=random",
+      followers: 2700,
+    },
+    {
+      name: "Thuy Duong",
+      role: "traveler",
+      isFollow: true,
+      avatar: "https://ui-avatars.com/api/?name=Thuy+Duong&size=128&background=random",
+      followers: 1800,
+    }
+  ],
+  following: [
+    {
+      name: "Gia Huy",
+      role: "tour guide",
+      isFollow: true,
+      avatar: "https://ui-avatars.com/api/?name=Gia+Huy&size=128&background=random",
+      followers: 2200,
+    },
+    {
+      name: "Mai Linh",
+      role: "traveler",
+      isFollow: true,
+      avatar: "https://ui-avatars.com/api/?name=Mai+Linh&size=128&background=random",
+      followers: 4100,
+    },
+    {
+      name: "Quoc Dat",
+      role: "traveler",
+      isFollow: true,  
+      avatar: "https://ui-avatars.com/api/?name=Quoc+Dat&size=128&background=random",
+      followers: 900,
+    },
+    {
+      name: "Thanh Tu",
+      role: "traveler",
+      isFollow: true,
+      avatar: "https://ui-avatars.com/api/?name=Thanh+Tu&size=128&background=random",
+      followers: 3300,
+    },
+    {
+      name: "Dieu Linh",
+      role: "traveler",
+      isFollow: true,
+      avatar: "https://ui-avatars.com/api/?name=Dieu+Linh&size=128&background=random",
+      followers: 2900,
+    }
+  ]
+};

@@ -6,6 +6,7 @@ import AuthLayout from "@/layouts/auth-layout";
 import CreateTour from "@/components/form/createtour-form";
 import ProfileLayout from "@/layouts/profile-layout";
 import UserProfilePage from "@/pages/userprofile-page";
+import UserProfileFollowPage from "@/pages/userprofile-follower-page";
 const HomePage = lazy(() => import("@/pages/home-page"));
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
@@ -26,8 +27,10 @@ const routes = createBrowserRouter([
           { path: "/tourdetail", element: <TourDetail /> },
           {
             element: <ProfileLayout />,
+            path: "/:username",
             children: [
-              { path: "/users/:userId", element: <UserProfilePage /> },
+              { index: true, element: <UserProfilePage />},
+              { path: "follow", element: <UserProfileFollowPage /> },
             ]
           }
         ]
