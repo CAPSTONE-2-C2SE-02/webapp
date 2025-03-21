@@ -56,6 +56,8 @@ export default {
   		},
 			fontFamily: {
 				roboto: ["Roboto", "sans-serif"],
+				pacifico: ["Pacifico", "cursive"],
+				madimi: ["Madimi One", "sans-serif"],
 			}
   	}
   },
