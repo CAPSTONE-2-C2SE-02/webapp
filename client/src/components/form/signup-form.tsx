@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useState } from "react";
 import {
     Form,
@@ -14,24 +13,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { UserPen, UserRound } from "lucide-react";
 import LogoGG from "@/assets/google_icon.svg";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { signUpschema, SignUpValue } from "@/lib/validations";
+import { useRegisterTourGuideMutation, useRegisterTravelerMutation } from "@/services/root-api";
+import { toast } from "sonner";
 
-
-const signUpschema = z.object({
-    email: z.string().email("Invalid email address"),
-    fullName: z.string().min(3, "Full Name must be at least 3 characters"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string(),
-    phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
-    role: z.enum(["traveller", "tourguide"]),
-}).refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-});
-
-type SignUpValue = z.infer<typeof signUpschema>;
 const SignupForm = () => {
-    const [role, setRole] = useState("traveller");
+    const [role, setRole] = useState<"traveller" | "tourguide">("traveller");
+    const [registerTraveler] = useRegisterTravelerMutation();
+    const [registerTourGuide] = useRegisterTourGuideMutation();
+    const navigate = useNavigate();
+
     const form = useForm<SignUpValue>({
         resolver: zodResolver(signUpschema),
         defaultValues: {
@@ -44,9 +36,25 @@ const SignupForm = () => {
         },
     });
 
-    function onSubmit(values: SignUpValue) {
-        console.log(values);
+    async function onSubmit(values: SignUpValue) {
+        try {
+            let response;
+            if (role === "traveller") {
+                response = await registerTraveler(values).unwrap();
+            } else if (role === "tourguide") {
+                response = await registerTourGuide(values).unwrap();
+            }
+            if (!response?.success) {
+                toast.error(response?.error);
+                return;
+            }
+            toast.success(response?.message);
+            navigate("/login?registered=true");
+        } catch (error) {
+            console.error("Register failed:", error);
+        }
     }
+
     return (
         <>
             <div className="text-center flex flex-col items-center mt-12 md:mt-16">

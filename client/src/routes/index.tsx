@@ -47,16 +47,16 @@ const routes = createBrowserRouter([
             ]
           },
         ]
+      },
+      {
+        element: <AuthLayout />,
+        children: [
+          { path: "/login", element: <SigninPage /> },
+          { path: "/register", element: <SignupPage /> },
+        ]
       }
     ]
   },
-  {
-    element: <AuthLayout />,
-    children: [
-      { path: "/login", element: <SigninPage /> },
-      { path: "/register", element: <SignupPage /> },
-    ]
-  }
 ]);
 
 export default function AppRoutes() {

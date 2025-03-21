@@ -12,26 +12,35 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useLoginMutation } from "@/services/root-api";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { setCredentials } from "@/stores/slices/auth-slice";
 import { useEffect } from "react";
-import { loginSchema, LoginValues } from "@/lib/validation";
+import { loginSchema, LoginValues } from "@/lib/validations";
+import { toast } from "sonner";
 
 const SigninForm = () => {
   const [login, { isLoading }] = useLoginMutation();
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // check if user is logged in >> redirect to home page
   useEffect(() => {
+    const registered = searchParams.get("registered");
     if (isAuthenticated) {
       navigate("/");
     }
-  }, [isAuthenticated, navigate]);
+    if (registered) {
+      toast.success("Account created successfully", {
+        description: "You can now login to your account.",
+      });
+      setSearchParams({});
+    }
+  }, [isAuthenticated, navigate, searchParams]);
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -45,10 +54,13 @@ const SigninForm = () => {
     try {
       const response = await login(values).unwrap();
 
-      if (response.success && response.result) {
-        if (response.result.data && response.result.token) {
-          dispatch(setCredentials({ userInfo: response.result.data, token: response.result.token }));
-        }
+      if (!response.success) {
+        toast.error(response?.error);
+        return;
+      }
+      if (response.result?.data && response.result?.token) {
+        dispatch(setCredentials({ userInfo: response.result.data, token: response.result.token }));
+        toast.success(response?.message);
         navigate("/");
       }
     } catch (error) {
