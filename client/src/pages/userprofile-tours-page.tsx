@@ -20,7 +20,7 @@ const UserProfileToursPage = () => {
     const navigate = useNavigate();
 
     const handleCreateTour = () => {
-    navigate("/createtour"); // Điều hướng đến trang tạo tour
+    navigate("/createtour");
   };
     return (
         <div className="my-1 w-full flex flex-col items-start gap-2 bg-white rounded-t-xl">
@@ -67,8 +67,10 @@ const UserProfileToursPage = () => {
                         <Button variant="default" className=" w-full py-5" onClick={handleCreateTour}>Create New Tour</Button>
                     </div>
                 </div>
-                {tours.map((tour) => (
-                    <TourCard key={tour._id} tour={tour} type={viewType} />
+                {tours
+                    .filter((tour) => tour.create_by === "userId")
+                    .map((tour) => (
+                        <TourCard key={tour._id} tour={tour} type={viewType} />
                 ))}
             </div>
             <div className="items-center w-full text-primary">
