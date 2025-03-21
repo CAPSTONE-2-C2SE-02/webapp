@@ -1,6 +1,7 @@
 import { Tour } from "@/lib/types";
 import { ArrowRight, Heart, MapPin, Star, Clock, UsersRound, CircleDollarSign } from "lucide-react";
 import { Button } from "../ui/button";
+import { Link } from "react-router";
 
 interface TourCardProps {
   tour: Tour;
@@ -49,10 +50,11 @@ const TourCard = ({ tour, type }: TourCardProps) => {
                 ${tour.price}
               </span>
             </div>
-
-            <Button className="absolute bottom-0 w-full justify-between rounded-full opacity-0 translate-y-3 invisible transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible">
-              Book now <ArrowRight className="size-4" />
-            </Button>
+              <Button className="absolute bottom-0 w-full justify-between rounded-full opacity-0 translate-y-3 invisible transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible" asChild>
+                <Link to={`/tours/${tour._id}`}>
+                  Book now <ArrowRight className="size-4" />
+                </Link>
+              </Button>
           </div>
         </div>
       ) : (
@@ -101,8 +103,10 @@ const TourCard = ({ tour, type }: TourCardProps) => {
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
                 <span className="text-sm font-medium">{tour.rating} Good</span>
               </div>
-              <Button className="rounded-2xl">
-                Book now <ArrowRight className="size-4" />
+              <Button className="rounded-2xl" asChild>
+                <Link to={`/tours/${tour._id}`}>
+                  Book now <ArrowRight className="size-4" />
+                </Link>
               </Button>
             </div>
           </div>

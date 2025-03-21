@@ -1,164 +1,317 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { CalendarIcon } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { DateRange } from "react-day-picker";
-import { BookingState, Tour } from "@/types/tour";
+import { bookingSchema, BookingValues } from "@/lib/validations";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
+import { cn } from "@/lib/utils";
+import { AlertCircle, CalendarIcon, DollarSign, Minus, Plus } from "lucide-react";
+import { Calendar } from "../ui/calendar";
+import { Separator } from "../ui/separator";
+import { format, isSameDay } from "date-fns";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { TourDetail } from "@/lib/types";
 
-interface BookingSectionProps {
-    tour: Tour;
+interface TourBookingSectionProps {
+  toursGuide: TourDetail['tourGuides'];
+  price: number;
 }
 
-export function BookingSection({ tour }: BookingSectionProps) {
-    const [booking, setBooking] = useState<BookingState>({
-        adults: 0,
-        youths: 0,
-        children: 0,
-        fromDate: "",
-        toDate: "",
-        isCalendarOpen: false,
-        selectedRange: { from: undefined, to: undefined },
-    });
+const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
+  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const [busyDates, setBusyDates] = useState<Date[]>([]);
+  const [dateAvailability, setDateAvailability] = useState<{
+    available: boolean
+    conflictingDates?: Date[]
+  }>({ available: true });
 
-    const handleBookingChange = (field: keyof BookingState, value: number | string | boolean | DateRange) => {
-        setBooking((prev) => ({
-            ...prev,
-            [field]: value,
-        }));
-    };
+  const form = useForm<BookingValues>({
+    resolver: zodResolver(bookingSchema),
+    defaultValues: {
+      dateRange: {
+        from: undefined,
+        to: undefined,
+      },
+      adults: 0,
+      youths: 0,
+      children: 0,
+    }
+  });
 
-    const handleDateSelect = (range: DateRange | undefined) => {
-        handleBookingChange("selectedRange", range || { from: undefined, to: undefined });
-        if (range?.from) {
-            handleBookingChange("fromDate", range.from.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" }));
-        }
-        if (range?.to) {
-            handleBookingChange("toDate", range.to.toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "numeric" }));
-        }
-        if (range?.from && range?.to) {
-            handleBookingChange("isCalendarOpen", false);
-        }
-    };
+  useEffect(() => {
+    // Update busy dates for the selected tour
+    setBusyDates(toursGuide.busyDates);
+    setDateAvailability({ available: true });
+  }, [])
 
-    const calculateTotalPrice = () => {
-        const adultPrice = booking.adults * tour.price;
-        const youthPrice = booking.youths * tour.price * 0.8;
-        const childrenPrice = booking.children * tour.price * 0.5;
-        return (adultPrice + youthPrice + childrenPrice).toFixed(2);
-    };
+  const adults = form.watch("adults");
+  const youths = form.watch("youths");
+  const children = form.watch("children");
+  const dateRange = form.watch("dateRange")
 
-    return (
-        <div className="lg:col-span-1">
-            <div className="border rounded-lg p-6 bg-white shadow-md sticky top-6">
-                <h2 className="text-2xl font-bold mb-4 text-center text-teal-600">Booking</h2>
-                <p className="text-xl font-semibold text-teal-700 flex items-center gap-2 mb-4">
-                    <span className="text-2xl">$</span> {tour.price}
-                </p>
-                <hr className="border-gray-300 my-4" />
-                <div className="mb-4 relative">
-                    <label className="block text-gray-600 mb-2">From date - to date</label>
-                    <div className="flex items-center">
-                        <Input
-                            type="text"
-                            placeholder="Select date range"
-                            className="w-full rounded-lg pl-10 pr-4 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                            value={booking.fromDate && booking.toDate ? `${booking.fromDate} - ${booking.toDate}` : ""}
-                            onClick={() => handleBookingChange("isCalendarOpen", true)}
-                            readOnly
+  useEffect(() => {
+    const total = (adults + youths + children) * price;
+    setTotalPrice(total);
+  }, [adults, youths, children, price]);
+
+  const onSubmit = (values: BookingValues) => {
+    console.log(values);
+  }
+
+  const checkAvailabilitySchedule = (dateRange: { from: Date; to: Date }): { available: boolean; conflictingDates: Date[] } => {
+    const conflict = busyDates.filter((busy) => {
+      const date = new Date(busy);
+      return date >= dateRange.from && date <= dateRange.to;
+    })
+
+    return {
+      available: conflict.length === 0,
+      conflictingDates: conflict,
+    }
+  }
+  
+  useEffect(() => {
+    if (dateRange?.from && dateRange?.to) {
+      const availability = checkAvailabilitySchedule(dateRange);
+      setDateAvailability(availability);
+
+      if (!availability.available) {
+        form.setError("dateRange", {
+          type: "manual",
+          message: "Selected dates conflict with guide's schedule"
+        });
+      } else {
+        form.clearErrors("dateRange");
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateRange, form]);
+
+  return (
+    <div className="lg:col-span-1">
+      <Card className="sticky top-[88px]">
+        <CardHeader>
+          <CardTitle className="text-center text-xl text-primary">Tour Booking</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+              <div className="flex items-center gap-2 text-xl font-semibold">
+                <DollarSign className="h-5 w-5 text-primary" />
+                <span>{price}</span>
+                /person
+              </div>
+              <FormField 
+                control={form.control}
+                name="dateRange"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Tour Dates</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              "text-muted-foreground",
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {field.value.from ? (
+                              field.value.to ? (
+                                <>
+                                  {format(field.value.from, "PPP")} - {format(field.value.to, "PPP")}
+                                </>
+                              ) : (
+                                format(field.value.from, "PPP")
+                              )
+                            ) : (
+                              "From date - to date"
+                            )}
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="end">
+                        <Calendar
+                          initialFocus
+                          mode="range"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          numberOfMonths={2}
+                          disabled={(date) => {
+                            if (date < new Date()) return true;
+                            return busyDates.some((busy) => isSameDay(busy, date));
+                          }}
+                          modifiers={{
+                            busy: busyDates,
+                          }}
+                          modifiersStyles={{
+                            busy: {
+                              backgroundColor: "rgba(239, 68, 68, 0.1)",
+                              color: "rgb(239, 68, 68)",
+                              textDecoration: "line-through",
+                            },
+                          }}
                         />
-                        <CalendarIcon className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 mt-4" />
-                    </div>
-                    {booking.isCalendarOpen && (
-                        <div className="absolute z-10 mt-2">
-                            <Calendar
-                                mode="range"
-                                selected={booking.selectedRange}
-                                onSelect={handleDateSelect}
-                                initialFocus={true}
-                                className="bg-white border border-gray-200 rounded-lg shadow-lg p-3"
-                            />
-                        </div>
-                    )}
-                </div>
-                <hr className="border-gray-300 my-4" />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {!dateAvailability.available &&
+                dateAvailability.conflictingDates &&
+                dateAvailability.conflictingDates.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Scheduling Conflict</AlertTitle>
+                    <AlertDescription>
+                      <p>The selected dates conflict with the guide's schedule:</p>
+                      <ul className="mt-2 list-disc list-inside">
+                        {dateAvailability.conflictingDates.map((conflict, index) => (
+                          <li key={index}>
+                            {format(conflict, "MMM d")}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-2">Please select different dates.</p>
+                    </AlertDescription>
+                  </Alert>
+                )
+              }
+
+              <div>
+                <h3 className="text-base font-medium text-center mb-4">Customer Types</h3>
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <label className="block text-gray-600">Adults (Age 14+)</label>
+                  <FormField
+                    control={form.control}
+                    name="adults"
+                    render={({ field }) => (
+                      <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-base">Adults (Age 14-80)</FormLabel>
                         <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                onClick={() => handleBookingChange("adults", Math.max(0, booking.adults - 1))}
-                            >
-                                -
-                            </Button>
-                            <Input
-                                type="number"
-                                value={booking.adults}
-                                onChange={(e) => handleBookingChange("adults", parseInt(e.target.value) || 0)}
-                                className="w-16 text-center"
-                            />
-                            <Button
-                                variant="outline"
-                                onClick={() => handleBookingChange("adults", booking.adults + 1)}
-                            >
-                                +
-                            </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => field.onChange(Math.max(0, field.value - 1))}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="w-8 text-center">{field.value}</span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => field.onChange(field.value + 1)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
                         </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <label className="block text-gray-600">Youths (Age 6-13)</label>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="youths"
+                    render={({ field }) => (
+                      <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-base">Youths (Age 6-13)</FormLabel>
                         <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                onClick={() => handleBookingChange("youths", Math.max(0, booking.youths - 1))}
-                            >
-                                -
-                            </Button>
-                            <Input
-                                type="number"
-                                value={booking.youths}
-                                onChange={(e) => handleBookingChange("youths", parseInt(e.target.value) || 0)}
-                                className="w-16 text-center"
-                            />
-                            <Button
-                                variant="outline"
-                                onClick={() => handleBookingChange("youths", booking.youths + 1)}
-                            >
-                                +
-                            </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => field.onChange(Math.max(0, field.value - 1))}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="w-8 text-center">{field.value}</span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => field.onChange(field.value + 1)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
                         </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <label className="block text-gray-600">Children (Age 0-5)</label>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="children"
+                    render={({ field }) => (
+                      <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-base">Children (Age 0-5)</FormLabel>
                         <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                onClick={() => handleBookingChange("children", Math.max(0, booking.children - 1))}
-                            >
-                                -
-                            </Button>
-                            <Input
-                                type="number"
-                                value={booking.children}
-                                onChange={(e) => handleBookingChange("children", parseInt(e.target.value) || 0)}
-                                className="w-16 text-center"
-                            />
-                            <Button
-                                variant="outline"
-                                onClick={() => handleBookingChange("children", booking.children + 1)}
-                            >
-                                +
-                            </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => field.onChange(Math.max(0, field.value - 1))}
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="w-8 text-center">{field.value}</span>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => field.onChange(field.value + 1)}
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
                         </div>
-                    </div>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                    )}
+                  />
                 </div>
-                <hr className="border-gray-300 my-4" />
-                <div className="bg-gray-100 p-4 rounded-lg mt-4">
-                    <p className="text-lg font-semibold text-teal-600">Total price: ${calculateTotalPrice()}</p>
+              </div>
+
+              <Separator />
+
+              <div className="bg-muted/50 p-3 rounded-md">
+                <div className="flex items-center justify-between">
+                  <span className="text-base font-medium">Total Price</span>
+                  <span className="text-lg font-semibold text-primary">$ {totalPrice}</span>
                 </div>
-                <Button className="w-full mt-4 bg-teal-600 hover:bg-teal-700">Booking Now</Button>
-            </div>
-        </div>
-    );
-}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-primary"
+                size="lg"
+                disabled={!form.formState.isValid || adults + youths + children === 0 || !dateAvailability.available}
+              >
+                Booking Now
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default TourBookingSection;
