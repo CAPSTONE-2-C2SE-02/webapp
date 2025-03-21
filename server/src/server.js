@@ -10,7 +10,6 @@ import http from "http";
 
 import connectMongoDB from "./config/db.config.js";
 import routes from "./routes/index.js";
-import Message from "./models/message.model.js";
 
 dotenv.config();
 
@@ -19,7 +18,7 @@ const PORT = process.env.PORT || 8080;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: process.env.CORS_ORIGINS,
     methods: ["GET", "POST"],
   },
 });
@@ -27,7 +26,7 @@ const io = new Server(server, {
 
 const startServer = () => {
   app.use(cors({
-    origin: "*",
+    origin: process.env.CORS_ORIGINS,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   }));
@@ -47,32 +46,45 @@ const startServer = () => {
     console.log(` 🌐 Local: http://localhost:${PORT}/`);
   });
 
+  let onlineUsers = [];
   io.on("connection", (socket) => {
-    console.log(`⚡ New client connected: ${socket.id}`);
 
-    socket.on("joinConversation", (conversationId) => {
-      socket.join(conversationId);
-      console.log(`Client joined conversation: ${conversationId}`);
+    socket.on("addNewUser", (userId) => {
+      !onlineUsers.some((user) => user.userId == userId) &&
+        onlineUsers.push({
+          userId,
+          socketId: socket.id,
+        });
+      console.log(`Connected Users:`, onlineUsers);
+
+      //send active users
+      io.emit("getUsers", onlineUsers);
     });
-    //Listen event client send message
-    socket.on("sendMessage", async ({ conversationId, sender, content }) => {
-      try {
-        const message = new Message({ conversationId, sender, content });
-        await message.save();
 
-        // receive message
-        io.to(conversationId).emit("receiveMessage", message);
+    socket.on("sendMessage", (message) => {
+      const user = onlineUsers.find((user) => user.userId == message.recipientId);
 
-      } catch (error) {
-        console.error("Error sending message:", error);
+
+      if (user) {
+        console.log("sending message and notification");
+        io.to(user.socketId).emit("getMessage", message);
+        io.to(user.socketId).emit("getNotification", {
+          senderId: message.senderId,
+          isRead: false,
+          date: new Date(),
+        });
       }
     });
 
-    //Listen event client disconnect
     socket.on("disconnect", () => {
-      console.log(`❌ Client disconnected: ${socket.id}`);
+      onlineUsers = onlineUsers.filter((user) => user.socketId != socket.id);
+      console.log(`User Disconnected:`, onlineUsers);
+
+      //send active users
+      io.emit("getUsers", onlineUsers);
     });
-  });
+  })
+
 };
 
 (async () => {
