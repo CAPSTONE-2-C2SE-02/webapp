@@ -49,7 +49,7 @@ const CreateNewTourForm = () => {
             priceForYoung: 0,
             priceForChildren: 0,
             introduction: "",
-            schedule: [],
+            schedule: [{ title: "", description: "" }],
             include: "",
             notInclude: "",
             images: [],

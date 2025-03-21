@@ -2,11 +2,15 @@ import NewPost from "@/components/post/new-post";
 import PostCard from "@/components/post/post-card";
 import ToursRecommend from "@/components/tour/tours-recommend";
 import { Calendar } from "@/components/ui/calendar"
+import { useAppSelector } from "@/hooks/redux";
 import { useState } from "react";
-
+import { useParams } from "react-router";
 
 const UserProfilePage = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
+  const { username } = useParams();
+  
   return (
     <div className="my-1 w-full flex items-start gap-5">
       {/* left content */}
@@ -20,7 +24,9 @@ const UserProfilePage = () => {
       </div>
       {/* main content */}
       <div className="flex-1">
-        <NewPost />
+        {isAuthenticated && userInfo?.username === username && (
+          <NewPost />
+        )}
         <div className="flex flex-col gap-3">
           <PostCard />
           <PostCard />

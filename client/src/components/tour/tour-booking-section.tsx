@@ -13,6 +13,8 @@ import { Separator } from "../ui/separator";
 import { format, isSameDay } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { TourDetail } from "@/lib/types";
+import { useAppSelector } from "@/hooks/redux";
+import { toast } from "sonner";
 
 interface TourBookingSectionProps {
   toursGuide: TourDetail['tourGuides'];
@@ -26,6 +28,8 @@ const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
     available: boolean
     conflictingDates?: Date[]
   }>({ available: true });
+  
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const form = useForm<BookingValues>({
     resolver: zodResolver(bookingSchema),
@@ -57,6 +61,15 @@ const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
   }, [adults, youths, children, price]);
 
   const onSubmit = (values: BookingValues) => {
+    if (!isAuthenticated) {
+      toast.error("Please login to continue booking", {
+        action: {
+          label: "Undo",
+          onClick: () => console.log("Undo"),
+        },
+      });
+      return;
+    }
     console.log(values);
   }
 

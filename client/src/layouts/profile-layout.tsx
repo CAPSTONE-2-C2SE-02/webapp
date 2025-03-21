@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NavLink, Outlet } from "react-router";
+import { NavLink, Outlet, useParams } from "react-router";
 import { UserRound } from "lucide-react"
 import { Star } from "lucide-react"
 import { UserRoundCheck } from "lucide-react"
@@ -9,7 +9,14 @@ import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/hooks/redux";
+
 const ProfileLayout = () => {
+    const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
+
+    // get username from url
+    const { username } = useParams();
+
     return (
         <div className="w-full flex flex-col gap-5">
             <div className="relative w-full py-8">
@@ -54,9 +61,11 @@ const ProfileLayout = () => {
                     <div className="my-2 mx-14 h-36 flex flex-col justify-items-start gap-2">
                         <p className="font-medium text-slate-600 text-sm">Introduction</p>
                         <textarea name="intro" value="asdasdasd" id="" disabled className="w-[630px] h-[94px] p-2 bg-blue-200 rounded-b-xl rounded-r-xl"></textarea>
-                        <Button variant={"outline"} className="bg-blue-950 text-white !h-[34px] w-fit ml-auto">
-                            <Edit /> Edit Profile
-                        </Button>
+                        {isAuthenticated && userInfo?.username === username && (
+                            <Button variant={"outline"} className="bg-blue-950 text-white !h-[34px] w-fit ml-auto">
+                                <Edit /> Edit Profile
+                            </Button>
+                        )}
                     </div>
                 </div>
                 <div className="flex justify-between border-t px-8 py-1 border-slate-200  rounded-b-2xl bg-white">

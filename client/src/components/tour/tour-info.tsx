@@ -13,15 +13,15 @@ export default function TourInfo({ tour }: TourInfoProps) {
       <h1 className="text-3xl font-bold mb-4">{tour.title}</h1>
       <div className="flex gap-4 mb-4">
         <div className="flex items-center gap-2 text-gray-600">
-          <MapPin size={20} className="text-teal-500" />
+          <MapPin size={20} className="text-primary" />
           <span>Departure location: {tour.depatureLocation}</span>
         </div>
         <div className="flex items-center gap-2 text-gray-600">
-          <MapPin size={20} className="text-teal-500" />
+          <MapPin size={20} className="text-primary" />
           <span>Destination: {tour.destination}</span>
         </div>
         <div className="flex items-center gap-2 text-gray-600">
-          <Clock size={20} className="text-teal-500" />
+          <Clock size={20} className="text-primary" />
           <span>Duration: {tour.duration}</span>
         </div>
       </div>
@@ -31,7 +31,7 @@ export default function TourInfo({ tour }: TourInfoProps) {
 
       {/* Tabs */}
       <Tabs defaultValue="introduction" className="w-full">
-        <TabsList className="grid grid-cols-4 w-full bg-teal-800 text-white">
+        <TabsList className="grid grid-cols-4 w-full bg-primary text-white">
           <TabsTrigger value="introduction">Introduction</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
           <TabsTrigger value="include">Include</TabsTrigger>
