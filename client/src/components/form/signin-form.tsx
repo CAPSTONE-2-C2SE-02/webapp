@@ -43,10 +43,12 @@ const SigninForm = () => {
 
   const onSubmit = async (values: LoginValues) => {
     try {
-      const result = await login(values).unwrap();
+      const response = await login(values).unwrap();
 
-      if (result.success && result.token) {
-        dispatch(setCredentials({ userInfo: null, token: result.token }));
+      if (response.success && response.result) {
+        if (response.result.data && response.result.token) {
+          dispatch(setCredentials({ userInfo: response.result.data, token: response.result.token }));
+        }
         navigate("/");
       }
     } catch (error) {

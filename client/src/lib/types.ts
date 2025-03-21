@@ -48,15 +48,17 @@ export type Review = {
 }
 
 export type UserInfo = {
-  fullName: string;
+  _id: string;
   username: string;
-  email: string;
-  phoneNumber: string;
+  role: string;
 }
 
 export interface ApiResponse {
   success: boolean;
   message?: string;
-  token?: string;
   error?: string;
+  result?: {
+    token?: string;
+    data?: UserInfo;
+  }
 }
