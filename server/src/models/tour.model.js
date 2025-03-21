@@ -4,27 +4,36 @@ import Visibility from "../enums/visibility.enum.js";
 import StatusTour from "../enums/statusTour.enum.js";
 
 const tourSchema = new mongoose.Schema({
-    title: {
+    nameOfTour: {
         type: String
     },
-    description: {
+    introduction: {
         type: String
     },
-    guide: {
+    tourGuideId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Profile"
     },
-    location: {
+    destination: {
         type: String
     },
-    itinerary: [
+    departureLocation: {
+        type: String
+    },
+    schedule: [
         {
             day: Number,
             title: String,
             description: String
         }
     ],
-    price: {
+    priceForAdult: {
+        type: Number
+    },
+    priceForYoung: {
+        type: Number
+    },
+    priceForChildren: {
         type: Number
     },
     maxParticipants: {
@@ -34,18 +43,18 @@ const tourSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    startDate: {
-        type: Date
-    },
-    endDate: {
-        type: Date
-    },
     duration: {
         type: Number
     },
     images: {
         type: [String],
         default: []
+    },
+    include: {
+        type: String,
+    },
+    notInclude: {
+        type: String,
     },
     visibility: {
         type: String,
