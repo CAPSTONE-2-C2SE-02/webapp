@@ -45,3 +45,17 @@ export type Review = {
   images?: string[];
   createdAt: string;
 }
+
+export type UserInfo = {
+  fullName: string;
+  username: string;
+  email: string;
+  phoneNumber: string;
+}
+
+export interface ApiResponse {
+  success: boolean;
+  message?: string;
+  token?: string;
+  error?: string;
+}
