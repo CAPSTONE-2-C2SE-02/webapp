@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils";
 const ProfileLayout = () => {
     return (
         <div className="w-full flex flex-col gap-5">
-            <div className="relative w-full pt-6">
-                <img src="https://placehold.co/1920x400" className="rounded-t-2xl"/>
+            <div className="relative w-full py-8">
+                <img src="https://placehold.co/1920x400" className="rounded-t-2xl" />
                 <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] [16px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
                         <AvatarImage />
@@ -55,67 +55,62 @@ const ProfileLayout = () => {
                         <p className="font-medium text-slate-600 text-sm">Introduction</p>
                         <textarea name="intro" value="asdasdasd" id="" disabled className="w-[630px] h-[94px] p-2 bg-blue-200 rounded-b-xl rounded-r-xl"></textarea>
                         <Button variant={"outline"} className="bg-blue-950 text-white !h-[34px] w-fit ml-auto">
-                            <Edit/> Edit Profile
+                            <Edit /> Edit Profile
                         </Button>
                     </div>
                 </div>
                 <div className="flex justify-between border-t px-8 py-1 border-slate-200  rounded-b-2xl bg-white">
                     <div className="flex items-center">
-                        <NavLink 
-                            to={`/username`}
-                            end
+                        <NavLink
+                            to={`/users/userId`}
                             className={({ isActive }) =>
                                 cn(
-                                  "bg-white px-4 py-2 font-medium text-sm",
-                                  isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                    "bg-white px-4 py-2 font-medium text-sm",
+                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
                                 )
                             }
                         >
                             Posts
                         </NavLink>
-                        <NavLink 
-                            to={`/username/follow`}
-                            end
+                        <NavLink
+                            to={`/users/userId/follow`}
                             className={({ isActive }) =>
                                 cn(
-                                  "bg-white px-4 py-2 font-medium text-sm",
-                                  isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                    "bg-white px-4 py-2 font-medium text-sm",
+                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
                                 )
                             }
                         >
                             Follow
                         </NavLink>
-                        <NavLink 
-                            to={`/username/images`}
-                            end
+                        <NavLink
+                            to={`/users/userId/images`}
                             className={({ isActive }) =>
                                 cn(
-                                  "bg-white px-4 py-2 font-medium text-sm",
-                                  isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                    "bg-white px-4 py-2 font-medium text-sm",
+                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
                                 )
                             }
                         >
                             Images
                         </NavLink>
-                        <NavLink 
-                            to={`/username/tours`}
-                            end
+                        <NavLink
+                            to={`/users/userId/tours`}
                             className={({ isActive }) =>
                                 cn(
-                                  "bg-white px-4 py-2 font-medium text-sm",
-                                  isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                    "bg-white px-4 py-2 font-medium text-sm",
+                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
                                 )
                             }
                         >
                             Tours
                         </NavLink>
-                        <NavLink 
-                            to={`/username/reviews`}
-                            end
+                        <NavLink
+                            to={`/users/userId/reviews`}
                             className={({ isActive }) =>
                                 cn(
-                                  "bg-white px-4 py-2 font-medium text-sm",
-                                  isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                    "bg-white px-4 py-2 font-medium text-sm",
+                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
                                 )
                             }
                         >
