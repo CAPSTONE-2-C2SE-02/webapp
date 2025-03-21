@@ -206,7 +206,8 @@ export const tourData: TourDetail = {
       new Date("2025-03-26"),
     ]
   }
-=======
+};
+
 export const userData = {
   name: "Ngoc Anh",
   username: "anh312",
