@@ -49,6 +49,7 @@ export const tours: Tour[] = [
     rating: 4.3,
     price: 1240,
     photo: ["https://placehold.co/600x400"],
+    create_by: "userId",
   },
   {
     _id: "2",
@@ -59,6 +60,7 @@ export const tours: Tour[] = [
     rating: 4.3,
     price: 1240,
     photo: ["https://placehold.co/600x400"],
+    create_by: "userId",
   },
   {
     _id: "3",
@@ -69,6 +71,7 @@ export const tours: Tour[] = [
     rating: 4.3,
     price: 1240,
     photo: ["https://placehold.co/600x400"],
+    create_by: "userId",
   },
   {
     _id: "4",
@@ -79,6 +82,7 @@ export const tours: Tour[] = [
     rating: 4.3,
     price: 1240,
     photo: ["https://placehold.co/600x400"],
+    create_by: "userId",
   },
   {
     _id: "5",
@@ -89,6 +93,7 @@ export const tours: Tour[] = [
     rating: 4.3,
     price: 1240,
     photo: ["https://placehold.co/600x400"],
+    create_by: "userId",
   },
   {
     _id: "6",
@@ -99,6 +104,7 @@ export const tours: Tour[] = [
     rating: 4.3,
     price: 1240,
     photo: ["https://placehold.co/600x400"],
+    create_by: "userId",
   },
   {
     _id: "7",
@@ -109,6 +115,7 @@ export const tours: Tour[] = [
     rating: 4.3,
     price: 1240,
     photo: ["https://placehold.co/600x400"],
+    create_by: "userId1",
   },
   {
     _id: "8",
@@ -119,6 +126,7 @@ export const tours: Tour[] = [
     rating: 4.3,
     price: 1240,
     photo: ["https://placehold.co/600x400"],
+    create_by: "userId1",
   },
   {
     _id: "9",
@@ -129,6 +137,7 @@ export const tours: Tour[] = [
     rating: 4.3,
     price: 1240,
     photo: ["https://placehold.co/600x400"],
+    create_by: "userId1",
   },
 ]
 
@@ -206,7 +215,8 @@ export const tourData: TourDetail = {
       new Date("2025-03-26"),
     ]
   }
-=======
+};
+
 export const userData = {
   name: "Ngoc Anh",
   username: "anh312",

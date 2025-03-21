@@ -7,6 +7,7 @@ export type Tour = {
   location: string;
   price: number;
   duration: string;
+  create_by: string;
 }
 
 export type TourDetail = {
@@ -44,4 +45,18 @@ export type Review = {
   tourGuideReview: string;
   images?: string[];
   createdAt: string;
+}
+
+export type UserInfo = {
+  fullName: string;
+  username: string;
+  email: string;
+  phoneNumber: string;
+}
+
+export interface ApiResponse {
+  success: boolean;
+  message?: string;
+  token?: string;
+  error?: string;
 }
