@@ -10,6 +10,8 @@ router.post("/", authenticated, authorize("TOUR_GUIDE"), validateJsonBody(calend
 
 router.get("/:id", calendarController.getCalendarByProfile);
 
+router.get("/:id/busy-dates", calendarController.getBusyDates);
+
 router.put("/:id", authenticated, authorize("TOUR_GUIDE"), checkOwnerCalendar, calendarController.updateCalendar);
 
 router.delete("/:id", authenticated, authorize("TOUR_GUIDE"), checkOwnerCalendar, calendarController.deleteCalendar);

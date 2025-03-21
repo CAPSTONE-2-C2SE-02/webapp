@@ -75,6 +75,37 @@ class CalendarController {
         }
     };
 
+    // [GET] /api/v1/calendars/:id/busy-dates
+    async getBusyDates(req, res) {
+        try {
+            const { id } = req.params;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const calendar = await Calendar.findOne({ tourGuideId: id });
+
+            if (!calendar) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "No calendar found for this tour guide.",
+                });
+            }
+
+            const busyDates = calendar.dates
+                .filter(item => item.status === "UNAVAILABLE" && new Date(item.date) >= today)
+                .map(item => item.date);
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: busyDates,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
 
     // [PUT] /api/v1/calendars/:id
     async updateCalendar(req, res) {

@@ -50,7 +50,6 @@ const TourCard = ({ tour, type }: TourCardProps) => {
                 ${tour.price}
               </span>
             </div>
-
               <Button className="absolute bottom-0 w-full justify-between rounded-full opacity-0 translate-y-3 invisible transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible" asChild>
                 <Link to={`/tours/${tour._id}`}>
                   Book now <ArrowRight className="size-4" />

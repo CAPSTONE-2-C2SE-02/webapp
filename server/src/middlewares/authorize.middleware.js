@@ -5,6 +5,7 @@ import Profile from "../models/profile.model.js";
 import Post from "../models/post.model.js";
 import Tour from "../models/tour.model.js";
 import Comment from "../models/comment.model.js";
+import Calendar from "../models/calendar.model.js";
 
 export const authorize = (...roles) => {
     return (req, res, next) => {
@@ -75,7 +76,7 @@ export const checkOwnerUserId = async (req, res, next) => {
     } catch (error) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             success: false,
-            error: "Internal Server Error",
+            error: error.message || "Internal Server Error",
         });
     }
 };
@@ -99,7 +100,7 @@ export const checkOwnerProfileId = async (req, res, next) => {
     } catch (error) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             success: false,
-            error: "Internal Server Error",
+            error: error.message || "Internal Server Error",
         });
     }
 };
@@ -124,7 +125,7 @@ export const checkOwnerPost = async (req, res, next) => {
     } catch (error) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             success: false,
-            error: "Internal Server Error",
+            error: error.message || "Internal Server Error",
         });
     }
 };
@@ -136,7 +137,7 @@ export const checkOwnerTour = async (req, res, next) => {
         }
 
         const tour = await Tour.findOne({ _id: req.params.id });
-        const profile = await Profile.findOne({ _id: tour.guide });
+        const profile = await Profile.findOne({ _id: tour.tourGuideId });
 
         if (!tour || profile.userId.toString() !== req.user.userId) {
             return res.status(StatusCodes.FORBIDDEN).json({
@@ -149,7 +150,7 @@ export const checkOwnerTour = async (req, res, next) => {
     } catch (error) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             success: false,
-            error: "Internal Server Error",
+            error: error.message || "Internal Server Error",
         });
     }
 };
@@ -174,7 +175,7 @@ export const checkOwnerComment = async (req, res, next) => {
     } catch (error) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             success: false,
-            error: "Internal Server Error",
+            error: error.message || "Internal Server Error",
         });
     }
 };
@@ -195,7 +196,7 @@ export const checkOwnerCalendar = async (req, res, next) => {
     } catch (error) {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             success: false,
-            error: "Internal Server Error",
+            error: error.message || "Internal Server Error",
         });
     }
 };
