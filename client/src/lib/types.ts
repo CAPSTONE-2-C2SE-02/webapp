@@ -7,6 +7,7 @@ export type Tour = {
   location: string;
   price: number;
   duration: string;
+  create_by: string;
 }
 
 export type TourDetail = {
