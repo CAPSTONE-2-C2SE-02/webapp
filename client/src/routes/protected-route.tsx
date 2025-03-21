@@ -6,7 +6,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   if (allowedRoles && !allowedRoles.includes("TOUR_GUIDE")) {
-    return <Navigate to="/" />
+    return <Navigate to="/" replace />
   }
 
   return <Outlet />
