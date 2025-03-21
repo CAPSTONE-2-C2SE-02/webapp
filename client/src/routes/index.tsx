@@ -3,12 +3,15 @@ import { Suspense, lazy } from "react";
 import ProtectedRoute from "./protected-route";
 import MainLayout from "@/layouts/main-layout";
 import AuthLayout from "@/layouts/auth-layout";
-import CreateTour from "@/components/form/createtour-form";
+import CreateNewTourForm from "@/components/form/createtour-form";
 import ProfileLayout from "@/layouts/profile-layout";
 import UserProfilePage from "@/pages/userprofile-page";
+import UserProfileFollowPage from "@/pages/userprofile-follower-page";
 const HomePage = lazy(() => import("@/pages/home-page"));
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
+const TourDetail = lazy(() => import("@/pages/tourdetail-page"));
+const ToursPage = lazy(() => import("@/pages/tours-page"));
 
 const routes = createBrowserRouter([
   {
@@ -19,13 +22,27 @@ const routes = createBrowserRouter([
         element: <MainLayout />,
         children: [
           { path: "/", element: <HomePage /> },
-          { path: "/createtour", element: <CreateTour /> },
           {
             element: <ProfileLayout />,
+            path: "/:username",
             children: [
-              { path: "/users/:userId", element: <UserProfilePage /> },
+              { index: true, element: <UserProfilePage />},
+              { path: "follow", element: <UserProfileFollowPage /> },
             ]
-          }
+          },
+
+          // Tour Routes
+          { path: "/tours", element: <ToursPage /> },
+          { path: "/tours/:tourId", element: <TourDetail /> },
+          { path: "/tours/:tourId/book", element: <div>TourBookingPage</div> },
+          { path: "/tours/:tourId/payment", element: <div>TourPaymentPage</div> },
+          { 
+            path: "/tours/create",
+            element: <ProtectedRoute allowedRoles={["TOUR_GUIDE"]} />,
+            children: [
+              { index: true, element: <CreateNewTourForm /> }
+            ]
+          },
         ]
       }
     ]
@@ -35,8 +52,6 @@ const routes = createBrowserRouter([
     children: [
       { path: "/login", element: <SigninPage /> },
       { path: "/register", element: <SignupPage /> },
-
-
     ]
   }
 ]);

@@ -1,25 +1,32 @@
-import Joi from "joi";
+import * as yup from "yup";
 
-const profileSchema = Joi.object({
-    fullName: Joi.string().required().messages({
-        "string.empty": "Full name is required.",
-        "string.min": "Full name must be at least 3 characters.",
-        "string.max": "Full name must not exceed 50 characters.",
-    }),
-    email: Joi.string().email().required().messages({
-        "string.empty": "Email is required.",
-        "string.email": "Invalid email format.",
-    }),
-    phoneNumber: Joi.string().pattern(/^[0-9]{10,11}$/).required().messages({
-        "string.empty": "Phone number is required.",
-        "string.pattern.base": "Phone number must be 10-11 digits.",
-    }),
-    address: Joi.string().optional(),
-    profilePicture: Joi.string().optional(),
-    bio: Joi.string().max(500).optional().messages({
-        "string.max": "Bio must not exceed 500 characters.",
-    }),
-    active: Joi.boolean().default(true),
+const profileSchema = yup.object({
+    fullName: yup
+        .string()
+        .min(3, "Full name must be at least 3 characters.")
+        .max(50, "Full name must not exceed 50 characters.")
+        .required("Full name is required."),
+
+    email: yup
+        .string()
+        .email("Invalid email format.")
+        .required("Email is required."),
+
+    phoneNumber: yup
+        .string()
+        .matches(/^[0-9]{10,11}$/, "Phone number must be 10-11 digits.")
+        .required("Phone number is required."),
+
+    address: yup.string().nullable(),
+
+    profilePicture: yup.string().nullable(),
+
+    bio: yup
+        .string()
+        .max(500, "Bio must not exceed 500 characters.")
+        .nullable(),
+
+    active: yup.boolean().default(true),
 });
 
 export { profileSchema };

@@ -17,17 +17,17 @@ const TourRecommendCard = ({ tour }: { tour: Tour }) => {
           </div>
           <div className="flex items-center gap-1">
             <MapPin className="size-4 text-primary" />
-            <span className="text-xs">{tour.destination}</span>
+            <span className="text-xs">{tour.location}</span>
           </div>
         </div>
         <div className="flex items-center gap-1 bg-primary w-fit text-white font-semibold px-2 py-1 rounded-full">
           <Star className="size-[14px]" />
-          <span className="text-xs">{tour.overalReview}</span>
+          <span className="text-xs">{tour.rating}</span>
         </div>
       </div>
       {/* link icon */}
       <Link
-        to={"/"}
+        to={"/tourdetail"}
         className="bg-primary size-12 flex items-center justify-center text-white rounded-full absolute top-0 right-0 border-[6px] border-white"
       >
         <ArrowUpRight />

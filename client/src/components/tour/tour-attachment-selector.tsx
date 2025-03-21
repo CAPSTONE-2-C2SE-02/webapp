@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useMemo, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
-import { mockTours } from "@/lib/mock-data";
+import { tours } from "@/lib/mock-data";
 import { Tour } from "@/lib/types";
 import useDebounce from "@/hooks/useDebounce";
 
@@ -20,11 +20,11 @@ const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSele
   const debouncedSearch = useDebounce(searchQuery, 500);
 
   const filteredTours = useMemo(() => {
-    if (!mockTours || !isShow) return [];
-    return mockTours.filter(
+    if (!tours || !isShow) return [];
+    return tours.filter(
       (tour) =>
         tour.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        tour.destination.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        tour.location.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         tour.description.toLowerCase().includes(debouncedSearch.toLowerCase())
     )
   }, [debouncedSearch, isShow]);
@@ -66,7 +66,7 @@ const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSele
             <h3 className="font-semibold text-primary">{tour.title}</h3>
             <div className="flex items-center text-gray-500 text-sm mt-1">
               <MapPin className="h-4 w-4 mr-1" />
-              {tour.destination}
+              {tour.location}
             </div>
           </div>
         ))}
