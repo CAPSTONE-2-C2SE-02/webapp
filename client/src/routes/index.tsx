@@ -6,10 +6,13 @@ import AuthLayout from "@/layouts/auth-layout";
 import CreateTour from "@/components/form/createtour-form";
 import ProfileLayout from "@/layouts/profile-layout";
 import UserProfilePage from "@/pages/userprofile-page";
+
 const HomePage = lazy(() => import("@/pages/home-page"));
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
 const TourDetail = lazy(() => import("@/pages/tourdetail-page"));
+const ProfileImages = lazy(() => import("@/pages/profileimage-page"));
+
 
 const routes = createBrowserRouter([
   {
@@ -26,6 +29,9 @@ const routes = createBrowserRouter([
             element: <ProfileLayout />,
             children: [
               { path: "/users/:userId", element: <UserProfilePage /> },
+              {
+                path: "/users/userId/images", element: <ProfileImages />
+              }
             ]
           }
         ]
