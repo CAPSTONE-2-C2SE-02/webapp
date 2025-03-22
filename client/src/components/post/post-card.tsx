@@ -58,7 +58,7 @@ const PostCard = () => {
               <div className="flex items-center gap-1">
                 <Clock className="size-3" />
                 <Link
-                  to={`/users/username/posts/postId`}
+                  to={`/n2duc/post/123123123`}
                   className="text-xs hover:underline"
                 >
                   12 minutes ago

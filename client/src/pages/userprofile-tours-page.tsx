@@ -13,19 +13,15 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
-import { useNavigate } from 'react-router';
+import { Link } from 'react-router';
 
 const UserProfileToursPage = () => {
     const [viewType] = useState<"grid" | "list">("grid");
-    const navigate = useNavigate();
 
-    const handleCreateTour = () => {
-    navigate("/createtour");
-  };
     return (
         <div className="my-1 w-full flex flex-col items-start gap-2 bg-white rounded-t-xl">
             {/* Header */}
-            <div className="flex flex-col w-full p-2 sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col w-full p-3 sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-sm font-medium ml-3">Result: 23 Properties Found</h2>
                 <div className="flex gap-5">
                     {/* <SearchInput /> */}
@@ -44,7 +40,7 @@ const UserProfileToursPage = () => {
                 </div>
                 <div className="flex items-start  gap-2">
                     <Select defaultValue="popular">
-                        <SelectTrigger className="w-[250px]">
+                        <SelectTrigger className="w-[200px]">
                             <span className="text-sm">Sort by:</span>
                             <SelectValue placeholder="Popular" />
                         </SelectTrigger>
@@ -61,10 +57,14 @@ const UserProfileToursPage = () => {
             <div className={viewType === "grid" ? "px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" : "space-y-3"}>
                 <div className="p-2 w-full flex flex-col shadow bg-white rounded-2xl border-zinc-50 gap-5">
                     <div className="flex flex-col items-center justify-center gap-4">
-                        <div className="w-full h-[290px]  bg-blue-200 rounded-xl flex items-center justify-center">
+                        <div className="w-full h-[290px]  bg-slate-200 rounded-xl flex items-center justify-center">
                             <Plus className="h-20 w-20 text-gray-400" />
                         </div>
-                        <Button variant="default" className=" w-full py-5" onClick={handleCreateTour}>Create New Tour</Button>
+                        <Button variant="default" className=" w-full py-5" asChild>
+                            <Link to="/tours/create">
+                                Create New Tour
+                            </Link>
+                        </Button>
                     </div>
                 </div>
                 {tours
@@ -73,7 +73,7 @@ const UserProfileToursPage = () => {
                         <TourCard key={tour._id} tour={tour} type={viewType} />
                 ))}
             </div>
-            <div className="items-center w-full text-primary">
+            <div className="items-center w-full text-primary py-3">
                 <Pagination>
                     <PaginationContent>
                         <PaginationItem>
