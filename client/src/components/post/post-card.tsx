@@ -9,11 +9,14 @@ import {
   MessageSquareMore,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import SharePostModal from "../modals/share-post-modal";
 import TourAttachment from "../tour/tour-attachment";
 import { tours } from "@/lib/mock-data";
+import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
+
+const imageMockData = ["https://placehold.co/600x400", "https://placehold.co/230x300", "https://placehold.co/1080x940"];
 
 const PostCard = () => {
   const [isLike, setIsLike] = useState(false);
@@ -35,6 +38,19 @@ const PostCard = () => {
   const handleSavePost = () => {
     setIsSave((prev) => !prev);
   };
+
+  const postImages = useMemo(
+    () => (
+      imageMockData.map((image, index) => (
+        <CarouselItem key={index} className="basis-auto max-h-[260px] max-w-[380px] first:pl-4 pl-2">
+          <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
+            <img src={image} alt="post image" className="w-full h-full object-cover" />
+          </div>
+        </CarouselItem>
+      ))
+    ),
+    []
+  );
 
   return (
     <>
@@ -110,23 +126,23 @@ const PostCard = () => {
               </Link>
             </div>
           </div>
+
           {/* Photos Content */}
-          <div className="w-[618px] mt-3">
-            <div className="overflow-y-hidden overflow-x-hidden w-[calc(100%+24px)]">
-              <div className="flex flex-row gap-1 overflow-x-auto cursor-grab translate-x-0">
-                {Array.from({ length: 5 }).fill(0).map(() => (
-                  <div className="min-w-60 h-auto rounded-lg border border-slate-300 overflow-hidden">
-                    <img
-                      src="https://placehold.co/400x600"
-                      alt="photo"
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                ))}
-                <div className="w-6 h-full flex-shrink-0" />
-              </div>
+          {imageMockData.length > 0 && (
+            <div className="mt-3">
+              {imageMockData.length === 1 ? (
+                <div className="max-w-full overflow-hidden w-full h-full rounded-lg border border-zinc-300">
+                  <img src="https://placehold.co/600x400" alt="" className="max-h-[420px]" />
+                </div>
+              ) : (
+                <div>
+                  <Carousel>
+                    <CarouselContent>{postImages}</CarouselContent>
+                  </Carousel>
+                </div>
+              )}
             </div>
-          </div>
+          )}
           {/* Tour Attachment */}
           <TourAttachment tour={tours[0]} />
           {/* Post Action */}

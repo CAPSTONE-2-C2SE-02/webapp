@@ -1,4 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Hash, Image, MapPin, Smile, X } from "lucide-react";
+import { Description } from "@radix-ui/react-dialog";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
@@ -10,13 +12,12 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import { TagsInput } from "../ui/tags-input";
-import { Hash, Image, MapPin, Smile, X } from "lucide-react";
-import { Tour } from "@/lib/types";
+import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import TourAttachment from "../tour/tour-attachment";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { cn } from "@/lib/utils";
 import TourAttachmentSelector from "../tour/tour-attachment-selector";
-import { Description } from "@radix-ui/react-dialog";
+import { Tour } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/hooks/redux";
 
 interface CreateNewPostModalProps {
   isOpen: boolean;
@@ -27,6 +28,8 @@ const CreateNewPostModal = ({
   isOpen,
   onOpenChange,
 }: CreateNewPostModalProps) => {
+  const { userInfo } = useAppSelector((state) => state.auth);
+
   const [isShowTagInput, setIsShowTagInput] = useState(false);
   const [isEmptyContent, setIsEmptyContent] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,6 +40,20 @@ const CreateNewPostModal = ({
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // reset all form fields when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setIsShowTagInput(false);
+      setIsEmptyContent(true);
+      setIsLoading(false);
+      setShowTourSelector(false);
+      setTags([]);
+      setContent("");
+      setSelectedTour(null);
+      setImages([]);
+    }
+  }, [isOpen]);
 
   // set content from div textbox
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
@@ -114,7 +131,7 @@ const CreateNewPostModal = ({
               <div className="w-full flex-1 space-y-4">
                 <div className="flex items-center gap-1.5">
                   <span className="text-base font-semibold text-primary">Ngoc Anh</span>
-                  <Badge className="text-xs rounded-full">@ngocanh08</Badge>
+                  <Badge className="text-xs rounded-full">@{userInfo?.username}</Badge>
                 </div>
                 <div className="space-y-3">
                   <div className="relative">
@@ -141,27 +158,29 @@ const CreateNewPostModal = ({
                     />
                   )}
                   {images.length > 0 && (
-                    <ScrollArea className="w-[582px] overflow-hidden">
-                      <div className="flex w-max gap-2 pb-2 rounded-lg">
+                    <Carousel className="w-full">
+                      <CarouselContent className="flex">
                         {images.map((image, index) => (
-                          <div key={index} className="relative min-w-[200px] h-[200px] rounded-lg overflow-hidden">
-                            <img 
-                              className="w-full h-full object-cover" 
-                              src={URL.createObjectURL(image)} 
-                              alt={`Upload ${index + 1}`} 
-                            />
+                          <CarouselItem key={index} className="relative min-w-[200px] h-[200px] basis-auto select-none first:pl-4 pl-2">
+                            <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
+                              <img 
+                                className="w-full h-full object-cover" 
+                                src={URL.createObjectURL(image)} 
+                                alt={`Upload ${index + 1}`} 
+                              />
+                            </div>
                             <button 
                               className="absolute top-2 right-2 bg-black/30 rounded-full p-1"
                               onClick={() => handleRemoveImage(index)}
                             >
                               <X className="h-4 w-4 text-white" />
                             </button>
-                          </div>
+                          </CarouselItem>
                         ))}
-                      </div>
-                      <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
+                      </CarouselContent>
+                    </Carousel>
                   )}
+
                   {/* Hidden file input */}
                   <input
                     type="file"
