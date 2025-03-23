@@ -3,7 +3,7 @@ import Visibility from "../enums/visibility.enum.js";
 import StatusTour from "../enums/statusTour.enum.js";
 
 const tourSchema = yup.object({
-    nameOfTour: yup
+    title: yup
         .string()
         .min(5, "Tour name must be at least 5 characters")
         .max(100, "Tour name must not exceed 100 characters")
@@ -63,7 +63,7 @@ const tourSchema = yup.object({
         .number()
         .min(1, "Duration must be at least 1 day")
         .required("Duration is required"),
-    images: yup
+    imageUrls: yup
         .array()
         .of(yup.string().url("Each image must be a valid URL"))
         .default([]),
@@ -73,10 +73,6 @@ const tourSchema = yup.object({
     notInclude: yup
         .string()
         .nullable(),
-    visibility: yup
-        .string()
-        .oneOf(Object.values(Visibility), "Invalid visibility value")
-        .default("PUBLIC"),
     status: yup
         .string()
         .oneOf(Object.values(StatusTour), "Invalid status value")
