@@ -1,6 +1,6 @@
 import Booking from "../models/booking.model.js";
 import Tour from "../models/tour.model.js"
-import Profile from "../models/profile.model.js"
+import User from "../models/user.model.js"
 import { StatusCodes } from "http-status-codes";
 import { addHours, differenceInHours } from "date-fns";
 
@@ -13,8 +13,8 @@ class BookingController {
             if (!tour)
                 return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Tour not found" });
 
-            const profileTourGuide = await Profile.findOne({ _id: tour.tourGuideId });
-            const profileTraveler = await Profile.findOne({ userId: req.user.userId });
+            const tourGuide = await User.findOne({ _id: tour.tourGuideId });
+            const traveler = await User.findOne({ _id: req.user.userId });
 
             const depositAmount = totalAmount * 30 / 100;
 
@@ -31,9 +31,9 @@ class BookingController {
             }
 
             const newBooking = {
-                travelerId: profileTraveler._id,
+                travelerId: traveler._id,
                 tourId: tourId,
-                tourGuideId: profileTourGuide._id,
+                tourGuideId: tourGuide._id,
                 startDay: startDay,
                 endDay: endDay,
                 totalAmount: totalAmount,
@@ -52,43 +52,46 @@ class BookingController {
     // [GET] /api/v1/bookings/traveler
     async getTravelerBookings(req, res) {
         try {
-            const profile = await Profile.findOne({ userId: req.user.userId });
-            if (!profile)
-                return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Traveler not found" });
+            const user = await User.findById(req.user.userId);
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found",
+                });
+            }
 
-            const bookings = await Booking.find({ travelerId: profile._id });
+            const bookings = await Booking.find({ travelerId: user._id })
+                .populate("travelerId", "fullName email phoneNumber")
+                .populate("tourId", "nameOfTour departureLocation destination duration schedule")
+                .populate("tourGuideId", "fullName email phoneNumber");
 
-            const responseBooking = await Promise.all(
-                bookings.map(async (book) => {
-                    const tourGuide = await Profile.findOne({ _id: book.tourGuideId });
-                    const tour = await Tour.findOne({ _id: book.tourId });
-                    return { ...book.toObject(), tourGuideName: tourGuide.fullName, tourName: tour.nameOfTour };
-                })
-            );
-
-            return res.status(StatusCodes.OK).json({ success: true, result: responseBooking });
+            return res.status(StatusCodes.OK).json({ success: true, result: bookings });
         } catch (error) {
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message
+            });
         }
     }
+
 
     // [GET] /api/v1/bookings/tour-guide
     async getTourGuideBookings(req, res) {
         try {
-            const profile = await Profile.findOne({ userId: req.user.userId });
-            if (!profile)
-                return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Tour guide not found" });
+            const user = await User.findById(req.user.userId);
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found",
+                });
+            }
 
-            const bookings = await Booking.find({ tourGuideId: profile._id });
+            const bookings = await Booking.find({ tourGuideId: user._id })
+                .populate("travelerId", "fullName email phoneNumber")
+                .populate("tourId", "nameOfTour departureLocation destination duration schedule")
+                .populate("tourGuideId", "fullName email phoneNumber");
 
-            const responseBooking = await Promise.all(
-                bookings.map(async (book) => {
-                    const traveler = await Profile.findOne({ _id: book.travelerId });
-                    const tour = await Tour.findOne({ _id: book.tourId });
-                    return { ...book.toObject(), travelerName: traveler.fullName, tourName: tour.nameOfTour };
-                })
-            );
-            return res.status(StatusCodes.OK).json({ success: true, result: responseBooking });
+            return res.status(StatusCodes.OK).json({ success: true, result: bookings });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
         }

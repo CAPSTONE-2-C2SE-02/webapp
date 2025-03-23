@@ -1,23 +1,23 @@
 import { StatusCodes } from "http-status-codes";
 import Calendar from "../models/calendar.model.js";
-import Profile from "../models/profile.model.js";
+import User from "../models/user.model.js";
 
 class CalendarController {
 
     // [POST] /api/v1/calendars/
     async setAvailability(req, res) {
         try {
-            const profile = await Profile.findOne({ userId: req.user.userId });
             const { dates } = req.body;
 
-            if (!profile) {
+            const user = await User.findOne({ _id: req.user.userId });
+            if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    error: "Profile not found",
+                    error: "User not found",
                 });
             }
 
-            let calendar = await Calendar.findOne({ tourGuideId: profile._id });
+            let calendar = await Calendar.findOne({ tourGuideId: user._id });
 
             if (calendar) {
                 calendar.dates = calendar.dates.filter(existingItem =>
@@ -27,7 +27,7 @@ class CalendarController {
                 );
                 calendar.dates.push(...dates);
             } else {
-                calendar = new Calendar({ tourGuideId: profile._id, dates });
+                calendar = new Calendar({ tourGuideId: user._id, dates });
             }
 
             await calendar.save();
@@ -46,7 +46,7 @@ class CalendarController {
     }
 
     // [GET] /api/v1/calendars/:id
-    async getCalendarByProfile(req, res) {
+    async getCalendarByTourGuideId(req, res) {
         try {
             const { id } = req.params;
             const today = new Date();
