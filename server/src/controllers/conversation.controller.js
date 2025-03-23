@@ -78,4 +78,3 @@ class ChatBox {
 
 }
 export default new ChatBox;
-

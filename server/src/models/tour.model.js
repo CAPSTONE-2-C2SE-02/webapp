@@ -50,10 +50,10 @@ const tourSchema = new mongoose.Schema({
         default: []
     },
     include: {
-        type: String,
+        type: [String],
     },
     notInclude: {
-        type: String,
+        type: [String],
     },
     status: {
         type: String,

@@ -2,7 +2,7 @@ import express from "express";
 import postController from "../controllers/post.controller.js";
 import { authenticated, authorize, checkOwnerPost } from "../middlewares/authorize.middleware.js";
 import upload from '../middlewares/multer.middleware.js';
-import { validateFormData } from "../middlewares/validate.middleware.js";
+import { validate } from "../middlewares/validate.middleware.js";
 import postSchema from "../validations/post.validation.js";
 
 const router = express.Router();
@@ -46,7 +46,7 @@ const router = express.Router();
  *       401:
  *         description: Unauthorized
  */
-router.post("/", authenticated, upload.array("images"), validateFormData(postSchema), postController.createPost);
+router.post("/", authenticated, upload.array("images"), validate(postSchema), postController.createPost);
 
 /**
  * @swagger
@@ -164,7 +164,7 @@ router.get("/:id", postController.getPostById);
  *       404:
  *         description: Post not found
  */
-router.put("/:id", authenticated, upload.array("images"), validateFormData(postSchema), checkOwnerPost, postController.updatePost);
+router.put("/:id", authenticated, upload.array("images"), validate(postSchema), checkOwnerPost, postController.updatePost);
 
 /**
  * @swagger

@@ -4,18 +4,15 @@ const profileSchema = yup.object({
     fullName: yup
         .string()
         .min(3, "Full name must be at least 3 characters.")
-        .max(50, "Full name must not exceed 50 characters.")
-        .required("Full name is required."),
+        .max(50, "Full name must not exceed 50 characters."),
 
     email: yup
         .string()
-        .email("Invalid email format.")
-        .required("Email is required."),
+        .email("Invalid email format."),
 
     phoneNumber: yup
         .string()
-        .matches(/^[0-9]{10,11}$/, "Phone number must be 10-11 digits.")
-        .required("Phone number is required."),
+        .matches(/^[0-9]{10,11}$/, "Phone number must be 10-11 digits."),
 
     address: yup.string().nullable(),
 
