@@ -2,10 +2,6 @@ import express from "express";
 import postController from "../controllers/post.controller.js";
 import { authenticated, authorize, checkOwnerPost } from "../middlewares/authorize.middleware.js";
 import upload from '../middlewares/multer.middleware.js';
-import { validate } from "../middlewares/validate.middleware.js";
-import postSchema from "../validations/post.validation.js";
-
-const router = express.Router();
 
 /**
  * @swagger
@@ -19,9 +15,11 @@ const router = express.Router();
  * /posts:
  *   post:
  *     summary: Create a new post
- *     description: Create a new post with content and optional images.
+ *     description: Create a new post with content and optional images. Only authenticated users can create posts.
  *     tags:
  *       - Post
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -37,7 +35,7 @@ const router = express.Router();
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Array of image files
+ *                 description: Array of image files for the post
  *     responses:
  *       201:
  *         description: Post created successfully
@@ -46,7 +44,6 @@ const router = express.Router();
  *       401:
  *         description: Unauthorized
  */
-router.post("/", authenticated, upload.array("images"), validate(postSchema), postController.createPost);
 
 /**
  * @swagger
@@ -66,31 +63,64 @@ router.post("/", authenticated, upload.array("images"), validate(postSchema), po
  *               items:
  *                 $ref: '#/components/schemas/Post'
  */
-router.get("/", postController.getAllPosts);
 
 /**
  * @swagger
- * /posts/my-post:
+ * /posts/search:
  *   get:
- *     summary: Get all my posts
- *     description: Retrieve a list of posts created by the authenticated user.
+ *     summary: Search posts
+ *     description: Search for posts by content or hashtags.
  *     tags:
  *       - Post
- *     security:
- *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The search query
  *     responses:
  *       200:
- *         description: A list of the user's posts
+ *         description: A list of matching posts
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Post'
- *       401:
- *         description: Unauthorized
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: No posts found
  */
-router.get("/my-post", authenticated, postController.getAllMyPosts);
+
+/**
+ * @swagger
+ * /posts/profile/{username}:
+ *   get:
+ *     summary: Get all posts by username
+ *     description: Retrieve a list of all posts created by a specific user.
+ *     tags:
+ *       - Post
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The username of the post creator
+ *     responses:
+ *       200:
+ *         description: A list of posts created by the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Post'
+ *       404:
+ *         description: User not found
+ */
 
 /**
  * @swagger
@@ -117,14 +147,13 @@ router.get("/my-post", authenticated, postController.getAllMyPosts);
  *       404:
  *         description: Post not found
  */
-router.get("/:id", postController.getPostById);
 
 /**
  * @swagger
  * /posts/{id}:
  *   put:
  *     summary: Update a post
- *     description: Update a post's content and/or images.
+ *     description: Update a post's content and/or images. Only the owner of the post can update it.
  *     tags:
  *       - Post
  *     security:
@@ -135,7 +164,7 @@ router.get("/:id", postController.getPostById);
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the post
+ *         description: The ID of the post to update
  *     requestBody:
  *       required: true
  *       content:
@@ -151,7 +180,7 @@ router.get("/:id", postController.getPostById);
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Array of updated image files
+ *                 description: Array of updated image files for the post
  *     responses:
  *       200:
  *         description: Post updated successfully
@@ -164,14 +193,13 @@ router.get("/:id", postController.getPostById);
  *       404:
  *         description: Post not found
  */
-router.put("/:id", authenticated, upload.array("images"), validate(postSchema), checkOwnerPost, postController.updatePost);
 
 /**
  * @swagger
  * /posts/{id}:
  *   delete:
  *     summary: Delete a post
- *     description: Delete a post by its ID.
+ *     description: Delete a post by its ID. Only the owner of the post can delete it.
  *     tags:
  *       - Post
  *     security:
@@ -182,7 +210,7 @@ router.put("/:id", authenticated, upload.array("images"), validate(postSchema), 
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the post
+ *         description: The ID of the post to delete
  *     responses:
  *       204:
  *         description: Post deleted successfully
@@ -193,7 +221,6 @@ router.put("/:id", authenticated, upload.array("images"), validate(postSchema), 
  *       404:
  *         description: Post not found
  */
-router.delete("/:id", authenticated, checkOwnerPost, postController.deletePost);
 
 /**
  * @swagger
@@ -221,7 +248,6 @@ router.delete("/:id", authenticated, checkOwnerPost, postController.deletePost);
  *       401:
  *         description: Unauthorized
  */
-router.post("/like", authenticated, authorize("TOUR_GUIDE", "TRAVELER"), postController.likePost);
 
 /**
  * @swagger
@@ -249,7 +275,6 @@ router.post("/like", authenticated, authorize("TOUR_GUIDE", "TRAVELER"), postCon
  *       401:
  *         description: Unauthorized
  */
-router.post("/re-post", authenticated, postController.rePost);
 
 /**
  * @swagger
@@ -289,6 +314,18 @@ router.post("/re-post", authenticated, postController.rePost);
  *       404:
  *         description: Post not found
  */
+
+const router = express.Router();
+
+router.post("/", authenticated, upload.array("images"), postController.createPost);
+router.get("/", postController.getAllPosts);
+router.get("/search", postController.searchPost);
+router.get("/profile/:username", postController.getAllPostsByUsername);
+router.get("/:id", postController.getPostById);
+router.put("/:id", authenticated, upload.array("images"), checkOwnerPost, postController.updatePost);
+router.delete("/:id", authenticated, checkOwnerPost, postController.deletePost);
+router.post("/like", authenticated, authorize("TOUR_GUIDE", "TRAVELER"), postController.likePost);
+router.post("/re-post", authenticated, postController.rePost);
 router.post("/privacy/:id", authenticated, authorize("TOUR_GUIDE", "TRAVELER"), checkOwnerPost, postController.setPrivacy);
 
 export default router;

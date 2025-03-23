@@ -50,7 +50,7 @@ class TourController {
             const skip = (page - 1) * limit;
 
             const tours = await Tour.find().skip(skip).limit(limit)
-                .populate("author", "_id username fullName ranking rating");
+                .populate("author", "_id username fullName profilePicture ranking rating");
             const totalTours = await Tour.countDocuments();
 
             return res.status(StatusCodes.OK).json({
@@ -76,7 +76,7 @@ class TourController {
         try {
             const id = req.params.id;
             const tour = await Tour.findById(id)
-                .populate("author", "_id username fullName ranking rating");
+                .populate("author", "_id username fullName profilePicture ranking rating");
 
             if (!tour) {
                 return res.status(StatusCodes.NOT_FOUND).json({
@@ -141,8 +141,7 @@ class TourController {
     async deleteTour(req, res) {
         try {
             const id = req.params.id;
-            const tour = await Tour.findById(id)
-                .populate("author", "_id username fullName ranking rating");
+            const tour = await Tour.findById(id);
             if (!tour) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -189,12 +188,12 @@ class TourController {
         }
     }
 
-    // [GET] /api/v1/tours/search?q=
+    // [GET] /api/v1/tours/search?destination=
 
     // db.tours.createIndex({ destination: "text" })
     async findByDestination(req, res) {
         try {
-            const searchQuery = req.query.q?.trim();
+            const searchQuery = req.query.destination?.trim();
             if (!searchQuery) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
@@ -203,15 +202,23 @@ class TourController {
             }
 
             const formattedQuery = searchQuery.replace(/[^a-zA-Z0-9 ]/g, " ");
-            let tours = await Tour.find(
-                { $text: { $search: formattedQuery } }
-            ).populate("author", "_id username fullName ranking rating");
+
+            let tours = [];
+
+            tours = await Tour.find(
+                { $text: { $search: searchQuery } },
+                { score: { $meta: "textScore" } }
+            )
+                .sort({ score: { $meta: "textScore" } })
+                .populate("author", "_id username fullName profilePicture ranking rating");
 
             if (tours.length === 0) {
-                const regexPattern = searchQuery.split("").join(".*");
                 tours = await Tour.find({
-                    location: { $regex: regexPattern, $options: "i" },
-                });
+                    $or: [
+                        { destination: { $regex: formattedQuery, $options: "i" } },
+                    ],
+                })
+                    .populate("author", "_id username fullName profilePicture ranking rating");
             }
 
             return res.status(StatusCodes.OK).json({
@@ -219,6 +226,33 @@ class TourController {
                 result: tours,
             });
 
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    // [GET] /api/v1/tours/profile/:username
+    async getAllToursByUsername(req, res) {
+        try {
+            const username = req.params.username;
+            const user = await User.findOne({ username });
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found",
+                });
+            }
+
+            const tours = await Tour.find({ author: user._id })
+                .populate("author", "_id username fullName profilePicture ranking rating");
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: tours
+            });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
