@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post("/", authenticated, authorize("TOUR_GUIDE"), validate(calendarSchema), calendarController.setAvailability);
 
-router.get("/:id", calendarController.getCalendarByProfile);
+router.get("/:id", calendarController.getCalendarByTourGuideId);
 
 router.get("/:id/busy-dates", calendarController.getBusyDates);
 

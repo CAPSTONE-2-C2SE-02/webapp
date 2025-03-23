@@ -171,12 +171,12 @@ class ProfileController {
         }
     };
 
-    // [GET] /api/v1/profiles/search?q=
+    // [GET] /api/v1/profiles/search?name=
 
     // db.users.createIndex({ fullName: "text" }) để tìm kiếm
     async searchProfiles(req, res) {
         try {
-            const searchQuery = req.query.q?.trim();
+            const searchQuery = req.query.name?.trim();
             if (!searchQuery) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
@@ -185,16 +185,31 @@ class ProfileController {
             }
 
             const formattedQuery = searchQuery.replace(/[^a-zA-Z0-9 ]/g, " ");
-            let profiles = await User.find(
-                { $text: { $search: formattedQuery } },
-                { score: { $meta: "textScore" } }
-            ).select("-password").sort({ score: { $meta: "textScore" } });
 
+            let profiles = [];
+
+            profiles = await User.find(
+                { $text: { $search: searchQuery } },
+                { score: { $meta: "textScore" } }
+            ).select("-password")
+                .sort({ score: { $meta: "textScore" } })
+            // .populate("followers", "_id username fullName profilePicture")
+            // .populate("following", "_id username fullName profilePicture")
 
             if (profiles.length === 0) {
-                const regexPattern = searchQuery.split("").join(".*");
                 profiles = await User.find({
-                    fullName: { $regex: regexPattern, $options: "i" },
+                    $or: [
+                        { fullName: { $regex: formattedQuery, $options: "i" } },
+                    ],
+                }).select("-password")
+                // .populate("followers", "_id username fullName profilePicture")
+                // .populate("following", "_id username fullName profilePicture")
+            }
+
+            if (profiles.length === 0) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "No profile found matching the search query",
                 });
             }
 

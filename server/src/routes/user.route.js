@@ -13,10 +13,10 @@ import { userSchema } from "../validations/user.validation.js";
 
 /**
  * @swagger
- * /users/register:
+ * /users/register/traveler:
  *   post:
- *     summary: Register a new user
- *     description: Register a new user with the required details.
+ *     summary: Register a new traveler
+ *     description: Register a new traveler account with the required details.
  *     tags:
  *       - User
  *     requestBody:
@@ -28,20 +28,61 @@ import { userSchema } from "../validations/user.validation.js";
  *             properties:
  *               name:
  *                 type: string
- *                 description: The name of the user
+ *                 description: The name of the traveler
  *               email:
  *                 type: string
- *                 description: The email of the user
+ *                 description: The email of the traveler
  *               password:
  *                 type: string
- *                 description: The password of the user
- *               role:
+ *                 description: The password of the traveler
+ *               phoneNumber:
  *                 type: string
- *                 enum: [TRAVELER, TOUR_GUIDE]
- *                 description: The role of the user
+ *                 description: The phone number of the traveler
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
+ *                 description: The date of birth of the traveler
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: Traveler registered successfully
+ *       400:
+ *         description: Validation error
+ */
+
+/**
+ * @swagger
+ * /users/register/tour-guide:
+ *   post:
+ *     summary: Register a new tour guide
+ *     description: Register a new tour guide account with the required details.
+ *     tags:
+ *       - User
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: The name of the tour guide
+ *               email:
+ *                 type: string
+ *                 description: The email of the tour guide
+ *               password:
+ *                 type: string
+ *                 description: The password of the tour guide
+ *               phoneNumber:
+ *                 type: string
+ *                 description: The phone number of the tour guide
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date
+ *                 description: The date of birth of the tour guide
+ *     responses:
+ *       201:
+ *         description: Tour guide registered successfully
  *       400:
  *         description: Validation error
  */
@@ -137,7 +178,8 @@ import { userSchema } from "../validations/user.validation.js";
 
 const router = express.Router();
 
-router.post("/register", validate(userSchema), userController.register);
+router.post("/register/traveler", validate(userSchema), userController.registerTraveler);
+router.post("/register/tour-guide", validate(userSchema), userController.registerTourGuide);
 router.get("", authenticated, authorize("ADMIN"), userController.getAllUsers);
 router.put("/change-password", authenticated, authorize("TRAVELER", "TOUR_GUIDE"), userController.changePassword);
 router.get("/:id", authenticated, authorize("ADMIN", "TRAVELER", "TOUR_GUIDE"), checkOwnerUserId, userController.findUserById);

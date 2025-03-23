@@ -6,10 +6,10 @@ import { comparePassword, hashPassword } from "../utils/password.util.js";
 
 class UserController {
 
-    //[POST] /api/v1/users/register
-    async register(req, res) {
+    //[POST] /api/v1/users/register/traveler
+    async registerTraveler(req, res) {
         try {
-            const { fullName, email, password, phoneNumber, dateOfBirth, roleName } = req.body;
+            const { fullName, email, password, phoneNumber, dateOfBirth } = req.body;
 
             const username = email.split('@')[0];
 
@@ -26,10 +26,10 @@ class UserController {
                 return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: errors });
             }
 
-            const role = await RoleModel.findOne({ name: roleName });
+            const roleTraveler = await RoleModel.findOne({ name: Role.TRAVELER });
 
-            if (!role)
-                return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Role not found." });
+            if (!roleTraveler)
+                return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Role traveler not found." });
 
             const newUser = {
                 username: username,
@@ -38,7 +38,7 @@ class UserController {
                 email: email,
                 phoneNumber: phoneNumber,
                 dateOfBirth: dateOfBirth,
-                roleId: role._id
+                roleId: roleTraveler._id
             };
 
             await User.create(newUser);
@@ -46,6 +46,53 @@ class UserController {
             return res.status(StatusCodes.CREATED).json({
                 success: true,
                 message: "Traveler account registration successful."
+            });
+        } catch (error) {
+            console.log(error);
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
+        }
+    };
+
+    //[POST] /api/v1/users/register/tour-guide
+    async registerTourGuide(req, res) {
+        try {
+            const { fullName, email, password, phoneNumber, dateOfBirth } = req.body;
+
+            const username = email.split('@')[0];
+
+            const exitsUser = await User.findOne({ $or: [{ email }, { phoneNumber }] });
+
+            if (exitsUser) {
+                const errors = [];
+
+                if (exitsUser.email == email)
+                    errors.push("Email already exist.")
+                if (exitsUser.phoneNumber == phoneNumber)
+                    errors.push("Phone number already exist.")
+
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: errors });
+            }
+
+            const roleTourGuide = await RoleModel.findOne({ name: Role.TOUR_GUIDE });
+
+            if (!roleTourGuide)
+                return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Role tour guide not found." });
+
+            const newUser = {
+                username: username,
+                password: await hashPassword(password),
+                fullName: fullName,
+                email: email,
+                phoneNumber: phoneNumber,
+                dateOfBirth: dateOfBirth,
+                roleId: roleTourGuide._id
+            };
+
+            await User.create(newUser);
+
+            return res.status(StatusCodes.CREATED).json({
+                success: true,
+                message: "Tour guide account registration successful."
             });
         } catch (error) {
             console.log(error);
