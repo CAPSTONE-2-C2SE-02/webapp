@@ -1,8 +1,6 @@
 import { StatusCodes } from "http-status-codes";
-import Role from "../enums/role.enum.js";
-import Visibility from "../enums/visibility.enum.js";
-import Profile from "../models/profile.model.js";
 import Tour from "../models/tour.model.js";
+import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
 
 class TourController {
@@ -10,37 +8,26 @@ class TourController {
     // [POST] /api/v1/tours
     async createTour(req, res) {
         try {
-            const profile = await Profile.findOne({ userId: req.user.userId });
-            if (!profile) {
+            const user = await User.findOne({ _id: req.user.userId });
+            if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    error: "Profile not found",
+                    error: "User not found",
                 });
             }
 
             const request = req.body;
-            const mediaUrls = req.files ? await uploadImages(req.files) : [];
+            const imageUrls = req.files ? await uploadImages(req.files) : [];
 
             const newTour = {
-                tourGuideId: profile._id,
-                nameOfTour: request.nameOfTour,
-                introduction: request.introduction,
-                destination: request.destination,
-                departureLocation: request.departureLocation,
-                schedule: request.schedule,
-                priceForAdult: request.priceForAdult,
-                priceForYoung: request.priceForYoung,
-                priceForChildren: request.priceForChildren,
-                maxParticipants: request.maxParticipants,
-                duration: request.duration,
-                include: request.include,
-                notInclude: request.notInclude,
-                images: mediaUrls,
+                author: user._id,
+                ...request,
+                imageUrls: imageUrls,
             };
 
             await Tour.create(newTour);
 
-            return res.status(StatusCodes.OK).json({
+            return res.status(StatusCodes.CREATED).json({
                 success: true,
                 message: "Tour created successfully"
             });
@@ -55,17 +42,12 @@ class TourController {
     // [GET] /api/v1/tours
     async getAllTours(req, res) {
         try {
-            const role = req.user?.role || false;
-            let filter = { visibility: Visibility.PUBLIC };
-            if (role === Role.ADMIN) {
-                filter = {};
-            }
-
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const skip = (page - 1) * limit;
 
-            const tours = await Tour.find(filter).skip(skip).limit(limit);
+            const tours = await Tour.find().skip(skip).limit(limit)
+                .populate("author", "_id username fullName ranking rating");
             const totalTours = await Tour.countDocuments();
 
             return res.status(StatusCodes.OK).json({
@@ -90,7 +72,8 @@ class TourController {
     async getTourById(req, res) {
         try {
             const id = req.params.id;
-            const tour = await Tour.findById(id);
+            const tour = await Tour.findById(id)
+                .populate("author", "_id username fullName ranking rating");
 
             if (!tour) {
                 return res.status(StatusCodes.NOT_FOUND).json({
@@ -123,15 +106,15 @@ class TourController {
                 });
             }
 
-            const requestData = req.body;
-            let images = tour.images;
+            const request = req.body;
+            let imageUrls = tour.imageUrls;
             if (req.files && req.files.length > 0) {
-                images = await uploadImages(req.files);
+                imageUrls = await uploadImages(req.files);
             }
 
             await Tour.findByIdAndUpdate(
                 id,
-                { $set: { ...requestData, images } },
+                { $set: { ...request, imageUrls } },
                 { new: true }
             );
 
@@ -152,7 +135,8 @@ class TourController {
     async deleteTour(req, res) {
         try {
             const id = req.params.id;
-            const tour = await Tour.findById(id);
+            const tour = await Tour.findById(id)
+                .populate("author", "_id username fullName ranking rating");
             if (!tour) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -177,15 +161,15 @@ class TourController {
     // [GET] /api/v1/tours/my-tours
     async getMyTours(req, res) {
         try {
-            const profile = await Profile.findOne({ userId: req.user.userId });
-            if (!profile) {
+            const user = await User.findOne({ _id: req.user.userId });
+            if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    error: "Profile not found",
+                    error: "User not found",
                 });
             }
 
-            const tours = await Tour.find({ tourGuideId: profile._id });
+            const tours = await Tour.find({ author: user._id });
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -215,7 +199,7 @@ class TourController {
             const formattedQuery = searchQuery.replace(/[^a-zA-Z0-9 ]/g, " ");
             let tours = await Tour.find(
                 { $text: { $search: formattedQuery } }
-            );
+            ).populate("author", "_id username fullName ranking rating");
 
             if (tours.length === 0) {
                 const regexPattern = searchQuery.split("").join(".*");

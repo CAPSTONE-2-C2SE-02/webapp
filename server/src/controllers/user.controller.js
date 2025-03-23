@@ -1,47 +1,19 @@
 import { StatusCodes } from "http-status-codes";
 import Role from "../enums/role.enum.js";
-import Profile from "../models/profile.model.js";
 import RoleModel from "../models/role.model.js";
 import User from "../models/user.model.js";
 import { comparePassword, hashPassword } from "../utils/password.util.js";
-import { profileSchema } from "../validations/profile.validation.js";
-import { userSchema } from "../validations/user.validation.js";
 
 class UserController {
 
-    //[POST] /api/v1/users/register/traveller
-    async registerTraveller(req, res) {
+    //[POST] /api/v1/users/register
+    async register(req, res) {
         try {
-            const { fullName, email, password, phoneNumber } = req.body;
-
-            const { error: errorUser } = userSchema.validate(
-                { password },
-                { abortEarly: false }
-            );
-            if (errorUser) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: "User validation error.",
-                    errors: errorUser.details.map(err => err.message),
-                });
-            }
-
-            const { error: errorProfile } = profileSchema.validate(
-                { fullName, email, phoneNumber },
-                { abortEarly: false }
-            );
-
-            if (errorProfile) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: "Profile validation error.",
-                    errors: errorProfile.details.map(err => err.message),
-                });
-            }
+            const { fullName, email, password, phoneNumber, dateOfBirth, roleName } = req.body;
 
             const username = email.split('@')[0];
 
-            const exitsUser = await Profile.findOne({ $or: [{ email }, { phoneNumber }] })
+            const exitsUser = await User.findOne({ $or: [{ email }, { phoneNumber }] });
 
             if (exitsUser) {
                 const errors = [];
@@ -51,107 +23,37 @@ class UserController {
                 if (exitsUser.phoneNumber == phoneNumber)
                     errors.push("Phone number already exist.")
 
-                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: errors });
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: errors });
             }
 
-            const travellerRole = await RoleModel.findOne({ name: Role.TRAVELER });
+            const role = await RoleModel.findOne({ name: roleName });
 
-            if (!travellerRole)
-                return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Role not found." });
+            if (!role)
+                return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Role not found." });
 
             const newUser = {
                 username: username,
                 password: await hashPassword(password),
-                role: travellerRole._id
+                fullName: fullName,
+                email: email,
+                phoneNumber: phoneNumber,
+                dateOfBirth: dateOfBirth,
+                roleId: role._id
             };
 
             const userCreated = await User.create(newUser);
-            if (userCreated) {
-                const newProfile = {
-                    userId: userCreated._id,
-                    fullName: fullName,
-                    email: email,
-                    phoneNumber: phoneNumber,
-                };
-                await Profile.create(newProfile);
-                return res.status(StatusCodes.OK).json({ success: true, message: "Traveler account registration successful." });
-            }
 
+            const userResponse = userCreated.toObject();
+            delete userResponse.password;
+
+            return res.status(StatusCodes.CREATED).json({
+                success: true,
+                result: userResponse,
+                message: "Traveler account registration successful."
+            });
         } catch (error) {
             console.log(error);
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
-        }
-    };
-
-    //[POST] /api/v1/users/register/tour-guide
-    async registerTourGuide(req, res) {
-        try {
-            const { fullName, email, password, phoneNumber } = req.body;
-
-            const { error: errorUser } = userSchema.validate(
-                { password },
-                { abortEarly: false }
-            );
-            if (errorUser) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: errorUser.details.map(err => err.message),
-                });
-            }
-
-            const { error: errorProfile } = profileSchema.validate(
-                { fullName, email, phoneNumber },
-                { abortEarly: false }
-            );
-
-            if (errorProfile) {
-                return res.status(400).json({
-                    success: false,
-                    message: errorProfile.details.map(err => err.message),
-                });
-            }
-
-            const username = email.split('@')[0];
-
-            const exitsUser = await Profile.findOne({ $or: [{ email }, { phoneNumber }] })
-
-            if (exitsUser) {
-                const errors = [];
-
-                if (exitsUser.email == email)
-                    errors.push("Email already exist.")
-                if (exitsUser.phoneNumber == phoneNumber)
-                    errors.push("Phone number already exist.")
-
-                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: errors });
-            }
-
-            const tourGuideRole = await RoleModel.findOne({ name: Role.TOUR_GUIDE });
-
-            if (!tourGuideRole)
-                return res.status(StatusCodes.NOT_FOUND).json({ success: false, message: "Role not found." });
-
-            const newUser = {
-                username: username,
-                password: await hashPassword(password),
-                role: tourGuideRole._id
-            };
-
-            const userCreated = await User.create(newUser);
-            if (userCreated) {
-                const newProfile = {
-                    userId: userCreated._id,
-                    fullName: fullName,
-                    email: email,
-                    phoneNumber: phoneNumber,
-                };
-                await Profile.create(newProfile);
-                return res.status(StatusCodes.OK).json({ success: true, message: "Tour guide account registration successful." });
-            }
-
-        } catch (error) {
-            console.log(error);
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
         }
     };
 
@@ -178,47 +80,32 @@ class UserController {
 
         } catch (error) {
             console.log(error);
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
         }
     };
 
     // [PUT] /api/v1/users/change-password/:id
     async changePassword(req, res) {
         try {
-            const { oldPassword, newPassword, reTypePassword } = req.body;
+            const { oldPassword, newPassword } = req.body;
 
-            const password = oldPassword;
-            const { error: errors } = userSchema.validate(
-                { password },
-                { abortEarly: false }
-            );
-
-            if (errors) {
+            if (!oldPassword || !newPassword)
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    message: errors.details.map(err => err.message),
-                })
-            }
+                    error: "Full information required",
+                });
 
-            const id = req.params.id;
-
-            const user = await User.findOne({ _id: id });
+            const user = await User.findOne({ _id: req.user.userId });
             if (!user)
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    message: "User not found.",
+                    error: "User not found.",
                 });
 
             if (!(await comparePassword(oldPassword, user.password)))
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    message: "Old password incorrect."
-                });
-
-            if (newPassword != reTypePassword)
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    message: "Re-type password does not match."
+                    error: "Old password incorrect."
                 });
 
             user.password = await hashPassword(newPassword);
@@ -231,7 +118,7 @@ class UserController {
             });
         } catch (error) {
             console.log(error);
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
         }
     };
 
@@ -244,7 +131,7 @@ class UserController {
             if (!user)
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    message: "User not found.",
+                    error: "User not found.",
                 });
 
             return res.status(StatusCodes.OK).json({
@@ -252,7 +139,7 @@ class UserController {
                 result: user,
             });
         } catch (error) {
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
         }
     };
 };

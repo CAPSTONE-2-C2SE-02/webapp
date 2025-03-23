@@ -10,6 +10,7 @@ import UserProfileFollowPage from "@/pages/userprofile-follower-page";
 import UserProfileToursPage from "@/pages/userprofile-tours-page";
 import ToursPage from "@/pages/tours-page";
 import RootLayout from "@/layouts/root-layout";
+import PostPage from "@/pages/post-page";
 const HomePage = lazy(() => import("@/pages/home-page"));
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
@@ -30,9 +31,14 @@ const routes = createBrowserRouter([
             children: [
               { index: true, element: <UserProfilePage />},
               { path: "follow", element: <UserProfileFollowPage /> },
+              { path: "photos", element: <div>Photos Page</div> },
               { path: "tours", element: <UserProfileToursPage /> },
+              { path: "reviews", element: <div>reviews Page</div> },
             ]
           },
+          
+          // Post routes
+          { path: "/:username/post/:postId", element: <PostPage /> },
 
           // Tour Routes
           { path: "/tours", element: <ToursPage /> },

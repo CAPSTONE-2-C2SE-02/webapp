@@ -19,7 +19,7 @@ const ProfileLayout = () => {
 
     return (
         <div className="w-full flex flex-col gap-5">
-            <div className="relative w-full py-8">
+            <div className="relative w-full pt-8">
                 <img src="https://placehold.co/1920x400" className="rounded-t-2xl" />
                 <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] [16px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
@@ -60,9 +60,9 @@ const ProfileLayout = () => {
                     </div>
                     <div className="my-2 mx-14 h-36 flex flex-col justify-items-start gap-2">
                         <p className="font-medium text-slate-600 text-sm">Introduction</p>
-                        <textarea name="intro" value="asdasdasd" id="" disabled className="w-[630px] h-[94px] p-2 bg-blue-200 rounded-b-xl rounded-r-xl"></textarea>
+                        <textarea name="bio" value="Xin chao Hello World" id="" disabled className="w-[630px] h-[94px] text-sm resize-none py-2 px-3 bg-slate-200 rounded-b-xl rounded-r-xl"></textarea>
                         {isAuthenticated && userInfo?.username === username && (
-                            <Button variant={"outline"} className="bg-blue-950 text-white !h-[34px] w-fit ml-auto">
+                            <Button className="text-white !h-[34px] w-fit ml-auto">
                                 <Edit /> Edit Profile
                             </Button>
                         )}
@@ -71,7 +71,8 @@ const ProfileLayout = () => {
                 <div className="flex justify-between border-t px-8 py-1 border-slate-200  rounded-b-2xl bg-white">
                     <div className="flex items-center">
                         <NavLink
-                            to={`/users/userId`}
+                            to={`/${username}`}
+                            end
                             className={({ isActive }) =>
                                 cn(
                                     "bg-white px-4 py-2 font-medium text-sm",
@@ -82,7 +83,7 @@ const ProfileLayout = () => {
                             Posts
                         </NavLink>
                         <NavLink
-                            to={`/users/userId/follow`}
+                            to={`/${username}/follow`}
                             className={({ isActive }) =>
                                 cn(
                                     "bg-white px-4 py-2 font-medium text-sm",
@@ -93,7 +94,7 @@ const ProfileLayout = () => {
                             Follow
                         </NavLink>
                         <NavLink
-                            to={`/users/userId/images`}
+                            to={`/${username}/photos`}
                             className={({ isActive }) =>
                                 cn(
                                     "bg-white px-4 py-2 font-medium text-sm",
@@ -101,10 +102,10 @@ const ProfileLayout = () => {
                                 )
                             }
                         >
-                            Images
+                            Photos
                         </NavLink>
                         <NavLink
-                            to={`/users/userId/tours`}
+                            to={`/${username}/tours`}
                             className={({ isActive }) =>
                                 cn(
                                     "bg-white px-4 py-2 font-medium text-sm",
@@ -115,7 +116,7 @@ const ProfileLayout = () => {
                             Tours
                         </NavLink>
                         <NavLink
-                            to={`/users/userId/reviews`}
+                            to={`/${username}/reviews`}
                             className={({ isActive }) =>
                                 cn(
                                     "bg-white px-4 py-2 font-medium text-sm",

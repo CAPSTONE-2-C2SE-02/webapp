@@ -7,9 +7,11 @@ import morgan from "morgan";
 import { Server } from "socket.io";
 import http from "http";
 
+import { swaggerUi, swaggerSpec } from "./config/swagger.config.js";
 
 import connectMongoDB from "./config/db.config.js";
 import routes from "./routes/index.js";
+import Message from "./models/message.model.js";
 
 dotenv.config();
 
@@ -18,23 +20,27 @@ const PORT = process.env.PORT || 8080;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGINS,
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
 
+// Swagger
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+console.log("Swagger Docs available at: http://localhost:8080/api-docs");
 
 const startServer = () => {
   app.use(cors({
-    origin: process.env.CORS_ORIGINS,
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   }));
   app.use(bodyParser.json());
   app.use(cookieParser());
   app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
-
+  // Routes
   app.use(process.env.API_PREFIX, routes);
 
   app.use(morgan("dev"));
@@ -46,45 +52,32 @@ const startServer = () => {
     console.log(` 🌐 Local: http://localhost:${PORT}/`);
   });
 
-  let onlineUsers = [];
   io.on("connection", (socket) => {
+    console.log(`⚡ New client connected: ${socket.id}`);
 
-    socket.on("addNewUser", (userId) => {
-      !onlineUsers.some((user) => user.userId == userId) &&
-        onlineUsers.push({
-          userId,
-          socketId: socket.id,
-        });
-      console.log(`Connected Users:`, onlineUsers);
-
-      //send active users
-      io.emit("getUsers", onlineUsers);
+    socket.on("joinConversation", (conversationId) => {
+      socket.join(conversationId);
+      console.log(`Client joined conversation: ${conversationId}`);
     });
+    //Listen event client send message
+    socket.on("sendMessage", async ({ conversationId, sender, content }) => {
+      try {
+        const message = new Message({ conversationId, sender, content });
+        await message.save();
 
-    socket.on("sendMessage", (message) => {
-      const user = onlineUsers.find((user) => user.userId == message.recipientId);
+        // receive message
+        io.to(conversationId).emit("receiveMessage", message);
 
-
-      if (user) {
-        console.log("sending message and notification");
-        io.to(user.socketId).emit("getMessage", message);
-        io.to(user.socketId).emit("getNotification", {
-          senderId: message.senderId,
-          isRead: false,
-          date: new Date(),
-        });
+      } catch (error) {
+        console.error("Error sending message:", error);
       }
     });
 
+    //Listen event client disconnect
     socket.on("disconnect", () => {
-      onlineUsers = onlineUsers.filter((user) => user.socketId != socket.id);
-      console.log(`User Disconnected:`, onlineUsers);
-
-      //send active users
-      io.emit("getUsers", onlineUsers);
+      console.log(`❌ Client disconnected: ${socket.id}`);
     });
-  })
-
+  });
 };
 
 (async () => {

@@ -3,7 +3,7 @@ import RoleModel from "../models/role.model.js";
 import InvalidatedToken from "../models/invalidated.token.model.js";
 
 export const generateToken = async (user) => {
-    const role = await RoleModel.findOne({ _id: user.role });
+    const role = await RoleModel.findOne({ _id: user.roleId });
     const token = jwt.sign(
         {
             userId: user._id,
@@ -28,15 +28,6 @@ export const verifyToken = async (token) => {
             return decoded;
         }
         return null;
-    } catch (error) {
-        return null;
-    }
-};
-
-export const decodeToken = async (token) => {
-    try {
-        const decoded = jwt.verify(token, process.env.SECRET_KEY);
-        return decoded;
     } catch (error) {
         return null;
     }
