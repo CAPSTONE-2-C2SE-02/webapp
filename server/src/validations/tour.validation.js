@@ -18,27 +18,7 @@ const tourSchema = yup.object({
     departureLocation: yup
         .string()
         .required("Departure location is required"),
-    schedule: yup
-        .array()
-        .of(
-            yup.object({
-                day: yup
-                    .number()
-                    .min(1, "Day must be at least 1")
-                    .required("Day is required"),
-                title: yup
-                    .string()
-                    .min(3, "Schedule title must be at least 3 characters")
-                    .max(100, "Schedule title must not exceed 100 characters")
-                    .required("Schedule title is required"),
-                description: yup
-                    .string()
-                    .min(5, "Schedule description must be at least 5 characters")
-                    .required("Schedule description is required"),
-            })
-        )
-        .min(1, "Schedule must have at least one day")
-        .required("Schedule is required"),
+
     priceForAdult: yup
         .number()
         .min(0, "Price for adult must be at least 0")
@@ -67,12 +47,6 @@ const tourSchema = yup.object({
         .array()
         .of(yup.string().url("Each image must be a valid URL"))
         .default([]),
-    include: yup
-        .string()
-        .nullable(),
-    notInclude: yup
-        .string()
-        .nullable(),
     status: yup
         .string()
         .oneOf(Object.values(StatusTour), "Invalid status value")

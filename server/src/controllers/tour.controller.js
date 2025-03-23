@@ -16,11 +16,14 @@ class TourController {
                 });
             }
 
-            const request = req.body;
+            const { schedule, ...request } = req.body;
             const imageUrls = req.files ? await uploadImages(req.files) : [];
+
+            const scheduleData = JSON.parse(schedule);
 
             const newTour = {
                 author: user._id,
+                schedule: scheduleData,
                 ...request,
                 imageUrls: imageUrls,
             };
@@ -106,7 +109,10 @@ class TourController {
                 });
             }
 
-            const request = req.body;
+            const { schedule, ...request } = req.body;
+
+            const scheduleData = JSON.parse(schedule);
+
             let imageUrls = tour.imageUrls;
             if (req.files && req.files.length > 0) {
                 imageUrls = await uploadImages(req.files);
@@ -114,7 +120,7 @@ class TourController {
 
             await Tour.findByIdAndUpdate(
                 id,
-                { $set: { ...request, imageUrls } },
+                { $set: { ...request, schedule: scheduleData, imageUrls } },
                 { new: true }
             );
 
