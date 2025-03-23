@@ -4,7 +4,6 @@ import connectMongoDB from "./db.config.js";
 import Role from "../enums/role.enum.js";
 import RoleModel from "../models/role.model.js";
 import User from "../models/user.model.js";
-import Profile from "../models/profile.model.js";
 import { hashPassword } from "../utils/password.util.js";
 
 
@@ -27,7 +26,7 @@ const initialRoles = async () => {
 
 const initialAdminAccount = async () => {
     try {
-        const existAdminAccount = await Profile.findOne({
+        const existAdminAccount = await User.findOne({
             $or: [
                 { phoneNumber: "657-895-6753" },
                 { email: "admin@example.com" }
@@ -42,23 +41,17 @@ const initialAdminAccount = async () => {
         } else {
             if (!existAdminAccount) {
                 const adminAccount = {
-                    username: "Admin",
+                    username: "admin",
                     password: await hashPassword("123456"),
-                    role: adminRole._id
+                    roleId: adminRole._id,
+                    fullName: "admin",
+                    email: "admin@gmail.com",
+                    phoneNumber: "657-895-6753",
                 };
 
                 const adminCreated = await User.create(adminAccount);
-                if (adminCreated) {
-                    const newProfile = {
-                        userId: adminCreated._id,
-                        fullName: "Duc",
-                        email: "Admin@gmail.com",
-                        phoneNumber: "657-895-6753",
-                    };
-                    await Profile.create(newProfile);
-                }
 
-                console.log('✅ Admin account has been created with default username and password: admin. Please change it immediately!');
+                console.log('✅ Admin account has been created with default username and password: 123456. Please change it immediately!');
             } else {
                 console.log('✅ Admin account already exists.');
             }

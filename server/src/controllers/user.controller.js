@@ -41,14 +41,10 @@ class UserController {
                 roleId: role._id
             };
 
-            const userCreated = await User.create(newUser);
-
-            const userResponse = userCreated.toObject();
-            delete userResponse.password;
+            await User.create(newUser);
 
             return res.status(StatusCodes.CREATED).json({
                 success: true,
-                result: userResponse,
                 message: "Traveler account registration successful."
             });
         } catch (error) {
