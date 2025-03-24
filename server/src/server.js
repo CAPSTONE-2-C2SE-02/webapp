@@ -11,7 +11,6 @@ import { swaggerUi, swaggerSpec } from "./config/swagger.config.js";
 
 import connectMongoDB from "./config/db.config.js";
 import routes from "./routes/index.js";
-import Message from "./models/message.model.js";
 
 dotenv.config();
 
@@ -20,18 +19,18 @@ const PORT = process.env.PORT || 8080;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: process.env.CORS_ORIGINS,
     methods: ["GET", "POST"],
   },
 });
 
 // Swagger
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-console.log("Swagger Docs available at: http://localhost:8080/api-docs");
+console.log("Swagger Docs available at: http://localhost:5000/api-docs");
 
 const startServer = () => {
   app.use(cors({
-    origin: "*",
+    origin: process.env.CORS_ORIGINS,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   }));
@@ -52,30 +51,41 @@ const startServer = () => {
     console.log(` 🌐 Local: http://localhost:${PORT}/`);
   });
 
+  let oneLineUses = [];
+
+
   io.on("connection", (socket) => {
-    console.log(`⚡ New client connected: ${socket.id}`);
 
-    socket.on("joinConversation", (conversationId) => {
-      socket.join(conversationId);
-      console.log(`Client joined conversation: ${conversationId}`);
+    socket.on("addNewUser", (userId) => {
+      !oneLineUses.some(user => user.userId === userId) &&
+        oneLineUses.push({ userId, socketId: socket.id });
+
+      console.log("👤Connected Users", oneLineUses);
+
+      io.emit("getUsers", oneLineUses);
     });
+
     //Listen event client send message
-    socket.on("sendMessage", async ({ conversationId, sender, content }) => {
-      try {
-        const message = new Message({ conversationId, sender, content });
-        await message.save();
+    socket.on("sendMessage", (message) => {
+      const user = oneLineUses.find(user => user.userId === message.recipientId);
 
-        // receive message
-        io.to(conversationId).emit("receiveMessage", message);
-
-      } catch (error) {
-        console.error("Error sending message:", error);
+      if (user) {
+        console.log("📩 Message sent and notification");
+        io.to(user.socketId).emit("getMessage", message);
+        io.to(user.socketId).emit("notification", {
+          senderId: message.senderId,
+          isRead: false,
+          date: new Date(),
+        });
       }
     });
 
     //Listen event client disconnect
     socket.on("disconnect", () => {
-      console.log(`❌ Client disconnected: ${socket.id}`);
+      oneLineUses = oneLineUses.filter(user => user.socketId !== socket.id);
+      console.log("�� Disconnected Users", oneLineUses);
+
+      io.emit("getUsers", oneLineUses);
     });
   });
 };

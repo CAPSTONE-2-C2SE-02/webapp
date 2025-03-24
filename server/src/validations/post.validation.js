@@ -1,5 +1,4 @@
 import * as yup from "yup";
-import Visibility from "../enums/visibility.enum.js";
 
 const postSchema = yup.object({
     hashtag: yup
