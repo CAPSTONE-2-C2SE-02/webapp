@@ -188,8 +188,9 @@ export const tourData: TourDetail = {
       tourReview: "Sống làm sao vì sao hùng, vượt được mọi ngòi yêu mến để làm gì? Sự thật nó phù phẳng rằng là chính ta đang sống cho xã hội và cả mẹ hùng quan tâm ta.",
       tourGuideReview: "Hành trình là gì? Xinh đẹp là gì? Là khái niệm của mọi con người, mỗi cá nhân chỉ không phải khai niệm chung bắt ta phải tuân theo.",
       images: [
-        "https://via.placeholder.com/100x100",
-        "https://via.placeholder.com/100x100",
+        "https://ui-avatars.com/api/?size=128&background=random",
+        "https://ui-avatars.com/api/?size=128&background=random",
+        "https://ui-avatars.com/api/?size=128&background=random",
       ],
     },
     {
