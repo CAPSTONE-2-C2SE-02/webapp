@@ -11,6 +11,7 @@ import UserProfileToursPage from "@/pages/userprofile-tours-page";
 import ToursPage from "@/pages/tours-page";
 import RootLayout from "@/layouts/root-layout";
 import PostPage from "@/pages/post-page";
+import UserProfileReviewPage from "@/pages/userprofile-review-page";
 const HomePage = lazy(() => import("@/pages/home-page"));
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
@@ -33,7 +34,7 @@ const routes = createBrowserRouter([
               { path: "follow", element: <UserProfileFollowPage /> },
               { path: "photos", element: <div>Photos Page</div> },
               { path: "tours", element: <UserProfileToursPage /> },
-              { path: "reviews", element: <div>reviews Page</div> },
+              { path: "reviews", element: <UserProfileReviewPage /> },
             ]
           },
           
