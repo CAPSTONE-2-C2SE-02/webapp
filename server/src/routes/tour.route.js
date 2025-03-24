@@ -100,6 +100,34 @@ import tourSchema from "../validations/tour.validation.js";
 
 /**
  * @swagger
+ * /tours/profile/{username}:
+ *   get:
+ *     summary: Get all tours by username
+ *     description: Retrieve a list of all tours created by a specific user.
+ *     tags:
+ *       - Tour
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The username of the tour creator
+ *     responses:
+ *       200:
+ *         description: A list of tours created by the user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Tour'
+ *       404:
+ *         description: User not found
+ */
+
+/**
+ * @swagger
  * /tours/search:
  *   get:
  *     summary: Search tours by destination
@@ -237,6 +265,7 @@ const router = express.Router();
 router.post("/", authenticated, upload.array("images"), authorize("TOUR_GUIDE"), validate(tourSchema), tourController.createTour);
 router.get("/", tourController.getAllTours);
 router.get("/my-tours", authenticated, authorize("TOUR_GUIDE"), tourController.getMyTours);
+router.get("/profile/:username", tourController.getAllToursByUsername);
 router.get("/search", tourController.findByDestination);
 router.get("/:id", tourController.getTourById);
 router.put("/:id", authenticated, upload.array("images"), authorize("TOUR_GUIDE"), validate(tourSchema), checkOwnerTour, tourController.updateTour);
