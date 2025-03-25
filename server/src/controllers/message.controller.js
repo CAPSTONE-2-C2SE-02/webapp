@@ -1,11 +1,23 @@
 import Message from "../models/message.model.js";
 import { StatusCodes } from "http-status-codes";
+import mongoose from "mongoose";
+import Conversation from "../models/conversation.model.js";
+import { uploadImages } from "../utils/uploadImage.util.js";
+
 
 
 class MessageContent {
   async getMessages(req, res) {
     try {
       const { chatId } = req.params;
+
+      //Check if chatId and senderId are valid ObjectIds
+      if (!mongoose.Types.ObjectId.isValid(chatId) || !mongoose.Types.ObjectId.isValid(senderId)) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          error: "Invalid chatID.",
+        });
+      }
 
       const messages = await Message.find({ chatId })
 
@@ -25,8 +37,37 @@ class MessageContent {
   async createMessage(req, res) {
     try {
       const { chatId, senderId, content } = req.body;
-      const message = new Message({ chatId, senderId, content });
+      const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
+
+      const imageUrls = [];
+      const fileUrls = [];
+
+      //Check if chatId and senderId are valid ObjectIds
+      if (!mongoose.Types.ObjectId.isValid(chatId) || !mongoose.Types.ObjectId.isValid(senderId)) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          error: "Invalid chatID or senderId.",
+        });
+      }
+
+
+      if (req.files) {
+        req.files.forEach(file => {
+          const ext = file.originalname.slice(file.originalname.lastIndexOf(".")).toLowerCase();
+          if (imageExtensions.includes(ext)) {
+            imageUrls.push(file.path);
+          } else {
+            fileUrls.push(file.path);
+          }
+        });
+      }
+
+
+      const message = new Message({ chatId, senderId, content, imageUrls, fileUrls });
       await message.save();
+
+      await Conversation.findByIdAndUpdate(chatId, { lastMessage: message._id });
+
 
       res.status(StatusCodes.OK).json({
         success: true,

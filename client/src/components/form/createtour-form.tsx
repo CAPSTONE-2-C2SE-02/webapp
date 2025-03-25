@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
     Form,
     FormControl,
@@ -12,42 +11,28 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Upload, X } from "lucide-react";
-import { Link } from "react-router";
-
-const createTourSchema = z.object({
-    nameOfTour: z.string().min(1, "Name of Tour is required"),
-    departureLocation: z.string().min(1, "Departure Location is required"),
-    destination: z.string().min(1, "Destination is required"),
-    duration: z.string().min(1, "Duration is required"),
-    priceForAdult: z.number().min(0, "Price for Adult must be a positive number"),
-    priceForYoung: z.number().min(0, "Price for Young must be a positive number"),
-    priceForChildren: z.number().min(0, "Price for Children must be a positive number"),
-    introduction: z.string().min(1, "Introduction is required"),
-    schedule: z.array(
-        z.object({
-            title: z.string().min(1, "Title is required"),
-            description: z.string().min(1, "Description is required"),
-        })
-    ).optional(),
-    include: z.string().min(1, "Include section is required"),
-    notInclude: z.string().min(1, "Not Include section is required"),
-    images: z.array(z.string()).optional(),
-});
-
-type CreateTourValues = z.infer<typeof createTourSchema>;
+import { ArrowLeft, ImagePlus, X } from "lucide-react";
+import { createTourSchema, CreateTourValues } from "@/lib/validations";
+import { useCreateTourMutation } from "@/services/tour-api";
+import { toast } from "sonner";
+import { useState } from "react";
+import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
+import { useNavigate } from "react-router";
 
 const CreateNewTourForm = () => {
+    const [createTour, { isLoading }] = useCreateTourMutation()
+    const [uploadedImages, setUploadedImages] = useState<File[]>([]);
     const form = useForm<CreateTourValues>({
         resolver: zodResolver(createTourSchema),
         defaultValues: {
-            nameOfTour: "",
+            title: "",
             departureLocation: "",
             destination: "",
-            duration: "",
+            duration: 1,
             priceForAdult: 0,
             priceForYoung: 0,
             priceForChildren: 0,
+            maxParticipants: 1,
             introduction: "",
             schedule: [{ title: "", description: "" }],
             include: "",
@@ -56,186 +41,296 @@ const CreateNewTourForm = () => {
         },
     });
 
+    const navigate = useNavigate();
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        if (files.length > 0) {
+            setUploadedImages(prev => {
+                const updatedImages = [...prev, ...files];
+                form.setValue("images", updatedImages);
+                return updatedImages;
+            });
+        }
+    };
+
+    const removeImage = (index: number) => {
+        setUploadedImages(prev => {
+            const updatedImages = prev.filter((_, i) => i !== index);
+            form.setValue("images", updatedImages);
+            return updatedImages;
+        });
+    };
+
     const { fields, append, remove } = useFieldArray({
         control: form.control,
         name: "schedule",
     });
 
-    function onSubmit(values: CreateTourValues) {
-        console.log(values);
+    async function onSubmit(values: CreateTourValues) {
+        try {
+            console.log(values)
+            const formData = new FormData();
+            Object.entries(values).forEach(([key, value]) => {
+                if (key === "images" && Array.isArray(value)) {
+                    value.forEach((file) => {
+                        formData.append("images", file as Blob);
+                    });
+                } else if (key === "schedule") {
+                    formData.append("schedule", JSON.stringify(value));
+                } else {
+                    formData.append(key, value as string | Blob);
+                }
+            });
+
+            const response = await createTour(formData).unwrap();
+
+            if (response?.success) {
+                toast.success("Tour created successfully!");
+                setTimeout(() => navigate('/tours'), 1500);
+            } else {
+                toast.error(response?.error);
+            }
+
+        } catch (error) {
+            console.error("Tour creation failed:", error);
+            toast.error("Failed to create tour. Please try again.");
+        }
     }
 
-    const uploadedImages = form.watch("images") || [];
-
-    const removeImage = (index: number) => {
-        const updatedImages = uploadedImages.filter((_, i) => i !== index);
-        form.setValue("images", updatedImages);
-    };
-
     return (
-        <div className="p-6 max-w-4xl mx-auto bg-gray-50 rounded-lg shadow-lg mt-6 mb-6">
-            <div className="flex items-center justify-between mb-6">
-                <Link to="/tours" className="text-blue-600">
-                    <ArrowLeft size={24} />
-                </Link>
-                <h2 className="text-2xl font-bold">Create New Tour</h2>
-                <div className="w-6"></div>
+        <div className="max-w-[1080px] mx-auto my-6 bg-white rounded-lg shadow-sm p-6">
+            <div className="flex items-center mb-6">
+                <button className="text-gray-500 hover:text-gray-700">
+                    <ArrowLeft size={20} />
+                </button>
+                <h1 className="text-2xl font-bold mx-auto">Create New Tour</h1>
             </div>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                    {/* Left Column */}
                     <div className="space-y-4">
                         <FormField
                             control={form.control}
-                            name="nameOfTour"
+                            name="title"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-gray-600">Name of Tour</FormLabel>
+                                    <FormLabel className="text-gray-700 font-medium">
+                                        Tour name <span className="text-red-500">*</span>
+                                    </FormLabel>
                                     <FormControl>
-                                        <Input placeholder="ex: TOUR HOI AN - DA NANG" {...field} />
+                                        <Input placeholder="ex: Tour Hoi An - Da Nang" {...field} className="h-11" />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="text-xs" />
                                 </FormItem>
                             )}
                         />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-4">
-                                <FormField
-                                    control={form.control}
-                                    name="departureLocation"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-gray-600">Departure Location</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="ex: HOI AN" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="duration"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-gray-600">Duration</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="ex: 2 days 1 night, 1 day" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="priceForYoung"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-gray-600">Price for Young</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="number"
-                                                    placeholder="ex: 100$"
-                                                    {...field}
-                                                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
-
-                            <div className="space-y-4">
-                                <FormField
-                                    control={form.control}
-                                    name="destination"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-gray-600">Destination</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="ex: DA NANG" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="priceForAdult"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-gray-600">Price for Adult</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="number"
-                                                    placeholder="ex: 100$"
-                                                    {...field}
-                                                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                                <FormField
-                                    control={form.control}
-                                    name="priceForChildren"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-gray-600">Price for Children</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="number"
-                                                    placeholder="ex: 100$"
-                                                    {...field}
-                                                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-                            </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="departureLocation"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-gray-700 font-medium">
+                                            Departure Location <span className="text-red-500">*</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="ex: Hoi An" {...field} className="h-11" />
+                                        </FormControl>
+                                        <FormMessage className="text-xs" />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="destination"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-gray-700 font-medium">
+                                            Destination <span className="text-red-500">*</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="ex: Da Nang" {...field} className="h-11" />
+                                        </FormControl>
+                                        <FormMessage className="text-xs" />
+                                    </FormItem>
+                                )}
+                            />
                         </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="duration"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-gray-700 font-medium">
+                                            Duration <span className="text-red-500">*</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input type="number"
+                                                min="1"
+                                                placeholder="ex: 2 days 1 night, 1 day"
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                                className="h-11"
+                                            />
+                                        </FormControl>
+                                        <FormMessage className="text-xs" />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="priceForAdult"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-gray-700 font-medium">
+                                            Price for adult <span className="text-red-500">*</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                placeholder="ex: 100$"
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                                className="h-11"
+                                            />
+                                        </FormControl>
+                                        <FormMessage className="text-xs" />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="priceForYoung"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-gray-700 font-medium">
+                                            Price for young <span className="text-red-500">*</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                placeholder="ex: 100$"
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                                className="h-11"
+                                            />
+                                        </FormControl>
+                                        <FormMessage className="text-xs" />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="priceForChildren"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="text-gray-700 font-medium">
+                                            Price for children <span className="text-red-500">*</span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                min="0"
+                                                placeholder="ex: 100$"
+                                                {...field}
+                                                onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                                className="h-11"
+                                            />
+                                        </FormControl>
+                                        <FormMessage className="text-xs" />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <FormField
+                            control={form.control}
+                            name="maxParticipants"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="text-gray-700 font-medium">
+                                        Max number people per group <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            placeholder="ex: 10 people"
+                                            {...field}
+                                            onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                            className="h-11" />
+                                    </FormControl>
+                                    <FormMessage className="text-xs" />
+                                </FormItem>
+                            )}
+                        />
 
                         <FormField
                             control={form.control}
                             name="introduction"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-gray-600">Introduction</FormLabel>
+                                    <FormLabel className="text-gray-700 font-medium">Introduction
+                                        <span className="text-red-500"> *</span>
+                                    </FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="Enter your introduction..." {...field} />
+                                        <Textarea
+                                            placeholder="Enter your tour introduction......"
+                                            {...field}
+                                            className="min-h-[120px] resize-none"
+                                        />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="text-xs" />
                                 </FormItem>
                             )}
                         />
+
                         <FormField
                             control={form.control}
                             name="include"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-gray-600">Include</FormLabel>
+                                    <FormLabel className="text-gray-700 font-medium">Include
+                                        <span className="text-red-500"> *</span>
+                                    </FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="Enter your introduction..." {...field} />
+                                        <Textarea
+                                            placeholder="Enter your tour introduction......"
+                                            {...field}
+                                            className="min-h-[120px] resize-none"
+                                        />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="text-xs" />
                                 </FormItem>
                             )}
                         />
+
                         <FormField
                             control={form.control}
                             name="notInclude"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-gray-600">Not Include</FormLabel>
+                                    <FormLabel className="text-gray-700 font-medium">Not Include
+                                        <span className="text-red-500"> *</span>
+                                    </FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="Enter your introduction..." {...field} />
+                                        <Textarea
+                                            placeholder="Enter your tour introduction......"
+                                            {...field}
+                                            className="min-h-[120px] resize-none"
+                                        />
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="text-xs" />
                                 </FormItem>
                             )}
                         />
@@ -243,9 +338,11 @@ const CreateNewTourForm = () => {
 
                     <div className="space-y-4">
                         <FormItem>
-                            <FormLabel className="text-gray-600">Schedule</FormLabel>
-                            <div className="border rounded-lg p-4 bg-white">
-                                <div className="max-h-96 overflow-y-auto space-y-4">
+                            <FormLabel className="text-gray-600">Schedule
+                                <span className="text-red-500"> *</span>
+                            </FormLabel>
+                            <div className=" border rounded-lg p-4 bg-white">
+                                <div className="h-[580px] overflow-y-auto space-y-4">
                                     {fields.map((field, index) => (
                                         <div key={field.id} className="relative border rounded-lg p-4 bg-white">
                                             <div className="flex justify-between items-center mb-2">
@@ -265,9 +362,9 @@ const CreateNewTourForm = () => {
                                                     <FormItem>
                                                         <FormLabel className="text-gray-600">Title</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="e.g., Arrival and City Tour" {...field} />
+                                                            <Input placeholder="e.g., Arrival and City Tour" {...field} className="h-11" />
                                                         </FormControl>
-                                                        <FormMessage />
+                                                        <FormMessage className="min-h-[20px]" />
                                                     </FormItem>
                                                 )}
                                             />
@@ -282,9 +379,10 @@ const CreateNewTourForm = () => {
                                                                 placeholder="Describe the activities for this day..."
                                                                 className="min-h-[100px]"
                                                                 {...field}
+
                                                             />
                                                         </FormControl>
-                                                        <FormMessage />
+                                                        <FormMessage className="min-h-[20px]" />
                                                     </FormItem>
                                                 )}
                                             />
@@ -307,11 +405,13 @@ const CreateNewTourForm = () => {
                             name="images"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel className="text-gray-600">Upload Images</FormLabel>
-                                    <FormControl>
-                                        <div className="flex flex-col md:flex-row gap-4">
+                                    <FormLabel className="text-gray-600">Upload Images
+                                        <span className="text-red-500"> *</span>
+                                    </FormLabel>
+                                    <FormControl >
+                                        <div className="flex flex-col md:flex-row gap-4 w-full">
                                             <div
-                                                className="border border-dashed border-gray-300 rounded-lg p-6 text-center w-full md:w-1/3 bg-gray-50 hover:bg-gray-100 cursor-pointer"
+                                                className="border border-dashed border-gray-300 rounded-lg p-6 text-center w-full md:w-1/3 bg-gray-50 hover:bg-gray-100 cursor-pointer flex-shrink-0"
                                                 onClick={() => document.getElementById("imageInput")?.click()}
                                                 onDragOver={(e) => e.preventDefault()}
                                                 onDrop={(e) => {
@@ -322,7 +422,7 @@ const CreateNewTourForm = () => {
                                                     field.onChange(updatedImages);
                                                 }}
                                             >
-                                                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                                <ImagePlus className="mx-auto h-7 w-7 text-gray-400" />
                                                 <p className="mt-2 text-sm text-gray-500">
                                                     Drop your image here, or{" "}
                                                     <span className="text-blue-600 cursor-pointer">Browse</span>
@@ -331,60 +431,58 @@ const CreateNewTourForm = () => {
                                                     id="imageInput"
                                                     type="file"
                                                     multiple
-                                                    accept="image/*"
+                                                    accept="images/*"
                                                     className="hidden"
-                                                    onChange={(e) => {
-                                                        const files = Array.from(e.target.files || []);
-                                                        const imageUrls = files.map((file) => URL.createObjectURL(file));
-                                                        const updatedImages = [...(field.value || []), ...imageUrls];
-                                                        field.onChange(updatedImages);
-                                                        e.target.value = "";
-                                                    }}
+                                                    onChange={handleImageUpload}
                                                 />
                                             </div>
-                                            {uploadedImages.length > 0 && (
-                                                <div className="flex-1 overflow-x-auto">
-                                                    <div className="flex flex-row gap-4">
+                                            {uploadedImages && uploadedImages.length > 0 && (
+                                                <Carousel className="flex-1 overflow-x-auto">
+                                                    <CarouselContent>
                                                         {uploadedImages.map((image, index) => (
-                                                            <div key={index} className="relative flex-shrink-0">
-                                                                <img
-                                                                    src={image}
-                                                                    alt={`Uploaded ${index}`}
-                                                                    className="h-48 w-48 object-cover rounded-lg"
-                                                                />
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => removeImage(index)}
-                                                                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                                                                >
-                                                                    <X size={16} />
-                                                                </button>
-                                                            </div>
+                                                            <CarouselItem key={index} className="basis-auto">
+                                                                <div key={index} className="relative w-[120px] h-[120px] overflow-hidden rounded-md border">
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="destructive"
+                                                                        size="icon"
+                                                                        className="absolute right-1 top-1 h-6 w-6 "
+                                                                        onClick={() => removeImage(index)}
+                                                                    >
+                                                                        <X className="h-4 w-4 " />
+                                                                    </Button>
+                                                                    <img
+                                                                        src={URL.createObjectURL(image)}
+                                                                        alt={`Uploaded image ${index + 1}`}
+                                                                        className="object-cover w-full h-full"
+                                                                    />
+                                                                </div>
+                                                            </CarouselItem>
                                                         ))}
-                                                    </div>
-                                                </div>
+                                                    </CarouselContent>
+                                                </Carousel>
                                             )}
                                         </div>
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage className="min-h-[20px]" />
                                 </FormItem>
                             )}
                         />
+                        <div className="flex justify-between gap-4 mt-6 pt-5">
+                            <Button
+                                variant="outline"
+                                className="border-gray-300 text-gray-600 w-full h-full"
+                                onClick={() => form.reset()}
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="submit" className="bg-primary text-white hover:bg-blue-900 w-full h-full">
+                                Done
+                            </Button>
+                        </div>
                     </div>
-                </form>
 
-                <div className="flex justify-end gap-4 mt-6">
-                    <Button
-                        variant="outline"
-                        className="border-gray-300 text-gray-600"
-                        onClick={() => form.reset()}
-                    >
-                        Cancel
-                    </Button>
-                    <Button type="submit" className="bg-blue-900 text-white hover:bg-blue-700">
-                        Done
-                    </Button>
-                </div>
+                </form>
             </Form>
         </div>
     );

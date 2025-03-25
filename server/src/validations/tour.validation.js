@@ -1,5 +1,4 @@
 import * as yup from "yup";
-import Visibility from "../enums/visibility.enum.js";
 import StatusTour from "../enums/statusTour.enum.js";
 
 const tourSchema = yup.object({
