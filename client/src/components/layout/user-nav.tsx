@@ -2,7 +2,7 @@ import { ChevronDown, Loader2, LogOut, Settings, SquarePen, UserRoundPen } from 
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import avatarDemo from "@/assets/avatar-demo.jpg";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Button } from "../ui/button";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { useLogoutMutation } from "@/services/root-api";
@@ -12,6 +12,7 @@ export default function UserNav() {
   const { userInfo, token } = useAppSelector((state) => state.auth);
   const [logout, { isLoading }] = useLogoutMutation();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
@@ -19,6 +20,7 @@ export default function UserNav() {
         await logout({ token });
       }
       dispatch(logOut());
+      navigate(0);
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -28,10 +30,9 @@ export default function UserNav() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center text-primary gap-2 outline-none border-none focus:outline-none">
-          <span className="font-semibold">Ngoc Duc</span>
           <Avatar className="size-10">
             <AvatarImage src={avatarDemo} alt="Avatar" />
-            <AvatarFallback>Ngoc Duc</AvatarFallback>
+            <AvatarFallback>{userInfo?.fullName}</AvatarFallback>
           </Avatar>
           <ChevronDown className="size-5" />
         </button>
@@ -39,7 +40,7 @@ export default function UserNav() {
       <DropdownMenuContent className="w-48" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Ngoc Duc</p>
+            <p className="text-sm font-medium leading-none">{userInfo?.fullName}</p>
             <p className="text-xs leading-none text-muted-foreground">
               @{userInfo?.username}
             </p>
@@ -53,12 +54,14 @@ export default function UserNav() {
               Profile
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to="/tours/create">
-              <SquarePen />
-              New Tour
-            </Link>
-          </DropdownMenuItem>
+          {userInfo?.role === "TOUR_GUIDE" && (
+            <DropdownMenuItem asChild>
+              <Link to="/tours/create">
+                <SquarePen />
+                New Tour
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem asChild>
             <Link to="/profile">
               <Settings />

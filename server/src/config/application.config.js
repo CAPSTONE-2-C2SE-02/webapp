@@ -43,7 +43,7 @@ const initialAdminAccount = async () => {
                 const adminAccount = {
                     username: "admin",
                     password: await hashPassword("123456"),
-                    roleId: adminRole._id,
+                    role: adminRole._id,
                     fullName: "admin",
                     email: "admin@gmail.com",
                     phoneNumber: "657-895-6753",

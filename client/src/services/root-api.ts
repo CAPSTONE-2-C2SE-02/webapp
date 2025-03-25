@@ -1,5 +1,5 @@
-import { ApiResponse } from "@/lib/types";
-import { RootState } from "@/stores";
+import { ApiResponse, UserInfo } from "@/lib/types";
+import { RootState } from "@/stores/store";
 import { logOut } from "@/stores/slices/auth-slice";
 import { BaseQueryFn, createApi, FetchArgs, fetchBaseQuery, FetchBaseQueryError } from "@reduxjs/toolkit/query/react";
 
@@ -69,8 +69,17 @@ export const rootApi = createApi({
         method: 'POST',
         body: credentials,
       })
+    }),
+    getUserAuth: builder.query<ApiResponse<UserInfo>, void>({
+      query: () => '/users/auth-user',
     })
   })
 });
 
-export const { useLoginMutation, useRegisterTravelerMutation, useRegisterTourGuideMutation, useLogoutMutation } = rootApi;
+export const {
+  useLoginMutation,
+  useRegisterTravelerMutation,
+  useRegisterTourGuideMutation,
+  useLogoutMutation,
+  useGetUserAuthQuery,
+} = rootApi;

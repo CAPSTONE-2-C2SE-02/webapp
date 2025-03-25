@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "../ui/button";
 import LogoGG from "@/assets/google_icon.svg";
-
 import {
   Form,
   FormControl,
@@ -61,8 +60,8 @@ const SigninForm = () => {
       toast.error((error as ErrorResponse).data?.error || "Error when creating account.");
     }
     if (isSuccess) {
-      if (data.success && data.result?.data && data.result?.token) {
-        dispatch(setCredentials({ userInfo: data?.result?.data, token: data?.result?.token }));
+      if (data.success && data.result?.token) {
+        dispatch(setCredentials({ token: data?.result?.token }));
         toast.success(data?.message);
         navigate("/");
       }
@@ -126,9 +125,9 @@ const SigninForm = () => {
           </Button>
         </form>
       </Form>
-      <p className="text-center mt-4">
+      <p className="text-center mt-4 text-sm text-gray-500">
         Don't have an account?{" "}
-        <Link to="/register" className="text-blue-600">
+        <Link to="/register" className="text-[hsl(174,100%,33%)] font-medium">
           Sign Up
         </Link>
       </p>

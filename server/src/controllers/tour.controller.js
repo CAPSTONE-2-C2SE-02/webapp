@@ -28,11 +28,12 @@ class TourController {
                 imageUrls: imageUrls,
             };
 
-            await Tour.create(newTour);
+            const tour = await Tour.create(newTour);
 
             return res.status(StatusCodes.CREATED).json({
                 success: true,
-                message: "Tour created successfully"
+                message: "Tour created successfully",
+                result: tour._id,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

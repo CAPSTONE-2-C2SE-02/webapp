@@ -121,26 +121,26 @@ const SignupForm = () => {
                                 <FormControl>
                                     <div className="flex gap-2">
                                         <div
-                                            className={`flex-1 p-4 border rounded flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors ${role === "tourguide" ? "border-sky-400 text-sky-400" : "border-gray-300"
+                                            className={`flex-1 p-4 border-2 rounded flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors ${role === "tourguide" ? "border-[hsl(174,100%,33%)] text-[hsl(174,100%,33%)]" : "border-gray-300 text-gray-400"
                                                 }`}
                                             onClick={() => {
                                                 setRole("tourguide");
                                                 field.onChange("tourguide");
                                             }}
                                         >
-                                            <UserPen size={18} />
-                                            <span className="text-sm">Tour Guide</span>
+                                            <UserPen size={18} strokeWidth={3} />
+                                            <span className="text-sm font-medium">Tour Guide</span>
                                         </div>
                                         <div
-                                            className={`flex-1 p-4 border rounded flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors ${role === "traveller" ? "border-sky-400 text-sky-400" : "border-gray-300"
+                                            className={`flex-1 p-4 border-2 rounded flex flex-col items-center justify-center gap-2 cursor-pointer transition-colors ${role === "traveller" ? "border-[hsl(174,100%,33%)] text-[hsl(174,100%,33%)]" : "border-gray-300 text-gray-400"
                                                 }`}
                                             onClick={() => {
                                                 setRole("traveller");
                                                 field.onChange("traveller");
                                             }}
                                         >
-                                            <UserRound size={18} />
-                                            <span className="text-sm">Traveller</span>
+                                            <UserRound size={18} strokeWidth={3} />
+                                            <span className="text-sm font-medium">Traveller</span>
                                         </div>
                                     </div>
                                 </FormControl>
@@ -182,7 +182,7 @@ const SignupForm = () => {
                         name="dateOfBirth"
                         render={({ field }) => (
                             <FormItem className="col-span-2 row-start-4">
-                                <FormLabel className="text-gray-600">Password</FormLabel>
+                                <FormLabel className="text-gray-600">Birthday</FormLabel>
                                 <Popover>
                                     <PopoverTrigger asChild>
                                     <FormControl>
@@ -239,8 +239,8 @@ const SignupForm = () => {
                 >
                     Create New Account
                 </Button>
-                <p className="text-center mt-4  text-gray-500">
-                    Already have an account? <Link to="/login" className="text-blue-600">Login</Link>
+                <p className="text-center mt-4 text-gray-500 text-sm">
+                    Already have an account? <Link to="/login" className="text-[hsl(174,100%,33%)] font-medium">Login</Link>
                 </p>
             </Form>
         </>

@@ -4,6 +4,7 @@ import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, R
 import storage from 'redux-persist/lib/storage';
 import authReducer from "./slices/auth-slice";
 import { rootApi } from "@/services/root-api";
+import { logOuMiddleware } from "./middlewares";
 
 const persistConfig = {
   key: 'root',
@@ -26,7 +27,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }).concat(rootApi.middleware)
+    }).concat(rootApi.middleware, logOuMiddleware)
   }
 });
 

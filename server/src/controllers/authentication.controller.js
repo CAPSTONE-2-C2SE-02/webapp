@@ -18,7 +18,7 @@ class AuthenticationController {
             const { email, password } = req.body;
 
             const user = await User.findOne({ email })
-                .populate("roleId", "name");
+                .populate("role", "name");
 
             if (!user)
                 return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, error: "Account does not exist." });
@@ -129,7 +129,7 @@ class AuthenticationController {
                 const user = {
                     username: email.split("@")[0],
                     password: await hashPassword("123456"),
-                    roleId: travelerRole._id,
+                    role: travelerRole._id,
                     fullName: "Google Account",
                     email: email,
                     phoneNumber: "1867891596",

@@ -38,7 +38,7 @@ class UserController {
                 email: email,
                 phoneNumber: phoneNumber,
                 dateOfBirth: dateOfBirth,
-                roleId: roleTraveler._id
+                role: roleTraveler._id
             };
 
             await User.create(newUser);
@@ -85,7 +85,7 @@ class UserController {
                 email: email,
                 phoneNumber: phoneNumber,
                 dateOfBirth: dateOfBirth,
-                roleId: roleTourGuide._id
+                role: roleTourGuide._id
             };
 
             await User.create(newUser);
@@ -99,6 +99,55 @@ class UserController {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
         }
     };
+
+    async getAuthUser(req, res) {
+        try {
+            const user = await User.findOne({ _id: req.user.userId })
+                .populate("role")
+                .select("-password");
+
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: { ...user._doc, role: user.role.name }
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message
+            });
+        }
+    };
+
+    async getUserByUsername(req, res) {
+        try {
+            const username = req.params.username;
+            const user = await User.findOne({ username: username }).populate("role").select("-password");
+
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                })
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: { ...user._doc, role: user.role.name }
+            })
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
 
     // [GET] /api/v1/users?page=x&limit=x
     async getAllUsers(req, res) {

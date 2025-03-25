@@ -9,9 +9,18 @@ export type Post = {
   hashtag: string[];
   content: string[];
   imageUrls: string[];
-  tourAttachment?: string;
+  likes: UserInfo[];
+  tourAttachment?: TourAttachment;
   createdAt: string;
   updatedAt: string;
+}
+
+export type TourAttachment = {
+  _id: string;
+  title: string;
+  introduction: string;
+  destination: string;
+  imageUrls: string[];
 }
 
 export type Tour = {
@@ -66,17 +75,31 @@ export type Review = {
 export type UserInfo = {
   _id: string;
   username: string;
-  role: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  dateOfBirth: string;
+  role: 'TOUR_GUIDE' | 'TRAVELER';
+  address: string;
+  profilePicture?: string;
+  coverPhoto?: string;
+  bio?: string;
+  followers: string[];
+  followings: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface ApiResponse {
+export type LoginInfo = {
+  token: string;
+  data: UserInfo;
+}
+
+export interface ApiResponse<T = LoginInfo> {
   success: boolean;
   message?: string;
   error?: string;
-  result?: {
-    token?: string;
-    data?: UserInfo;
-  }
+  result?: T
 }
 
 export type ErrorResponse = {

@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
     },
-    roleId: {
+    role: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Role',
     },
