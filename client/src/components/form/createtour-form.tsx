@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, ImagePlus, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, Loader2, X } from "lucide-react";
 import { createTourSchema, CreateTourValues } from "@/lib/validations";
 import { useCreateTourMutation } from "@/services/tour-api";
 import { toast } from "sonner";
@@ -476,7 +476,8 @@ const CreateNewTourForm = () => {
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" className="bg-primary text-white hover:bg-blue-900 w-full h-full">
+                            <Button type="submit" disabled={isLoading} className="bg-primary text-white hover:bg-blue-900 w-full h-full">
+                                {isLoading && <Loader2 className="size-4 animate-spin" />}
                                 Done
                             </Button>
                         </div>

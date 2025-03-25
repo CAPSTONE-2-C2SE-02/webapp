@@ -1,3 +1,19 @@
+export type Post = {
+  _id: string;
+  createdBy: {
+    _id: string;
+    username: string;
+    fullName: string;
+    avatar: string;
+  },
+  hashtag: string[];
+  content: string[];
+  imageUrls: string[];
+  tourAttachment?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type Tour = {
   _id: string;
   title: string;
@@ -60,5 +76,13 @@ export interface ApiResponse {
   result?: {
     token?: string;
     data?: UserInfo;
+  }
+}
+
+export type ErrorResponse = {
+  status: number;
+  data: {
+    error: string;
+    success: boolean;
   }
 }

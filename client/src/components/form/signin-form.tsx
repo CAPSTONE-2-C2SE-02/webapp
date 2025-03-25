@@ -19,9 +19,11 @@ import { setCredentials } from "@/stores/slices/auth-slice";
 import { useEffect } from "react";
 import { loginSchema, LoginValues } from "@/lib/validations";
 import { toast } from "sonner";
+import { ErrorResponse } from "@/lib/types";
+import { PasswordInput } from "../ui/password-input";
 
 const SigninForm = () => {
-  const [login, { isLoading }] = useLoginMutation();
+  const [login, { isLoading, isError, isSuccess, error, data }] = useLoginMutation();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const dispatch = useAppDispatch();
@@ -51,33 +53,32 @@ const SigninForm = () => {
   });
 
   const onSubmit = async (values: LoginValues) => {
-    try {
-      const response = await login(values).unwrap();
+    await login(values).unwrap();
+  };
 
-      if (!response.success) {
-        toast.error(response?.error);
-        return;
-      }
-      if (response.result?.data && response.result?.token) {
-        dispatch(setCredentials({ userInfo: response.result.data, token: response.result.token }));
-        toast.success(response?.message);
+  useEffect(() => {
+    if (isError) {
+      toast.error((error as ErrorResponse).data?.error || "Error when creating account.");
+    }
+    if (isSuccess) {
+      if (data.success && data.result?.data && data.result?.token) {
+        dispatch(setCredentials({ userInfo: data?.result?.data, token: data?.result?.token }));
+        toast.success(data?.message);
         navigate("/");
       }
-    } catch (error) {
-      console.error("Login failed:", error);
     }
-  };
+  }, [isError, error, isSuccess, data, dispatch, navigate]);
 
   return (
     <>
       <h2 className="text-2xl font-semibold text-center mt-10">Welcome Back</h2>
-      <p className="text-center text-gray-500">
+      <p className="text-center text-gray-500 mb-5">
         Let&apos;s explore this exciting platform together!
       </p>
 
-      <button className="w-full mt-4 flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-md">
+      <Button className="w-full" variant={"outline"} size={"lg"}>
         <img src={LogoGG} alt="gg Logo" className="h-5" /> Using Google account
-      </button>
+      </Button>
 
       <div className="flex items-center my-4">
         <hr className="flex-grow border-gray-300" />
@@ -110,7 +111,7 @@ const SigninForm = () => {
               <FormItem className="mt-4">
                 <FormLabel className="text-gray-600">Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="********" type="password" {...field} />
+                  <PasswordInput placeholder="********" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -118,7 +119,7 @@ const SigninForm = () => {
           />
           <Button
             type="submit"
-            className="w-full bg-blue-950 mt-4"
+            className="w-full mt-4"
             disabled={isLoading}
           >
             Login

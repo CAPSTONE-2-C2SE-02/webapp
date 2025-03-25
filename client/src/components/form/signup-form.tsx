@@ -11,12 +11,17 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { UserPen, UserRound } from "lucide-react";
+import { CalendarIcon, UserPen, UserRound } from "lucide-react";
 import LogoGG from "@/assets/google_icon.svg";
 import { Link, useNavigate } from "react-router";
 import { signUpschema, SignUpValue } from "@/lib/validations";
 import { useRegisterTourGuideMutation, useRegisterTravelerMutation } from "@/services/root-api";
 import { toast } from "sonner";
+import { PasswordInput } from "../ui/password-input";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Calendar } from "../ui/calendar";
+import { cn } from "@/lib/utils";
+import { format, isAfter } from "date-fns";
 
 const SignupForm = () => {
     const [role, setRole] = useState<"traveller" | "tourguide">("traveller");
@@ -50,8 +55,10 @@ const SignupForm = () => {
             }
             toast.success(response?.message);
             navigate("/login?registered=true");
-        } catch (error) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
             console.error("Register failed:", error);
+            toast.error(error.data.error);
         }
     }
 
@@ -63,7 +70,7 @@ const SignupForm = () => {
             </div>
 
             <div className="mt-5">
-                <Button className="flex items-center justify-center w-full border border-gray-200 bg-white text-black hover:bg-sky-700 hover:text-white">
+                <Button className="w-full" variant={"outline"} size={"lg"}>
                     <img src={LogoGG} alt="gg Logo" className="h-5" />
                     <span className="text-sm font-medium">Using Google account</span>
                 </Button>
@@ -76,12 +83,12 @@ const SignupForm = () => {
             </div>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-4 grid-rows-4 gap-4">
                     <FormField
                         control={form.control}
                         name="email"
                         render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="col-span-2">
                                 <FormLabel className="text-gray-600">Email</FormLabel>
                                 <FormControl>
                                     <Input placeholder="tripconnect@gmail.com" type="email" {...field} />
@@ -95,7 +102,7 @@ const SignupForm = () => {
                         control={form.control}
                         name="fullName"
                         render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="col-span-2 col-start-1">
                                 <FormLabel className="text-gray-600">Full Name</FormLabel>
                                 <FormControl>
                                     <Input placeholder="John Doe" {...field} />
@@ -107,51 +114,9 @@ const SignupForm = () => {
 
                     <FormField
                         control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-gray-600">Password</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Enter password" type="password" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-gray-600">Confirm Password</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Confirm password" type="password" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
-                        name="phoneNumber"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel className="text-gray-600">Phone Number</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="+84 123 456 789" type="tel" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-
-                    <FormField
-                        control={form.control}
                         name="role"
                         render={({ field }) => (
-                            <FormItem>
+                            <FormItem className="col-span-2 row-span-2 col-start-3 row-start-1">
                                 <FormLabel className="text-gray-600">Role</FormLabel>
                                 <FormControl>
                                     <div className="flex gap-2">
@@ -183,6 +148,89 @@ const SignupForm = () => {
                             </FormItem>
                         )}
                     />
+
+                    <FormField
+                        control={form.control}
+                        name="phoneNumber"
+                        render={({ field }) => (
+                            <FormItem className="col-span-2">
+                                <FormLabel className="text-gray-600">Phone Number</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="+84 123 456 789" type="tel" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                            <FormItem className="col-span-2 col-start-3 row-start-3">
+                                <FormLabel className="text-gray-600">Password</FormLabel>
+                                <FormControl>
+                                    <PasswordInput placeholder="Enter password" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="dateOfBirth"
+                        render={({ field }) => (
+                            <FormItem className="col-span-2 row-start-4">
+                                <FormLabel className="text-gray-600">Password</FormLabel>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <FormControl>
+                                        <Button
+                                        variant="outline"
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal",
+                                            !field.value && "text-muted-foreground",
+                                        )}
+                                        >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {field.value ? format(field.value, "PPP") : "Pick a date"}
+                                        </Button>
+                                    </FormControl>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                        <Calendar
+                                            mode="single"
+                                            captionLayout="dropdown-buttons"
+                                            selected={field.value}
+                                            onSelect={field.onChange}
+                                            disabled={(date) => isAfter(date, new Date())}
+                                            initialFocus
+                                            fromYear={1900}
+                                            toYear={2050}
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                            <FormItem className="col-span-2 col-start-3 row-start-4">
+                                <FormLabel className="text-gray-600">Confirm Password</FormLabel>
+                                <FormControl>
+                                    <PasswordInput placeholder="Confirm password" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+
                 </form>
                 <Button
                     type="submit"

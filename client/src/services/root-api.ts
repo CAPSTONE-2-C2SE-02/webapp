@@ -30,6 +30,14 @@ const baseQueryWithReauth: BaseQueryFn<
   return result;
 };
 
+type RegisterValues = {
+  email: string;
+  fullName: string;
+  password: string;
+  phoneNumber: string;
+  dateOfBirth: Date;
+}
+
 export const rootApi = createApi({
   reducerPath: 'rootApi',
   baseQuery: baseQueryWithReauth,
@@ -41,14 +49,14 @@ export const rootApi = createApi({
         body: credentials,
       })
     }),
-    registerTraveler: builder.mutation<ApiResponse, { fullName: string; email: string; password: string }>({
+    registerTraveler: builder.mutation<ApiResponse, RegisterValues>({
       query: (credentials) => ({
         url: '/users/register/traveler',
         method: 'POST',
         body: credentials,
       })
     }),
-    registerTourGuide: builder.mutation<ApiResponse, { fullName: string; email: string; password: string }>({
+    registerTourGuide: builder.mutation<ApiResponse, RegisterValues>({
       query: (credentials) => ({
         url: '/users/register/tour-guide',
         method: 'POST',
