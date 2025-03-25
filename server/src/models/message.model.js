@@ -13,10 +13,6 @@ const messageSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  fileUrls: {
-    type: [String],
-    default: []
-  },
   imageUrls: {
     type: [String],
     default: []

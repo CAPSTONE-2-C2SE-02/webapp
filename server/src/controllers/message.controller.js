@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
 import Conversation from "../models/conversation.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
+import User from "../models/user.model.js";
 
 
 
@@ -37,10 +38,8 @@ class MessageContent {
   async createMessage(req, res) {
     try {
       const { chatId, senderId, content } = req.body;
-      const imageExtensions = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
 
-      const imageUrls = [];
-      const fileUrls = [];
+      const imageUrls = req.files ? await uploadImages(req.files) : [];
 
       //Check if chatId and senderId are valid ObjectIds
       if (!mongoose.Types.ObjectId.isValid(chatId) || !mongoose.Types.ObjectId.isValid(senderId)) {
@@ -50,20 +49,25 @@ class MessageContent {
         });
       }
 
-
-      if (req.files) {
-        req.files.forEach(file => {
-          const ext = file.originalname.slice(file.originalname.lastIndexOf(".")).toLowerCase();
-          if (imageExtensions.includes(ext)) {
-            imageUrls.push(file.path);
-          } else {
-            fileUrls.push(file.path);
-          }
+      // Check conversation is already exist or not
+      const chatExists = await Conversation.findById(chatId);
+      if (!chatExists) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+          success: false,
+          error: "ConversationId does not exist.",
         });
       }
 
+      // Check if the sender exists
+      const senderExists = await User.findById(senderId);
+      if (!senderExists) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+          success: false,
+          error: "SenderId does not exist.",
+        });
+      }
 
-      const message = new Message({ chatId, senderId, content, imageUrls, fileUrls });
+      const message = new Message({ chatId, senderId, content, imageUrls });
       await message.save();
 
       await Conversation.findByIdAndUpdate(chatId, { lastMessage: message._id });
