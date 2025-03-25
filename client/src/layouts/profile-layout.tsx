@@ -10,12 +10,23 @@ import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/hooks/redux";
+import { useGetUserInfoByUsernameQuery } from "@/services/user-api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const ProfileLayout = () => {
     const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
 
     // get username from url
-    const { username } = useParams();
+    const { username } = useParams<{ username: string }>();
+    const { data: user, isLoading } = useGetUserInfoByUsernameQuery(username as string);
+
+    if (isLoading) {
+        return (
+            <div className="w-full">
+                <Skeleton className="w-full" />
+            </div>
+        )
+    }
 
     return (
         <div className="w-full flex flex-col gap-5">
@@ -23,22 +34,24 @@ const ProfileLayout = () => {
                 <img src="https://placehold.co/1920x400" className="rounded-t-2xl" />
                 <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] [16px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
-                        <AvatarImage />
-                        <AvatarFallback>Ngoc Anh</AvatarFallback>
+                        <AvatarImage src={user?.result?.profilePicture} />
+                        <AvatarFallback>{user?.result?.fullName}</AvatarFallback>
                     </Avatar>
                     <div className="flex-col justify-items-center">
-                        <p className="font-bold text-2xl my-1 justify-center truncate max-w-44 pt-2">Ngọc Ánh</p>
-                        <div className="flex items-center py-2">
-                            <Star className="w-4 h-4 mx-1 stroke-amber-400" />
-                            <p className="font-medium text-black text-sm"> 4.8 Excellent</p>
-                        </div>
+                        <p className="font-bold text-2xl my-1 justify-center truncate max-w-44 pt-2">{user?.result?.fullName}</p>
+                        {user?.result?.role === "TOUR_GUIDE" && (
+                            <div className="flex items-center py-2">
+                                <Star className="w-4 h-4 mx-1 stroke-amber-400" />
+                                <p className="font-medium text-black text-sm">4.8 Excellent</p>
+                            </div>
+                        )}
                         <div className="flex items-center py-2">
                             <UserRound className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm"> 812 Follower</p>
+                            <p className="font-medium text-slate-600 text-sm">{user?.result?.followers.length} Follower</p>
                         </div>
                         <div className="flex items-center py-2">
                             <UserRoundCheck className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm"> 812 Following</p>
+                            <p className="font-medium text-slate-600 text-sm">{user?.result?.followings.length} Following</p>
                         </div>
                     </div>
                 </div>
@@ -46,21 +59,21 @@ const ProfileLayout = () => {
                     <div className="flex-col justify-items-start content-center">
                         <div className="flex items-center py-2 ">
                             <Mail className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600"> ptnanh125@gmail.com</p>
+                            <p className="font-medium text-slate-600">{user?.result?.email}</p>
                         </div>
                         <div className="flex items-center py-2">
                             <Phone className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm"> 0935112120</p>
+                            <p className="font-medium text-slate-600 text-sm">{user?.result?.phoneNumber}</p>
                         </div>
                         <div className="flex items-center py-2">
                             <MapPin className="w-4 h-4 mx-1 stroke-slate-600 " />
-                            <p className="font-medium text-slate-600 text-sm"> From Dong Ha</p>
+                            <p className="font-medium text-slate-600 text-sm">From {user?.result?.address}</p>
                         </div>
                         <a href="" className="mx-1 text-blue-900 font-medium underline py-2 text-sm">More</a>
                     </div>
                     <div className="my-2 mx-14 h-36 flex flex-col justify-items-start gap-2">
                         <p className="font-medium text-slate-600 text-sm">Introduction</p>
-                        <textarea name="bio" value="Xin chao Hello World" id="" disabled className="w-[630px] h-[94px] text-sm resize-none py-2 px-3 bg-slate-200 rounded-b-xl rounded-r-xl"></textarea>
+                        <textarea name="bio" value={user?.result?.bio} id="" disabled className="w-[630px] h-[94px] text-sm resize-none py-2 px-3 bg-slate-200 rounded-b-xl rounded-r-xl"></textarea>
                         {isAuthenticated && userInfo?.username === username && (
                             <Button className="text-white !h-[34px] w-fit ml-auto">
                                 <Edit /> Edit Profile
@@ -131,7 +144,6 @@ const ProfileLayout = () => {
             </div>
             <Outlet />
         </div>
-
     )
 }
 

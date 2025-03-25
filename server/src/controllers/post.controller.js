@@ -50,6 +50,7 @@ class PostController {
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .sort({ "createdAt": -1 })
                 .exec();
 
             const totalPosts = await Post.countDocuments();
@@ -403,6 +404,7 @@ class PostController {
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .sort({ "createdAt": -1 })
             if (!posts) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,

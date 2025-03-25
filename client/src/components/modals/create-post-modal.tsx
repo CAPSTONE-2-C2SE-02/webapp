@@ -135,14 +135,14 @@ const CreateNewPostModal = ({
             <div className="flex items-start gap-3">
               <div className="size-9 rounded-full overflow-hidden flex-shrink">
                 <img
-                  src="https://ui-avatars.com/api/?size=128&background=random"
+                  src={userInfo?.profilePicture || "https://ui-avatars.com/api/?size=128&background=random"}
                   alt="avatar"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="w-full flex-1 space-y-4">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-base font-semibold text-primary">Ngoc Anh</span>
+                  <span className="text-base font-semibold text-primary">{userInfo?.fullName}</span>
                   <Badge className="text-xs rounded-full">@{userInfo?.username}</Badge>
                 </div>
                 <div className="space-y-3">

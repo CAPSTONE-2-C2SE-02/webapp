@@ -15,12 +15,13 @@ import { ArrowLeft, ImagePlus, Loader2, X } from "lucide-react";
 import { createTourSchema, CreateTourValues } from "@/lib/validations";
 import { useCreateTourMutation } from "@/services/tour-api";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { useNavigate } from "react-router";
+import { ErrorResponse } from "@/lib/types";
 
 const CreateNewTourForm = () => {
-    const [createTour, { isLoading }] = useCreateTourMutation()
+    const [createTour, { isLoading, isError, isSuccess, error, data }] = useCreateTourMutation();
     const [uploadedImages, setUploadedImages] = useState<File[]>([]);
     const form = useForm<CreateTourValues>({
         resolver: zodResolver(createTourSchema),
@@ -69,7 +70,6 @@ const CreateNewTourForm = () => {
 
     async function onSubmit(values: CreateTourValues) {
         try {
-            console.log(values)
             const formData = new FormData();
             Object.entries(values).forEach(([key, value]) => {
                 if (key === "images" && Array.isArray(value)) {
@@ -83,20 +83,25 @@ const CreateNewTourForm = () => {
                 }
             });
 
-            const response = await createTour(formData).unwrap();
-
-            if (response?.success) {
-                toast.success("Tour created successfully!");
-                setTimeout(() => navigate('/tours'), 1500);
-            } else {
-                toast.error(response?.error);
-            }
-
+            await createTour(formData).unwrap();
         } catch (error) {
             console.error("Tour creation failed:", error);
             toast.error("Failed to create tour. Please try again.");
         }
     }
+
+    useEffect(() => {
+        if (isError) {
+            toast.error((error as ErrorResponse).data.error)
+        }
+        if (isSuccess) {
+            const response = JSON.parse(JSON.stringify(data));
+            if (response?.success && response?.result) {
+                toast.success("Create tour successfully");
+                navigate(`/tours/${response?.result}`);
+            }
+        }
+    }, [isError, isSuccess, error, data, navigate]);
 
     return (
         <div className="max-w-[1080px] mx-auto my-6 bg-white rounded-lg shadow-sm p-6">

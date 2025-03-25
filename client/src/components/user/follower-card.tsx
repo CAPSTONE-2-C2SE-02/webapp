@@ -14,7 +14,7 @@ interface FollowerCardProps {
   }
 }
 
-const FollowerCard = ({data}:FollowerCardProps ) => {
+const FollowerCard = ({ data }: FollowerCardProps ) => {
   const [isFollowing, setIsFollowing] = useState(data.isFollow)
 
   const toggleFollow = () => {

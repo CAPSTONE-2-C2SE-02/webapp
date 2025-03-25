@@ -13,16 +13,16 @@ import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import SharePostModal from "../modals/share-post-modal";
 import TourAttachment from "../tour/tour-attachment";
-import { tours } from "@/lib/mock-data";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
+import { Post } from "@/lib/types";
+import { formatDistanceToNow } from "date-fns";
 
-const imageMockData = ["https://placehold.co/600x400", "https://placehold.co/230x300", "https://placehold.co/1080x940"];
-
-const PostCard = () => {
+const PostCard = ({ postData }: { postData: Post }) => {
   const [isLike, setIsLike] = useState(false);
   const [isSave, setIsSave] = useState(false);
   const [isSharePostModelOpen, setIsSharePostModelOpen] = useState(false);
   const [postUrl, setPostUrl] = useState<string>("");
+  const [likes, setLikes] = useState<number>(postData?.likes?.length);
 
   const showSharePost = (postId: string) => {
     const baseUrl = window.location.origin || "http://localhost:5173";
@@ -33,6 +33,7 @@ const PostCard = () => {
 
   const handleLikePost = () => {
     setIsLike((prev) => !prev);
+    setLikes(like => like + 1);
   };
 
   const handleSavePost = () => {
@@ -41,7 +42,7 @@ const PostCard = () => {
 
   const postImages = useMemo(
     () => (
-      imageMockData.map((image, index) => (
+      postData?.imageUrls && postData?.imageUrls.map((image, index) => (
         <CarouselItem key={index} className="basis-auto max-h-[260px] max-w-[380px] first:pl-4 pl-2">
           <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
             <img src={image} alt="post image" className="w-full h-full object-cover" />
@@ -49,7 +50,7 @@ const PostCard = () => {
         </CarouselItem>
       ))
     ),
-    []
+    [postData?.imageUrls]
   );
 
   return (
@@ -66,10 +67,10 @@ const PostCard = () => {
             </div>
             <div className="text-primary">
               <Link
-                to={`/users/username`}
+                to={`/${postData?.createdBy?.username}`}
                 className="hover:underline text-sm font-medium"
               >
-                Ngoc Anh
+                {postData?.createdBy?.fullName}
               </Link>
               <div className="flex items-center gap-1">
                 <Clock className="size-3" />
@@ -77,7 +78,7 @@ const PostCard = () => {
                   to={`/n2duc/post/123123123`}
                   className="text-xs hover:underline"
                 >
-                  12 minutes ago
+                  {formatDistanceToNow(new Date(postData?.createdAt), { addSuffix: true })}
                 </Link>
               </div>
             </div>
@@ -98,41 +99,29 @@ const PostCard = () => {
         <CardContent className="px-4 pb-3">
           {/* Text Content */}
           <div>
-            <p className="text-black text-sm font-normal">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Dicta
-              ducimus quia, ipsam consequatur corrupti quasi quas minima, et
-              cupiditate possimus provident quis hic eius unde est odio laborum.
-              Officia, blanditiis.
-            </p>
+            {postData?.content.length > 0 && postData.content.map(content => (
+              <p key={content} className="text-black text-sm font-normal">{content}</p>
+            ))}
             {/* Hashtag */}
             <div className="flex items-center gap-1 mt-1">
-              <Link
-                to={`/posts&search=banahill`}
-                className="hover:underline text-sm text-primary"
-              >
-                #banahill
-              </Link>
-              <Link
-                to={`/posts&search=banahill`}
-                className="hover:underline text-sm text-primary"
-              >
-                #banahill
-              </Link>
-              <Link
-                to={`/posts&search=banahill`}
-                className="hover:underline text-sm text-primary"
-              >
-                #banahill
-              </Link>
+              {postData?.hashtag?.length > 0 && postData.hashtag.map(tag => (
+                <Link
+                  to={`/posts?search=${tag}`}
+                  className="hover:underline text-sm text-primary"
+                  key={tag}
+                >
+                  #{tag}
+                </Link>
+              ))}
             </div>
           </div>
 
           {/* Photos Content */}
-          {imageMockData.length > 0 && (
+          {postData?.imageUrls.length > 0 && (
             <div className="mt-3">
-              {imageMockData.length === 1 ? (
+              {postData?.imageUrls.length === 1 ? (
                 <div className="max-w-full overflow-hidden w-full h-full rounded-lg border border-zinc-300">
-                  <img src="https://placehold.co/600x400" alt="" className="max-h-[420px]" />
+                  <img src={postData?.imageUrls[0]} alt="" className="max-h-[420px] w-full" />
                 </div>
               ) : (
                 <div>
@@ -144,7 +133,9 @@ const PostCard = () => {
             </div>
           )}
           {/* Tour Attachment */}
-          <TourAttachment tour={tours[0]} />
+          {postData?.tourAttachment && (
+            <TourAttachment tour={postData?.tourAttachment} />
+          )}
           {/* Post Action */}
           <div className="w-full flex items-center justify-between px-10 mt-3">
             <Button
@@ -165,7 +156,7 @@ const PostCard = () => {
               </div>
               <div className="flex items-center justify-center py-1 px-1.5 rounded-xl bg-primary/20">
                 <span className="text-sm font-semibold leading-none text-primary">
-                  13
+                  {likes}
                 </span>
               </div>
             </Button>

@@ -181,6 +181,8 @@ const router = express.Router();
 router.post("/register/traveler", validate(userSchema), userController.registerTraveler);
 router.post("/register/tour-guide", validate(userSchema), userController.registerTourGuide);
 router.get("", authenticated, authorize("ADMIN"), userController.getAllUsers);
+router.get("/auth-user", authenticated, userController.getAuthUser);
+router.get("/profile/:username", userController.getUserByUsername);
 router.put("/change-password", authenticated, authorize("TRAVELER", "TOUR_GUIDE"), userController.changePassword);
 router.get("/:id", authenticated, authorize("ADMIN", "TRAVELER", "TOUR_GUIDE"), checkOwnerUserId, userController.findUserById);
 
