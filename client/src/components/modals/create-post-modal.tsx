@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Hash, Image, MapPin, Smile, X } from "lucide-react";
+import { Hash, Image, Loader2, MapPin, Smile, X } from "lucide-react";
 import { Description } from "@radix-ui/react-dialog";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -18,6 +18,8 @@ import TourAttachmentSelector from "../tour/tour-attachment-selector";
 import { Tour } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/hooks/redux";
+import { useCreatePostMutation } from "@/services/post-api";
+import { toast } from "sonner";
 
 interface CreateNewPostModalProps {
   isOpen: boolean;
@@ -29,10 +31,9 @@ const CreateNewPostModal = ({
   onOpenChange,
 }: CreateNewPostModalProps) => {
   const { userInfo } = useAppSelector((state) => state.auth);
+  const [createPost, { isLoading, isError, error }] = useCreatePostMutation();
 
   const [isShowTagInput, setIsShowTagInput] = useState(false);
-  const [isEmptyContent, setIsEmptyContent] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [showTourSelector, setShowTourSelector] = useState(false);
 
   const [tags, setTags] = useState<string[]>([]);
@@ -40,36 +41,28 @@ const CreateNewPostModal = ({
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // reset all form fields when modal is closed
   useEffect(() => {
     if (!isOpen) {
       setIsShowTagInput(false);
-      setIsEmptyContent(true);
-      setIsLoading(false);
       setShowTourSelector(false);
       setTags([]);
       setContent("");
       setSelectedTour(null);
       setImages([]);
+      if (contentRef.current) contentRef.current.innerHTML = "";
     }
   }, [isOpen]);
 
   // set content from div textbox
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const isEmpty = e.currentTarget.textContent?.trim() === '';
-    setIsEmptyContent(isEmpty);
-
-    if (e.currentTarget) {
-      const processedContent = e.currentTarget.innerHTML
-        .replace(/<div>/g, '\n')
-        .replace(/<\/div>/g, '')
-        .replace(/<br>/g, '\n')
-        .trim();
-      
-      setContent(processedContent);
+  const handleInput = () => {
+    if (contentRef.current) {
+      const text = contentRef.current.innerText.trim();
+      setContent(text);
     }
-  };
+  }
 
   // handle tasks related to images 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,23 +78,42 @@ const CreateNewPostModal = ({
 
   // create new post
   const handleSubmit = async () => {
-    setIsLoading(true);
-    const formData = new FormData();
+    try {
+      const formData = new FormData();
+  
+      // Append text data
+      if (content) {
+        content.split('\n').forEach((line) => {
+          formData.append('content', line);
+        });
+      }
+      tags.forEach((tag) => {
+        formData.append('hashtag', tag);
+      });
+      if (selectedTour) {
+        formData.append('tourAttachment', selectedTour._id);
+      }
 
-    // Append text data
-    formData.append('content', content);
-    formData.append('tags', JSON.stringify(tags));
-    // if (selectedTour) {
-    //   formData.append('tourId', selectedTour.id);
-    // }
+      // Append images
+      images.forEach((image) => {
+        formData.append('images', image);
+      });
 
-    // Append images
-    images.forEach((image) => {
-      formData.append(`images`, image);
-    });
+      const response = await createPost(formData).unwrap();
 
-    console.log(images, tags, content.split("\n"));
-    setIsLoading(false);
+      if (!response.success || isError) {
+        toast.error(response.error || error as string || "Error when creating post");
+        return;
+      }
+
+      toast.success(response.message);
+      onOpenChange(false);
+      
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.data?.error || "Error when creating post");
+    }
   };
 
   return (
@@ -135,16 +147,18 @@ const CreateNewPostModal = ({
                 </div>
                 <div className="space-y-3">
                   <div className="relative">
-                    {isEmptyContent && (
+                    {content.length == 0 && (
                       <span className="absolute top-0 left-0 text-gray-400 pointer-events-none text-sm">
                         What's on your mind?
                       </span>
                     )}
                     <div
                       aria-placeholder="What's on your mind?"
+                      ref={contentRef}
                       tabIndex={0}
                       role="textbox"
                       contentEditable="true"
+                      spellCheck="false"
                       onInput={handleInput}
                       className="w-full select-text break-words rounded focus:outline-none min-h-[1rem] text-sm whitespace-pre-wrap overflow-x-auto overflow-y-auto"
                     />
@@ -217,7 +231,10 @@ const CreateNewPostModal = ({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button onClick={handleSubmit} disabled={isLoading}>Post</Button>
+              <Button onClick={handleSubmit} disabled={isLoading}>
+                {isLoading && <Loader2 className="size-4 animate-spin" />}
+                Post
+              </Button>
             </DialogFooter>
           </div>
 
