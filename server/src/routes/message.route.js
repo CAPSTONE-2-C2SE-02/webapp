@@ -9,7 +9,7 @@ import upload from '../middlewares/multer.middleware.js';
 const router = express.Router();
 
 
-router.post("/", authenticated, upload.array("files"), Message.createMessage);
+router.post("/", authenticated, upload.array("images"), Message.createMessage);
 router.get("/:chatId", authenticated, Message.getMessages);
 
 
