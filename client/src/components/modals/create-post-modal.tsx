@@ -18,7 +18,7 @@ import TourAttachmentSelector from "../tour/tour-attachment-selector";
 import { Tour } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/hooks/redux";
-import { useCreatePostMutation } from "@/services/post-api";
+import { useCreatePostMutation } from "@/services/posts/post-api";
 import { toast } from "sonner";
 
 interface CreateNewPostModalProps {

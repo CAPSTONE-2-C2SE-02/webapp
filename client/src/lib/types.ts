@@ -15,6 +15,15 @@ export type Post = {
   updatedAt: string;
 }
 
+export type PostsNewFeed = {
+  totalPosts: number;
+  totalPage: number;
+  currentPage: number;
+  nextPage: number;
+  limit: number;
+  data: Post[];
+}
+
 export type TourAttachment = {
   _id: string;
   title: string;

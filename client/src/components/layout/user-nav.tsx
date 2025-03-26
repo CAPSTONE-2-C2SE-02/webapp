@@ -31,7 +31,7 @@ export default function UserNav() {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center text-primary gap-2 outline-none border-none focus:outline-none">
           <Avatar className="size-10">
-            <AvatarImage src={avatarDemo} alt="Avatar" />
+            <AvatarImage src={avatarDemo} alt="Avatar" className="object-cover" />
             <AvatarFallback>{userInfo?.fullName}</AvatarFallback>
           </Avatar>
           <ChevronDown className="size-5" />

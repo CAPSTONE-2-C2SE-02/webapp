@@ -60,6 +60,7 @@ class PostController {
                     totalPosts: totalPosts,
                     totalPage: Math.ceil(totalPosts / limit),
                     currentPage: page,
+                    nextPage: page + 1,
                     limit: limit,
                     data: posts
                 },
@@ -75,7 +76,8 @@ class PostController {
     // [GET] /api/v1/posts/:id
     async getPostById(req, res) {
         try {
-            const post = await Post.findOne()
+            const { id } = req.params;
+            const post = await Post.findOne({ _id: id })
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination introduction imageUrls")
@@ -390,6 +392,10 @@ class PostController {
     // [GET] /api/v1/posts/profile/:username
     async getAllPostsByUsername(req, res) {
         try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const skip = (page - 1) * limit;
+
             const username = req.params.username;
 
             const user = await User.findOne({ username });
@@ -400,11 +406,12 @@ class PostController {
                 });
             }
 
-            const posts = await Post.find({ createdBy: user._id })
+            const posts = await Post.find({ createdBy: user._id }).skip(skip).limit(limit)
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination introduction imageUrls")
                 .sort({ "createdAt": -1 })
+
             if (!posts) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -412,9 +419,18 @@ class PostController {
                 })
             }
 
+            const totalPosts = await Post.find({ createdBy: user._id }).countDocuments();
+
             return res.status(StatusCodes.OK).json({
                 success: true,
-                result: posts
+                result: {
+                    totalPosts: totalPosts,
+                    totalPage: Math.ceil(totalPosts / limit),
+                    currentPage: page,
+                    nextPage: page + 1,
+                    limit: limit,
+                    data: posts
+                }
             })
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

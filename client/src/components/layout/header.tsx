@@ -37,7 +37,7 @@ const Header = () => {
       <div className="container mx-auto flex items-center justify-between px-8 py-4">
         <div className="flex items-center gap-5 flex-1">
           <Link to="/" className="size-10">
-            <img src={tripConnectLogo} className="w-full h-full" />
+            <img src={tripConnectLogo} className="w-full h-full object-cover" />
           </Link>
           <SearchInput />
         </div>
