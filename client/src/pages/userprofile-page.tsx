@@ -1,10 +1,13 @@
+import InfiniteScrollContainer from "@/components/post/infinite-scroll-container";
 import NewPost from "@/components/post/new-post";
 import PostCard from "@/components/post/post-card";
+import PostCardSkeleton from "@/components/skeleton/post-card-skeleton";
 import ToursRecommend from "@/components/tour/tours-recommend";
 import { Calendar } from "@/components/ui/calendar"
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAppSelector } from "@/hooks/redux";
-import { useGetPostsByUsernameQuery } from "@/services/post-api";
+import { fetchPostByUsername } from "@/services/posts/post-api";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useParams } from "react-router";
 
@@ -12,9 +15,22 @@ const UserProfilePage = () => {
   const { username } = useParams();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
-  const { data: postsData, isLoading } = useGetPostsByUsernameQuery({ username: username as string }, {
-    skip: !username
-  });
+  
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ["posts-feed", "user-posts", username],
+    queryFn: ({ pageParam }) => fetchPostByUsername({ username: username!, pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+  })
+
+  const posts = data?.pages.flatMap((page) => page.data) || []; 
 
   return (
     <div className="my-1 w-full flex items-start gap-5">
@@ -32,17 +48,17 @@ const UserProfilePage = () => {
         {isAuthenticated && userInfo?.username === username && (
           <NewPost />
         )}
-        {isLoading && (
-          <div className="flex flex-col gap-3">
-            <Skeleton className="w-full h-[300px] rounded-xl" />
-            <Skeleton className="w-full h-[300px] rounded-xl" />
-          </div>
-        )}
-        <div className="flex flex-col gap-3">
-          {!isLoading && postsData?.result?.map((post) => (
+        <InfiniteScrollContainer
+          className="flex flex-col gap-3"
+          onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
+        >
+          {status === "pending" && <PostCardSkeleton />}
+          {status === "error" && <p className="text-center text-destructive">An error occurred while loading posts.</p>}
+          {posts.map((post) => (
             <PostCard key={post._id} postData={post} />
           ))}
-        </div>
+          {isFetchingNextPage && <Loader2 className="mx-auto my-3 animate-spin" />}
+        </InfiniteScrollContainer>
       </div>
       {/* right content */}
       <div className="flex flex-col gap-5 max-w-[340px] w-full sticky top-20 left-0">

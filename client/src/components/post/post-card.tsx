@@ -45,7 +45,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
       postData?.imageUrls && postData?.imageUrls.map((image, index) => (
         <CarouselItem key={index} className="basis-auto max-h-[260px] max-w-[380px] first:pl-4 pl-2">
           <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
-            <img src={image} alt="post image" className="w-full h-full object-cover" />
+            <img src={image} alt="post image" loading="lazy" className="w-full h-full object-cover" />
           </div>
         </CarouselItem>
       ))
@@ -75,7 +75,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
               <div className="flex items-center gap-1">
                 <Clock className="size-3" />
                 <Link
-                  to={`/n2duc/post/123123123`}
+                  to={`/${postData?.createdBy?.username}/post/${postData?._id}`}
                   className="text-xs hover:underline"
                 >
                   {formatDistanceToNow(new Date(postData?.createdAt), { addSuffix: true })}
@@ -121,7 +121,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
             <div className="mt-3">
               {postData?.imageUrls.length === 1 ? (
                 <div className="max-w-full overflow-hidden w-full h-full rounded-lg border border-zinc-300">
-                  <img src={postData?.imageUrls[0]} alt="" className="max-h-[420px] w-full" />
+                  <img src={postData?.imageUrls[0]} alt="" className="max-h-[420px] w-full object-cover" />
                 </div>
               ) : (
                 <div>
