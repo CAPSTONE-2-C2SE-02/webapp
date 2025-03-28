@@ -225,6 +225,112 @@ class ProfileController {
             });
         }
     };
+
+    // [POST] /api/v1/profiles/follow/:id
+    async followUser(req, res) {
+        try {
+            const currentUserId = req.user.userId;
+            const targetUserId = req.params.id;
+
+            if (currentUserId === targetUserId) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "You cannot follow yourself.",
+                });
+            }
+
+            const targetUser = await User.findById(targetUserId);
+            if (!targetUser) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            const currentUser = await User.findById(currentUserId);
+
+            if (targetUser.followers.includes(currentUserId)) {
+                // Unfollow
+                targetUser.followers = targetUser.followers.filter((id) => id.toString() !== currentUserId);
+                currentUser.followings = currentUser.followings.filter((id) => id.toString() !== targetUserId);
+
+                await targetUser.save();
+                await currentUser.save();
+
+                return res.status(StatusCodes.OK).json({
+                    success: true,
+                    message: "Unfollowed the user successfully.",
+                });
+            } else {
+                // Follow
+                targetUser.followers.push(currentUserId);
+                currentUser.followings.push(targetUserId);
+
+                await targetUser.save();
+                await currentUser.save();
+
+                return res.status(StatusCodes.OK).json({
+                    success: true,
+                    message: "Followed the user successfully.",
+                });
+            }
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/profiles/followers
+    async getFollowers(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await User.findById(userId).populate("followers", "_id username fullName profilePicture");
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: user.followers,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/profiles/following
+    async getFollowings(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await User.findById(userId).populate("followings", "_id username fullName profilePicture");
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: user.followings,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
 };
 
 export default new ProfileController;

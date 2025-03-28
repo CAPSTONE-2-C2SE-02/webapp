@@ -12,6 +12,8 @@ import { swaggerUi, swaggerSpec } from "./config/swagger.config.js";
 import connectMongoDB from "./config/db.config.js";
 import routes from "./routes/index.js";
 
+import checkExpiredBookings from "./jobs/cron.job.js";
+
 dotenv.config();
 
 const app = express();
@@ -53,6 +55,8 @@ const startServer = () => {
 
   let oneLineUses = [];
 
+  // Cron Jobs
+  checkExpiredBookings();
 
   io.on("connection", (socket) => {
 
