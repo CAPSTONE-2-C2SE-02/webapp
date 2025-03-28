@@ -2,48 +2,62 @@ import Booking from "../models/booking.model.js";
 import Tour from "../models/tour.model.js"
 import User from "../models/user.model.js"
 import { StatusCodes } from "http-status-codes";
-import { addHours, differenceInHours } from "date-fns";
+import { addHours, differenceInHours, addMinutes } from "date-fns";
+import { reserveSlots, releaseSlots } from "../services/booking.service.js";
 
 class BookingController {
     // [POST] /api/v1/bookings/
     async createBooking(req, res) {
         try {
-            const { tourId, startDay, endDay, totalAmount } = new Booking(req.body);
+            const { tourId, startDay, endDay, adults, youths, children, } = new Booking(req.body);
+            const travelerId = req.user.userId;
+            const slots = (adults || 0) + (youths || 0) + (children || 0);
+
+            const reserved = await reserveSlots(tourId, slots);
+            if (!reserved) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Not enough slots for booking"
+                });
+            }
+
             const tour = await Tour.findById(tourId);
             if (!tour)
                 return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Tour not found" });
 
-            const tourGuide = await User.findOne({ _id: tour.tourGuideId });
-            const traveler = await User.findOne({ _id: req.user.userId });
-
-            const depositAmount = totalAmount * 30 / 100;
-
-            const now = new Date();
-            const hoursUntilStart = differenceInHours(startDay, now);
-
-            let timeoutAt;
-            if (hoursUntilStart > 48) {
-                timeoutAt = addHours(now, 12);
-            } else if (hoursUntilStart >= 24) {
-                timeoutAt = addHours(now, 6);
-            } else {
-                timeoutAt = addHours(now, 2);
+            if (tour.availableSlots < slots) {
+                await releaseSlots(tourId, slots);
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: "Not enough slots" });
             }
 
+            const tourGuide = await User.findOne({ _id: tour.author });
+
+            const totalAmount = ((adults || 0) * tour.priceForAdult) + ((youths || 0) * tour.priceForYoung) + ((children || 0) * tour.priceForChildren);
+            const depositAmount = totalAmount * 0.3;
+
+            const timeoutAt = addMinutes(new Date(), 3);
+
             const newBooking = {
-                travelerId: traveler._id,
+                travelerId: travelerId,
                 tourId: tourId,
                 tourGuideId: tourGuide._id,
                 startDay: startDay,
                 endDay: endDay,
+                adults: adults,
+                youths: youths,
+                children: children,
                 totalAmount: totalAmount,
                 depositAmount: depositAmount,
                 timeoutAt: timeoutAt,
             }
 
-            await Booking.create(newBooking);
+            const bookingResponse = await Booking.create(newBooking);
 
-            return res.status(StatusCodes.CREATED).json({ success: true, result: newBooking, message: "Booking created successfully" });
+            return res.status(StatusCodes.CREATED).json({
+                success: true,
+                result: bookingResponse,
+                message: "Booking created successfully"
+            });
         } catch (error) {
             return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: error.message });
         }

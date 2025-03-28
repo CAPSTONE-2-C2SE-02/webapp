@@ -4,7 +4,7 @@ import MongooseDelete from "mongoose-delete";
 const bookingSchema = new mongoose.Schema({
     travelerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Profile",
+        ref: "User",
     },
     tourId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -12,7 +12,7 @@ const bookingSchema = new mongoose.Schema({
     },
     tourGuideId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Profile",
+        ref: "User",
     },
     bookingDate: {
         type: Date,
@@ -26,7 +26,7 @@ const bookingSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ["PENDING", "CONFIRMED", "CANCELED", "TIMEOUT"],
+        enum: ["PENDING", "PAID", "CONFIRMED", "CANCELED", "TIMEOUT"],
         default: "PENDING",
     },
     paymentStatus: {
@@ -34,17 +34,27 @@ const bookingSchema = new mongoose.Schema({
         enum: ["PENDING", "PAID", "REFUNDED"],
         default: "PENDING",
     },
-    depositAmount: {
+    adults: {
+        type: Number,
+    },
+    youths: {
+        type: Number,
+    },
+    children: {
         type: Number,
     },
     totalAmount: {
         type: Number,
     },
+    depositAmount: {
+        type: Number,
+    },
     timeoutAt: {
         type: Date,
+        index: { expires: 300 },
     },
 },
-    { timestamps: true }
+    { timestamps: true, versionKey: false }
 )
 
 bookingSchema.plugin(MongooseDelete, { deletedAt: true, overrideMethods: true });
