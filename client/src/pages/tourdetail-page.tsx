@@ -20,7 +20,7 @@ const TourDetailPage = () => {
           <TourInfo tour={tourData} />
           <TourReviewsSection reviews={tourData.reviews} />
         </div>
-        <TourBookingSection toursGuide={tourData.tourGuides} price={tourData.price} />
+        <TourBookingSection toursGuide={tourData.author} price={tourData.priceForAdult} />
       </div>
     </div>
   );

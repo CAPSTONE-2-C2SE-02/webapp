@@ -24,7 +24,7 @@ const HomePage = () => {
     queryKey: ["posts-feed"],
     queryFn: fetchNewsFeed,
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => lastPage?.nextPage || undefined,
+    getNextPageParam: (lastPage) => lastPage?.nextPage,
   });
 
   const posts = postsData?.pages.flatMap((page) => page.data) || [];

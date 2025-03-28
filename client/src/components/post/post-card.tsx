@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader } from "../ui/card";
 import {
   Bookmark,
   Clock,
-  EllipsisVertical,
   Forward,
   Heart,
   MessageSquareMore,
@@ -16,6 +15,7 @@ import TourAttachment from "../tour/tour-attachment";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { Post } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
+import PostCardAction from "./post-card-action";
 
 const PostCard = ({ postData }: { postData: Post }) => {
   const [isLike, setIsLike] = useState(false);
@@ -91,9 +91,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
                 <Bookmark className="size-4" />
               )}
             </Button>
-            <Button variant={"ghost"} size={"icon"}>
-              <EllipsisVertical />
-            </Button>
+            <PostCardAction id={postData._id} author={postData.createdBy} />
           </div>
         </CardHeader>
         <CardContent className="px-4 pb-3">
@@ -137,7 +135,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
             <TourAttachment tour={postData?.tourAttachment} />
           )}
           {/* Post Action */}
-          <div className="w-full flex items-center justify-between px-10 mt-3">
+          <div className="w-full flex items-center justify-between px-10 mt-3 rounded-md">
             <Button
               variant={"ghost"}
               className={cn(

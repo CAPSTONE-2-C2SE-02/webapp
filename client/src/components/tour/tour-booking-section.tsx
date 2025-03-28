@@ -12,12 +12,12 @@ import { Calendar } from "../ui/calendar";
 import { Separator } from "../ui/separator";
 import { format, isSameDay } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { TourDetail } from "@/lib/types";
+import { Tour } from "@/lib/types";
 import { useAppSelector } from "@/hooks/redux";
 import { toast } from "sonner";
 
 interface TourBookingSectionProps {
-  toursGuide: TourDetail['tourGuides'];
+  toursGuide: Tour['author'];
   price: number;
 }
 
