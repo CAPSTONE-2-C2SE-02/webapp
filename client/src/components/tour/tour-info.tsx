@@ -1,10 +1,10 @@
 import { MapPin, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TourDetail } from "@/lib/types";
+import { Tour } from "@/lib/types";
 import TourImageGallery from "./tour-image-gallery";
 
 interface TourInfoProps {
-  tour: TourDetail;
+  tour: Tour;
 }
 
 export default function TourInfo({ tour }: TourInfoProps) {
@@ -27,7 +27,7 @@ export default function TourInfo({ tour }: TourInfoProps) {
       </div>
 
       {/* Main Image and Thumbnails */}
-      <TourImageGallery images={tour.photos} />
+      <TourImageGallery images={tour.imageUrls} />
 
       {/* Tabs */}
       <Tabs defaultValue="introduction" className="w-full">

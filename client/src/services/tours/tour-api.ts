@@ -1,5 +1,6 @@
-import { ApiResponse } from "@/lib/types";
-import { rootApi } from "./root-api";
+import { ApiResponse, Tour } from "@/lib/types";
+import { rootApi } from "../root-api";
+import axiosInstance from "@/config/api";
 
 export const tourApi = rootApi.injectEndpoints({
   endpoints: (builder) => {
@@ -18,3 +19,8 @@ export const tourApi = rootApi.injectEndpoints({
 });
 
 export const { useCreateTourMutation } = tourApi;
+
+export const fetchAllPostTourGuide = async (): Promise<Tour[]> => {
+  const response = await axiosInstance.get('/tours/my-tours');
+  return response.data.result;
+};

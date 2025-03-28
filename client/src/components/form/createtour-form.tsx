@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, ImagePlus, Loader2, X } from "lucide-react";
 import { createTourSchema, CreateTourValues } from "@/lib/validations";
-import { useCreateTourMutation } from "@/services/tour-api";
+import { useCreateTourMutation } from "@/services/tours/tour-api";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";

@@ -16,11 +16,11 @@ export type Post = {
 }
 
 export type PostsNewFeed = {
-  totalPosts: number;
-  totalPage: number;
-  currentPage: number;
+  // totalPosts: number;
+  // totalPage: number;
+  // currentPage: number;
+  // limit: number;
   nextPage: number;
-  limit: number;
   data: Post[];
 }
 
@@ -35,24 +35,15 @@ export type TourAttachment = {
 export type Tour = {
   _id: string;
   title: string;
-  description: string;
-  photo: string[];
-  rating: number;
-  location: string;
-  price: number;
-  duration: string;
-  create_by: string;
-}
-
-export type TourDetail = {
-  _id: string;
-  title: string;
-  description: string;
-  photos: string[];
+  introduction: string;
+  imageUrls: string[];
   rating: number;
   depatureLocation: string;
   destination: string;
-  price: number;
+  priceForAdult: number;
+  priceForYoung: number;
+  priceForChildren: number;
+  maxParticipants: number;
   duration: string;
   schedule:
   {
@@ -62,8 +53,7 @@ export type TourDetail = {
   includes: string[];
   notIncludes: string[];
   reviews: Review[];
-  introduction: string;
-  tourGuides: {
+  author: {
     _id: string,
     name: string,
     avatar: string,

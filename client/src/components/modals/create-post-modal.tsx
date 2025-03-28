@@ -18,8 +18,9 @@ import TourAttachmentSelector from "../tour/tour-attachment-selector";
 import { Tour } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/hooks/redux";
-import { useCreatePostMutation } from "@/services/posts/post-api";
+// import { useCreatePostMutation } from "@/services/posts/post-api";
 import { toast } from "sonner";
+import { useCreatePostMutation } from "@/services/posts/mutation";
 
 interface CreateNewPostModalProps {
   isOpen: boolean;
@@ -31,7 +32,8 @@ const CreateNewPostModal = ({
   onOpenChange,
 }: CreateNewPostModalProps) => {
   const { userInfo } = useAppSelector((state) => state.auth);
-  const [createPost, { isLoading, isError, error }] = useCreatePostMutation();
+  // const [createPost, { isLoading, isError, error }] = useCreatePostMutation();
+  const createPostMutation = useCreatePostMutation();
 
   const [isShowTagInput, setIsShowTagInput] = useState(false);
   const [showTourSelector, setShowTourSelector] = useState(false);
@@ -99,16 +101,19 @@ const CreateNewPostModal = ({
         formData.append('images', image);
       });
 
-      const response = await createPost(formData).unwrap();
+      // const response = await createPost(formData).unwrap();
+      createPostMutation.mutate(
+        formData,
+        {
+          onSuccess: () => {
+            onOpenChange(false);
+          },
+          onError: () => {
+            return;
+          }
+        }
+      )
 
-      if (!response.success || isError) {
-        toast.error(response.error || error as string || "Error when creating post");
-        return;
-      }
-
-      toast.success(response.message);
-      onOpenChange(false);
-      
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error(error);
@@ -231,8 +236,8 @@ const CreateNewPostModal = ({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button onClick={handleSubmit} disabled={isLoading}>
-                {isLoading && <Loader2 className="size-4 animate-spin" />}
+              <Button onClick={handleSubmit} disabled={createPostMutation.isPending}>
+                {createPostMutation.isPending && <Loader2 className="size-4 animate-spin" />}
                 Post
               </Button>
             </DialogFooter>

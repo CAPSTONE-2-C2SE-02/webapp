@@ -16,7 +16,7 @@ createRoot(document.getElementById('root')!).render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <AppRoutes />
-        <Toaster position="top-right" />
+        <Toaster position="top-right" duration={2000} />
       </PersistGate>
     </Provider>
     </QueryClientProvider>

@@ -25,11 +25,19 @@ class PostController {
                 imageUrls,
             }
 
-            await Post.create(newPost);
+            const createdPost = await Post.create(newPost)
+
+            const post = await Post.findById(createdPost._id)
+                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("likes", "_id username fullName")
+                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .sort({ "createdAt": -1 })
+                .exec();
 
             return res.status(StatusCodes.CREATED).json({
                 success: true,
-                message: "Post create successfully"
+                message: "Post create successfully",
+                result: post,
             })
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -161,11 +169,12 @@ class PostController {
                 })
             }
 
-            await Post.delete({ _id: id });
+            const postDeleted = await Post.findOneAndDelete({ _id: id });
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                message: "Post has been deleted",
+                message: "Post delete successfully",
+                result: postDeleted,
             })
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

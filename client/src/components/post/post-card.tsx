@@ -135,7 +135,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
             <TourAttachment tour={postData?.tourAttachment} />
           )}
           {/* Post Action */}
-          <div className="w-full flex items-center justify-between px-10 mt-3">
+          <div className="w-full flex items-center justify-between px-10 mt-3 rounded-md">
             <Button
               variant={"ghost"}
               className={cn(

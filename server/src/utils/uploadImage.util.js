@@ -5,7 +5,7 @@ import fs from 'fs';
 export const uploadImages = async (images) => {
     try {
         if (!images || images.length === 0) {
-            throw new Error("No images provided.");
+            return [];
         }
 
         const uploadPromises = images.map(async (img) => {
