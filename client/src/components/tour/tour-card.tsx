@@ -27,7 +27,7 @@ const TourCard = ({ tour, type }: TourCardProps) => {
 
           {/* content */}
           <div className="p-2 flex flex-col items-center gap-5 flex-1 transition-opacity duration-300 group-hover:opacity-100 relative">
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <h4 className="text-sm font-semibold line-clamp-1">
                 {tour.title}
               </h4>

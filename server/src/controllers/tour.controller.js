@@ -47,12 +47,28 @@ class TourController {
     // [GET] /api/v1/tours
     async getAllTours(req, res) {
         try {
+            const sortBy = req.query.sortBy || "createdAt";
+            const sortOrder = req.query.sortOrder || "desc";
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const skip = (page - 1) * limit;
 
-            const tours = await Tour.find().skip(skip).limit(limit)
+            const sortOptions = {};
+            if (sortBy === "price") {
+                sortOptions.priceForAdult = sortOrder === "asc" ? 1 : -1;
+            } else if (sortBy === "rating") {
+                sortOptions.rating = sortOrder === 'asc' ? 1 : -1;
+            } else {
+                sortOptions.createdAt = sortOrder === 'asc' ? 1 : -1;
+            }
+
+            const tours = await Tour
+                .find()
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(limit)
                 .populate("author", "_id username fullName profilePicture ranking rating");
+
             const totalTours = await Tour.countDocuments();
 
             return res.status(StatusCodes.OK).json({
@@ -61,7 +77,6 @@ class TourController {
                     totalTours,
                     totalPage: Math.ceil(totalTours / limit),
                     currentPage: page,
-                    limit,
                     data: tours
                 },
             });

@@ -8,12 +8,109 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { tours } from "@/lib/mock-data";
 import TourCard from "./tour-card";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../ui/pagination";
+import { Tour } from "@/lib/types";
+import TourCardSkeleton from "../skeleton/tour-card-skeleton";
 
-const TourListing = () => {
+interface TourListing {
+  tours: Tour[];
+  total: number;
+  currentPage: number;
+  currentSortBy: string;
+  currentSortOrder: string;
+  loading: boolean;
+}
+
+const TourListing = ({
+  tours,
+  total,
+  currentPage,
+  currentSortBy,
+  currentSortOrder,
+  loading,
+}: TourListing) => {
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
+  const basePath =
+    typeof window !== "undefined" ? window.location.pathname : "/tours";
+
+  const getPaginationItems = () => {
+    const items = [];
+
+    items.push(
+      <PaginationItem key={"first"}>
+        <PaginationLink
+          href={`${basePath}?page=1${
+            currentSortBy
+              ? `&sortBy=${currentSortBy}&sortOrder=${currentSortOrder}`
+              : ""
+          }`}
+          isActive={currentPage === 1}
+        >
+          1
+        </PaginationLink>
+      </PaginationItem>
+    )
+
+    if (currentPage > 3) {
+      items.push(
+        <PaginationItem key={"elipsis-1"}>
+          <PaginationEllipsis />
+        </PaginationItem>
+      )
+    }
+
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(total - 1, currentPage + 1);
+      i++
+    ) {
+      if (i === 1 || i === total) continue;
+
+      items.push(
+        <PaginationItem key={i}>
+          <PaginationLink
+            href={`${basePath}?page=${i}${
+              currentSortBy
+                ? `&sortBy=${currentSortBy}&sortOrder=${currentSortOrder}`
+                : ""
+            }`}
+            isActive={currentPage  === i}
+          >
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      ); 
+    }
+
+    if (currentPage < total - 2) {
+      items.push(
+        <PaginationItem key={`eclipsis-2`}>
+          <PaginationEllipsis />
+        </PaginationItem>
+      )
+    }
+
+    if (total > 1) {
+      items.push(
+        <PaginationItem key={"last"}>
+          <PaginationLink
+            href={`${basePath}?page=${total}${
+              currentSortBy
+                ? `&sortBy=${currentSortBy}&sortOrder=${currentSortOrder}`
+                : ""
+            }`}
+            isActive={currentPage === total}
+          >
+            {total}
+          </PaginationLink>
+        </PaginationItem>
+      )
+    }
+
+    return items;
+  }
+
   return (
     <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-5">
       {/* Header */}
@@ -59,36 +156,37 @@ const TourListing = () => {
         </div>
       </div>
       {/* Tour Cards */}
+      {loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <TourCardSkeleton />
+          <TourCardSkeleton />
+          <TourCardSkeleton />
+          <TourCardSkeleton />
+          <TourCardSkeleton />
+          <TourCardSkeleton />
+        </div>
+      )}
       <div className={viewType === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" : "space-y-3"}>
         {tours.map((tour) => (
           <TourCard key={tour._id} tour={tour} type={viewType} />
         ))}
       </div>
       {/* Pagination */}
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">1</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#" isActive>
-              2
-            </PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationLink href="#">3</PaginationLink>
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationEllipsis />
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext href="#" />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      {total > 1 && (
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious href="#" />
+            </PaginationItem>
+            
+            {getPaginationItems()}
+
+            <PaginationItem>
+              <PaginationNext href="#" />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      )}
     </div>
   );
 };

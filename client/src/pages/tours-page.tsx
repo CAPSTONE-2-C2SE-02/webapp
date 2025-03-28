@@ -2,8 +2,27 @@ import TourFilterPanel from "@/components/tour/tour-filter-panel";
 import TourListing from "@/components/tour/tour-listings";
 import { Button } from "@/components/ui/button";
 import { MapPin, Search } from "lucide-react";
+import { useSearchParams } from "react-router";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { fetchAllTours } from "@/services/tours/tour-api";
 
 const ToursPage = () => {
+  const [searchParams] = useSearchParams();
+  const params = Object.fromEntries([...searchParams]);
+  
+  const page = params.page ? parseInt(params.page) : 1;
+  const sortBy = (params.sortBy || "createdAt") as | "price" | "rating" | "createdAt";
+  const sortOrder = (params.sortOrder || "desc") as "asc" | "desc";
+  
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ["tours", page, sortBy, sortOrder],
+    queryFn: () => fetchAllTours({ pageParam: page, sortBy, sortOrder }),
+    placeholderData: keepPreviousData,
+  });
+
+  const tours = data?.success && data.result ? data.result.data : [];
+  const total = data?.success && data.result ? data.result.totalPage : 0;
+
   return (
     <div className="my-5">
       <div className="mb-14">
@@ -18,9 +37,9 @@ const ToursPage = () => {
           </div>
           {/* search box */}
           <div className="absolute max-w-[800px] w-full left-1/2 bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-border -translate-x-1/2 bottom-0 translate-y-1/3 flex items-center gap-3">
-            <div className="px-4 py-2 rounded-lg bg-white flex items-center justify-center gap-4 border border-border flex-1">
-              <MapPin className="size-4" />
-              <input type="text" className="border-none outline-none flex-1 text-base placeholder:text-base" placeholder="Xin chao cac con vo" />
+            <div className="px-4 py-2.5 rounded-lg bg-white flex items-center justify-center gap-4 border border-border flex-1">
+              <MapPin className="size-4 text-primary" />
+              <input type="text" className="border-none outline-none flex-1 text-sm placeholder:text-sm" placeholder="Where are you going?" />
             </div>
             <Button className="text-white h-[40px]">
               <Search className="size-4" />
@@ -40,8 +59,20 @@ const ToursPage = () => {
           {/* Cards Feature */}
           <TourFilterPanel />
         </div>
+        {isError && (
+          <div className="w-full shadow bg-white rounded-2xl border border-zinc-50 p-5 text-sm text-red-500 font-medium">
+            {error.message}
+          </div>
+        )}
         {/* Tour Listings */}
-        <TourListing />
+        <TourListing
+          tours={tours}
+          total={total}
+          currentPage={page}
+          currentSortBy={sortBy}
+          currentSortOrder={sortOrder}
+          loading={isPending}
+        />
       </div>
     </div>
   )
