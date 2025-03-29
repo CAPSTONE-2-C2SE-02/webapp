@@ -10,9 +10,9 @@ class BookingController {
     // [POST] /api/v1/bookings/
     async createBooking(req, res) {
         try {
-            const { tourId, startDay, endDay, adults, youths, children, } = new Booking(req.body);
+            const { tourId, startDay, endDay, adults = 0, youths = 0, children = 0 } = req.body;
             const travelerId = req.user.userId;
-            const slots = (adults || 0) + (youths || 0) + (children || 0);
+            const slots = adults + youths + children;
 
             const reserved = await reserveSlots(tourId, slots);
             if (!reserved) {
@@ -23,8 +23,10 @@ class BookingController {
             }
 
             const tour = await Tour.findById(tourId);
-            if (!tour)
+            if (!tour) {
+                await releaseSlots(tourId, slots);
                 return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Tour not found" });
+            }
 
             if (tour.availableSlots < slots) {
                 await releaseSlots(tourId, slots);
@@ -32,8 +34,7 @@ class BookingController {
             }
 
             const tourGuide = await User.findOne({ _id: tour.author });
-
-            const totalAmount = ((adults || 0) * tour.priceForAdult) + ((youths || 0) * tour.priceForYoung) + ((children || 0) * tour.priceForChildren);
+            const totalAmount = (adults * tour.priceForAdult) + (youths * tour.priceForYoung) + (children * tour.priceForChildren);
             const depositAmount = totalAmount * 0.3;
 
             const timeoutAt = addMinutes(new Date(), 3);

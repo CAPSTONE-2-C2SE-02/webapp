@@ -53,6 +53,9 @@ const paymentSchema = new mongoose.Schema({
     },
     amountPaid: {
         type: Number
+    },
+    paymentUrl: {
+        type: Object
     }
 },
     {

@@ -1,5 +1,6 @@
 import amqp from "amqplib";
-import { VNPay, VnpLocale, dateFormat, ProductCode, ignoreLogger } from "vnpay";
+import { StatusCodes } from "http-status-codes";
+import { ProductCode, VNPay, VnpLocale, dateFormat, ignoreLogger } from "vnpay";
 import vnpayConfig from "../config/vnpay.config.js";
 import Booking from "../models/booking.model.js";
 import Payment from "../models/payment.model.js";
@@ -11,11 +12,9 @@ async function processPayment() {
     const channel = await connection.createChannel();
     await channel.assertQueue("PAYMENT_QUEUE", { durable: true });
 
-    console.log("🔄 [*] Waiting for payment messages in PAYMENT_QUEUE");
-
     channel.consume("PAYMENT_QUEUE", async (msg) => {
         if (msg !== null) {
-            const { bookingId, userId, fullName, phoneNumber, email } = JSON.parse(msg.content.toString());
+            const { bookingId, fullName, country, address, city, note, userId } = JSON.parse(msg.content.toString());
             console.log(`💳 Processing payment for bookingId: ${bookingId}`);
 
             try {
@@ -28,19 +27,6 @@ async function processPayment() {
 
                 const transactionId = Date.now().toString() + Math.floor(1000 + Math.random() * 9000).toString();
 
-                const newPayment = await Payment.create({
-                    bookingId,
-                    userId,
-                    fullName,
-                    phoneNumber,
-                    email,
-                    transactionId,
-                    typePayment: "VNPAY",
-                    amountPaid: booking.depositAmount,
-                    status: "PENDING"
-                });
-
-                // Tạo URL thanh toán VNPay
                 const vnpay = new VNPay({
                     tmnCode: vnpayConfig.vnp_TmnCode,
                     secureSecret: vnpayConfig.vnp_HashSecret,
@@ -70,6 +56,21 @@ async function processPayment() {
                     vnp_CurrCode: "VND",
                 });
 
+                const newPayment = await Payment.create({
+                    bookingId,
+                    userId,
+                    fullName,
+                    country,
+                    address,
+                    city,
+                    note,
+                    transactionId,
+                    typePayment: "VNPAY",
+                    amountPaid: booking.depositAmount,
+                    status: "PENDING",
+                    paymentUrl: vnp_Params
+                });
+
                 console.log(`✅ Payment URL created for bookingId: ${bookingId}`, vnp_Params);
                 channel.ack(msg);
 
@@ -81,26 +82,23 @@ async function processPayment() {
     });
 }
 
-// Xử lý callback từ VNPay
-async function processVnpayCallback(vnpParams) {
+async function processVnpayCallback(vnpParams, res) {
     try {
         console.log("🔄 Processing VNPay callback:", vnpParams);
 
         const payment = await Payment.findOne({ transactionId: vnpParams["vnp_TxnRef"] });
         if (!payment) {
-            console.error("❌ Payment not found for transaction:", vnpParams["vnp_TxnRef"]);
-            return;
+            return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Payment not found" });
         }
 
         const booking = await Booking.findById(payment.bookingId);
         if (!booking || booking.status === "TIMEOUT") {
-            console.error("❌ Booking not found or expired:", payment.bookingId);
-            return;
+            return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: "Booking not found or expired" });
         }
 
         if (vnpParams["vnp_ResponseCode"] === "00") {
-            // Thanh toán thành công
             payment.status = "SUCCESS";
+            payment.transactionNo = vnpParams["vnp_TransactionNo"]
             booking.status = "PAID";
             booking.paymentMethod = "VNPAY";
             booking.paymentStatus = "PAID";
@@ -110,10 +108,28 @@ async function processVnpayCallback(vnpParams) {
                 tour.totalBookings += 1;
                 await tour.save();
             }
-        } else {
-            // Thanh toán thất bại
-            payment.status = "FAILED";
 
+            await payment.save();
+            await booking.save();
+
+            console.log(`✅ Payment processed successfully for bookingId: ${booking._id}`);
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                message: "Payment successful",
+                result: {
+                    paymentId: payment._id,
+                    bookingId: booking._id,
+                    amount: payment.amountPaid,
+                    transactionNo: vnpParams["vnp_TransactionNo"],
+                    bankCode: vnpParams["vnp_BankCode"]
+                }
+            });
+
+        } else {
+            payment.status = "FAILED";
+            booking.paymentStatus = "FAILED";
+            booking.status = "FAILED";
             const tour = await Tour.findById(booking.tourId);
             if (tour) {
                 tour.availableSlots += (booking.adults || 0) + (booking.youths || 0) + (booking.children || 0);
@@ -121,21 +137,26 @@ async function processVnpayCallback(vnpParams) {
             }
 
             releaseSlots(booking.tourId, (booking.adults || 0) + (booking.youths || 0) + (booking.children || 0));
+
+            await payment.save();
+            await booking.save();
+
+            console.log(`❌ Payment failed for bookingId: ${booking._id}`);
+
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                error: "Payment failed",
+                transactionNo: vnpParams["vnp_TransactionNo"]
+            });
         }
-
-        payment.transactionNo = vnpParams["vnp_TransactionNo"];
-        payment.bankCode = vnpParams["vnp_BankCode"];
-        payment.paymentTime = new Date();
-        await payment.save();
-        await booking.save();
-
-        console.log(`✅ Payment processed successfully for bookingId: ${booking._id}`);
 
     } catch (error) {
         console.error("❌ Error processing VNPay callback:", error);
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: "Internal Server Error" });
     }
 }
 
 processPayment().catch(console.error);
 
 export { processVnpayCallback };
+

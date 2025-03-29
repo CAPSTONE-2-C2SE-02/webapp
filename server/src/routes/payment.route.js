@@ -7,5 +7,6 @@ const router = express.Router();
 
 router.post("/", authenticated, paymentController.createPayment);
 router.get("/vnp-return", paymentController.vnpReturnURL);
+router.get("/booking/:id", authenticated, paymentController.getPaymentByBookingId);
 
 export default router;
