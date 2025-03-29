@@ -29,7 +29,15 @@ class ProfileController {
                 return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: errors });
             }
 
-            const image = req.files ? await uploadSingleImage(req.files) : user.profilePicture;
+            // Upload profile picture
+            const profilePicture = req.files?.profilePicture
+                ? await uploadSingleImage(req.files.profilePicture)
+                : user.profilePicture;
+
+            // Upload cover photo
+            const coverPhoto = req.files?.coverPhoto
+                ? await uploadSingleImage(req.files.coverPhoto)
+                : user.coverPhoto;
 
             const today = new Date();
             const minAgeDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
@@ -46,7 +54,8 @@ class ProfileController {
                     phoneNumber: request.phoneNumber || user.phoneNumber,
                     address: request.address || user.address,
                     bio: request.bio || user.bio,
-                    profilePicture: image,
+                    profilePicture: profilePicture,
+                    coverPhoto: coverPhoto,
                     dateOfBirth: request.dateOfBirth || user.dateOfBirth,
                 },
                 { new: true }
@@ -55,6 +64,7 @@ class ProfileController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: "Profile updated successfully.",
+                result: updatedProfile,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
