@@ -1,11 +1,12 @@
-import Booking from "../models/booking.model.js";
-import Tour from "../models/tour.model.js"
-import User from "../models/user.model.js"
+import { addMinutes } from "date-fns";
 import { StatusCodes } from "http-status-codes";
-import { addHours, differenceInHours, addMinutes } from "date-fns";
-import { reserveSlots, releaseSlots } from "../services/booking.service.js";
-
+import Booking from "../models/booking.model.js";
+import Tour from "../models/tour.model.js";
+import User from "../models/user.model.js";
+import { releaseSlots, reserveSlots } from "../services/booking.service.js";
+import { sendToQueue } from "../services/queue.service.js";
 class BookingController {
+
     // [POST] /api/v1/bookings/
     async createBooking(req, res) {
         try {
@@ -37,25 +38,29 @@ class BookingController {
 
             const timeoutAt = addMinutes(new Date(), 3);
 
-            const newBooking = {
-                travelerId: travelerId,
-                tourId: tourId,
+            const newBooking = await Booking.create({
+                travelerId,
+                tourId,
                 tourGuideId: tourGuide._id,
-                startDay: startDay,
-                endDay: endDay,
-                adults: adults,
-                youths: youths,
-                children: children,
-                totalAmount: totalAmount,
-                depositAmount: depositAmount,
-                timeoutAt: timeoutAt,
-            }
+                startDay,
+                endDay,
+                adults,
+                youths,
+                children,
+                totalAmount,
+                depositAmount,
+                timeoutAt,
+                paymentStatus: "PENDING"
+            });
 
-            const bookingResponse = await Booking.create(newBooking);
+            tour.availableSlots -= slots;
+            await tour.save();
+
+            await sendToQueue("booking_created", { bookingId: newBooking._id });
 
             return res.status(StatusCodes.CREATED).json({
                 success: true,
-                result: bookingResponse,
+                result: newBooking,
                 message: "Booking created successfully"
             });
         } catch (error) {
