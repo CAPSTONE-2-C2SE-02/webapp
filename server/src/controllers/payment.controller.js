@@ -4,13 +4,12 @@ import vnpayConfig from "../config/vnpay.config.js";
 import Booking from "../models/booking.model.js";
 import Payment from "../models/payment.model.js";
 import Tour from "../models/tour.model.js";
-import querystring from 'querystring';
-import crypto from 'crypto';
+import { releaseSlots } from "../services/booking.service.js";
 
 class PaymentController {
     async createPayment(req, res) {
         try {
-            const { bookingId, typePayment, fullName, phoneNumber, email, bankCode } = req.body;
+            const { bookingId, typePayment, fullName, phoneNumber, email } = req.body;
             const userId = req.user.userId;
 
             if (!bookingId) {
@@ -31,7 +30,6 @@ class PaymentController {
                 phoneNumber,
                 email,
                 transactionId,
-                bankCode,
                 typePayment: "VNPAY",
                 amountPaid: booking.depositAmount,
                 status: "PENDING"
@@ -90,35 +88,43 @@ class PaymentController {
                 return res.status(404).json({ success: false, error: "Payment not found" });
             }
 
+            const booking = await Booking.findById(payment.bookingId);
+            if (!booking || booking.status === "TIMEOUT") {
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: "Booking not found or has expired" });
+            }
+
             if (vnpParams["vnp_ResponseCode"] === "00") {
                 payment.status = "SUCCESS";
 
-                const booking = await Booking.findById(payment.bookingId);
-                if (booking) {
-                    const tour = await Tour.findById(booking.tourId);
-                    if (tour) {
-                        tour.availableSlots = tour.availableSlots - ((booking.adults | 0) + (booking.youths | 0) + (booking.children | 0));
-                        tour.totalBookings += 1;
-                        await tour.save();
-                    }
-                    booking.status = "PAID";
-                    booking.paymentMethod = "VNPAY";
-                    booking.paymentStatus = "PAID";
-                    await booking.save();
+                const tour = await Tour.findById(booking.tourId);
+                if (tour) {
+                    tour.totalBookings += 1;
+                    await tour.save();
                 }
+                booking.status = "PAID";
+                booking.paymentMethod = "VNPAY";
+                booking.paymentStatus = "PAID";
+                await booking.save();
             } else {
                 payment.status = "FAILED";
+                const tour = await Tour.findById(booking.tourId);
+                if (tour) {
+                    tour.availableSlots += (booking.adults || 0) + (booking.youths || 0) + (booking.children || 0);
+                    await tour.save();
+                }
             }
 
-            payment.transactionId = vnpParams["vnp_TransactionNo"];
+            payment.transactionNo = vnpParams["vnp_TransactionNo"];
             payment.bankCode = vnpParams["vnp_BankCode"];
             payment.paymentTime = new Date();
             await payment.save();
 
-            return res.status(200).json({ success: true, message: "Payment updated successfully", payment });
+            releaseSlots(booking.tourId, (booking.adults | 0) + (booking.youths | 0) + (booking.children | 0));
+
+            return res.status(StatusCodes.OK).json({ success: true, message: "Payment updated successfully", payment });
         } catch (error) {
             console.error("Error in vnpReturnURL:", error);
-            return res.status(500).json({ success: false, error: "Internal Server Error" });
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: "Internal Server Error" });
         }
     }
 }
