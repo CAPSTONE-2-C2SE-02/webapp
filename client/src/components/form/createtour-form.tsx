@@ -306,7 +306,7 @@ const CreateNewTourForm = () => {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="text-gray-700 font-medium">Include
-                                        <span className="text-red-500"> *</span>
+                                        <span className="text-red-600"> *</span>
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea

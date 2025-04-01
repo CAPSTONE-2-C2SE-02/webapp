@@ -29,7 +29,15 @@ class ProfileController {
                 return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: errors });
             }
 
-            const image = req.files ? await uploadSingleImage(req.files) : user.profilePicture;
+            // Upload profile picture
+            const profilePicture = req.files?.profilePicture
+                ? await uploadSingleImage(req.files.profilePicture)
+                : user.profilePicture;
+
+            // Upload cover photo
+            const coverPhoto = req.files?.coverPhoto
+                ? await uploadSingleImage(req.files.coverPhoto)
+                : user.coverPhoto;
 
             const today = new Date();
             const minAgeDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
@@ -46,7 +54,8 @@ class ProfileController {
                     phoneNumber: request.phoneNumber || user.phoneNumber,
                     address: request.address || user.address,
                     bio: request.bio || user.bio,
-                    profilePicture: image,
+                    profilePicture: profilePicture,
+                    coverPhoto: coverPhoto,
                     dateOfBirth: request.dateOfBirth || user.dateOfBirth,
                 },
                 { new: true }
@@ -55,6 +64,7 @@ class ProfileController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: "Profile updated successfully.",
+                result: updatedProfile,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -225,6 +235,112 @@ class ProfileController {
             });
         }
     };
+
+    // [POST] /api/v1/profiles/follow/:id
+    async followUser(req, res) {
+        try {
+            const currentUserId = req.user.userId;
+            const targetUserId = req.params.id;
+
+            if (currentUserId === targetUserId) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "You cannot follow yourself.",
+                });
+            }
+
+            const targetUser = await User.findById(targetUserId);
+            if (!targetUser) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            const currentUser = await User.findById(currentUserId);
+
+            if (targetUser.followers.includes(currentUserId)) {
+                // Unfollow
+                targetUser.followers = targetUser.followers.filter((id) => id.toString() !== currentUserId);
+                currentUser.followings = currentUser.followings.filter((id) => id.toString() !== targetUserId);
+
+                await targetUser.save();
+                await currentUser.save();
+
+                return res.status(StatusCodes.OK).json({
+                    success: true,
+                    message: "Unfollowed the user successfully.",
+                });
+            } else {
+                // Follow
+                targetUser.followers.push(currentUserId);
+                currentUser.followings.push(targetUserId);
+
+                await targetUser.save();
+                await currentUser.save();
+
+                return res.status(StatusCodes.OK).json({
+                    success: true,
+                    message: "Followed the user successfully.",
+                });
+            }
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/profiles/followers
+    async getFollowers(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await User.findById(userId).populate("followers", "_id username fullName profilePicture");
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: user.followers,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/profiles/following
+    async getFollowings(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await User.findById(userId).populate("followings", "_id username fullName profilePicture");
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: user.followings,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
 };
 
 export default new ProfileController;

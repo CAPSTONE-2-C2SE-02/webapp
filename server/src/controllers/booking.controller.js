@@ -1,49 +1,69 @@
-import Booking from "../models/booking.model.js";
-import Tour from "../models/tour.model.js"
-import User from "../models/user.model.js"
+import { addMinutes } from "date-fns";
 import { StatusCodes } from "http-status-codes";
-import { addHours, differenceInHours } from "date-fns";
-
+import Booking from "../models/booking.model.js";
+import Tour from "../models/tour.model.js";
+import User from "../models/user.model.js";
+import { releaseSlots, reserveSlots } from "../services/booking.service.js";
+import { sendToQueue } from "../services/queue.service.js";
 class BookingController {
+
     // [POST] /api/v1/bookings/
     async createBooking(req, res) {
         try {
-            const { tourId, startDay, endDay, totalAmount } = new Booking(req.body);
+            const { tourId, startDay, endDay, adults = 0, youths = 0, children = 0 } = req.body;
+            const travelerId = req.user.userId;
+            const slots = adults + youths + children;
+
+            const reserved = await reserveSlots(tourId, slots);
+            if (!reserved) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Not enough slots for booking"
+                });
+            }
+
             const tour = await Tour.findById(tourId);
-            if (!tour)
+            if (!tour) {
+                await releaseSlots(tourId, slots);
                 return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Tour not found" });
-
-            const tourGuide = await User.findOne({ _id: tour.tourGuideId });
-            const traveler = await User.findOne({ _id: req.user.userId });
-
-            const depositAmount = totalAmount * 30 / 100;
-
-            const now = new Date();
-            const hoursUntilStart = differenceInHours(startDay, now);
-
-            let timeoutAt;
-            if (hoursUntilStart > 48) {
-                timeoutAt = addHours(now, 12);
-            } else if (hoursUntilStart >= 24) {
-                timeoutAt = addHours(now, 6);
-            } else {
-                timeoutAt = addHours(now, 2);
             }
 
-            const newBooking = {
-                travelerId: traveler._id,
-                tourId: tourId,
+            if (tour.availableSlots < slots) {
+                await releaseSlots(tourId, slots);
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: "Not enough slots" });
+            }
+
+            const tourGuide = await User.findOne({ _id: tour.author });
+            const totalAmount = (adults * tour.priceForAdult) + (youths * tour.priceForYoung) + (children * tour.priceForChildren);
+            const depositAmount = totalAmount * 0.3;
+
+            const timeoutAt = addMinutes(new Date(), 3);
+
+            const newBooking = await Booking.create({
+                travelerId,
+                tourId,
                 tourGuideId: tourGuide._id,
-                startDay: startDay,
-                endDay: endDay,
-                totalAmount: totalAmount,
-                depositAmount: depositAmount,
-                timeoutAt: timeoutAt,
-            }
+                startDay,
+                endDay,
+                adults,
+                youths,
+                children,
+                totalAmount,
+                depositAmount,
+                timeoutAt,
+                paymentStatus: "PENDING"
+            });
 
-            await Booking.create(newBooking);
+            tour.availableSlots -= slots;
+            await tour.save();
 
-            return res.status(StatusCodes.CREATED).json({ success: true, result: newBooking, message: "Booking created successfully" });
+            await sendToQueue("booking_created", { bookingId: newBooking._id });
+
+            return res.status(StatusCodes.CREATED).json({
+                success: true,
+                result: newBooking,
+                message: "Booking created successfully"
+            });
         } catch (error) {
             return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: error.message });
         }

@@ -12,7 +12,7 @@ export const generateToken = async (user) => {
         process.env.SECRET_KEY,
         {
             algorithm: 'HS512',
-            expiresIn: "1h",
+            expiresIn: "24h",
         }
     );
     return token;
