@@ -61,6 +61,13 @@ export type Tour = {
   };
 }
 
+export type TourList = {
+  totalTours: number;
+  totalPage: number;
+  currentPage: number;
+  data: Tour[];
+}
+
 export type Review = {
   _id: string;
   user: string;

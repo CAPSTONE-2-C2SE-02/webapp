@@ -3,17 +3,17 @@ import { Suspense, lazy } from "react";
 import ProtectedRoute from "./protected-route";
 import MainLayout from "@/layouts/main-layout";
 import AuthLayout from "@/layouts/auth-layout";
-import CreateNewTourForm from "@/components/form/createtour-form";
 import ProfileLayout from "@/layouts/profile-layout";
 import UserProfilePage from "@/pages/userprofile-page";
 import UserProfileFollowPage from "@/pages/userprofile-follower-page";
 import UserProfileToursPage from "@/pages/userprofile-tours-page";
-import ToursPage from "@/pages/tours-page";
-import PostPage from "@/pages/post-page";
 import UserProfileReviewPage from "@/pages/userprofile-review-page";
-const HomePage = lazy(() => import("@/pages/home-page"));
+import CreateTourPage from "@/pages/createtour-page";
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
+const HomePage = lazy(() => import("@/pages/home-page"));
+const PostPage = lazy(() => import("@/pages/post-page"));
+const ToursPage = lazy(() => import("@/pages/tours-page"));
 const TourDetail = lazy(() => import("@/pages/tourdetail-page"));
 
 const routes = createBrowserRouter([
@@ -41,13 +41,18 @@ const routes = createBrowserRouter([
       // Tour Routes
       { path: "/tours", element: <ToursPage /> },
       { path: "/tours/:tourId", element: <TourDetail /> },
-      { path: "/tours/:tourId/book", element: <div>TourBookingPage</div> },
-      { path: "/tours/:tourId/payment", element: <div>TourPaymentPage</div> },
+      {
+        element: <ProtectedRoute />,
+        children: [
+          { path: "/tours/:tourId/book", element: <div>TourBookingPage</div> },
+          { path: "/tours/:tourId/payment", element: <div>TourPaymentPage</div> },
+        ]
+      },
       { 
         path: "/tours/create",
         element: <ProtectedRoute allowedRoles={["TOUR_GUIDE"]} />,
         children: [
-          { index: true, element: <CreateNewTourForm /> }
+          { index: true, element: <CreateTourPage /> }
         ]
       },
     ]
