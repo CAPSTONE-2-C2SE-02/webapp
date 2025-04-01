@@ -6,6 +6,8 @@ import Booking from "../models/booking.model.js";
 import Payment from "../models/payment.model.js";
 import Tour from "../models/tour.model.js";
 import { releaseSlots } from "../services/booking.service.js";
+import { sendEmail } from "../services/email.service.js";
+import User from "../models/user.model.js";
 
 async function processPayment() {
     const connection = await amqp.connect("amqp://localhost");
@@ -113,6 +115,27 @@ async function processVnpayCallback(vnpParams, res) {
             await booking.save();
 
             console.log(`✅ Payment processed successfully for bookingId: ${booking._id}`);
+
+            const traveler = await User.findById(booking.travelerId);
+            if (!traveler) {
+                return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Traveler not found" });
+            }
+
+            const subject = "Xác nhận đặt tour thành công!";
+            const html = `
+            <h2>Xin chào ${traveler.fullName},</h2>
+            <p>Bạn đã đặt tour thành công. Dưới đây là thông tin booking của bạn:</p>
+            <ul>
+                <li><strong>Tour:</strong> ${tour.title}</li>
+                <li><strong>Ngày bắt đầu:</strong> ${booking.startDay.toString()}</li>
+                <li><strong>Ngày kết thúc:</strong> ${booking.endDay.toString()}</li>
+                <li><strong>Số người:</strong> ${booking.adults + booking.youths + booking.children}</li>
+                <li><strong>Tổng tiền:</strong> ${booking.totalAmount} VND</li>
+            </ul>
+            <p>Cảm ơn bạn đã tin tưởng sử dụng dịch vụ!</p>
+            `;
+
+            await sendEmail(traveler.email, subject, html);
 
             return res.status(StatusCodes.OK).json({
                 success: true,
