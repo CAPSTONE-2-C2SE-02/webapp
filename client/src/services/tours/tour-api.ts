@@ -23,11 +23,13 @@ export const { useCreateTourMutation } = tourApi;
 
 const BASE_API_URL = import.meta.env.VITE_API_URL;
 
+// get all tours created by author
 export const fetchAllPostTourGuide = async (): Promise<Tour[]> => {
   const response = await axiosInstance.get('/tours/my-tours');
   return response.data.result;
 };
 
+// get all tours
 export const fetchAllTours = async ({
   pageParam = 1,
   limit = 12,
@@ -41,6 +43,14 @@ export const fetchAllTours = async ({
 }): Promise<ApiResponse<TourList>> => {
   const response = await axios.get(`${BASE_API_URL}/tours`, {
     params: { page: pageParam, limit, sortBy, sortOrder },
+  });
+  return response.data;
+};
+
+// get all tours are searched by destination
+export const fetchAllSearchTours = async (destination: string): Promise<ApiResponse<Tour[]>> => {
+  const response = await axios.get(`${BASE_API_URL}/tours/search`, {
+    params: { destination }
   });
   return response.data;
 };

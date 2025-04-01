@@ -58,6 +58,8 @@ class TourController {
                 sortOptions.priceForAdult = sortOrder === "asc" ? 1 : -1;
             } else if (sortBy === "rating") {
                 sortOptions.rating = sortOrder === 'asc' ? 1 : -1;
+            } else if (sortBy === "slot") {
+                sortOptions.maxParticipants = sortOrder === 'asc' ? 1 : -1;
             } else {
                 sortOptions.createdAt = sortOrder === 'asc' ? 1 : -1;
             }

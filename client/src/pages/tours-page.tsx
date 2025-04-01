@@ -1,10 +1,10 @@
 import TourFilterPanel from "@/components/tour/tour-filter-panel";
 import TourListing from "@/components/tour/tour-listings";
 import { Button } from "@/components/ui/button";
-import { MapPin, Search } from "lucide-react";
 import { useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchAllTours } from "@/services/tours/tour-api";
+import TourSearchBox from "@/components/tour/tour-search-box";
 
 const ToursPage = () => {
   const [searchParams] = useSearchParams();
@@ -36,16 +36,7 @@ const ToursPage = () => {
             </div>
           </div>
           {/* search box */}
-          <div className="absolute max-w-[800px] w-full left-1/2 bg-white/60 backdrop-blur-sm p-5 rounded-xl border border-border -translate-x-1/2 bottom-0 translate-y-1/3 flex items-center gap-3">
-            <div className="px-4 py-2.5 rounded-lg bg-white flex items-center justify-center gap-4 border border-border flex-1">
-              <MapPin className="size-4 text-primary" />
-              <input type="text" className="border-none outline-none flex-1 text-sm placeholder:text-sm" placeholder="Where are you going?" />
-            </div>
-            <Button className="text-white h-[40px]">
-              <Search className="size-4" />
-              Search
-            </Button>
-          </div>
+          <TourSearchBox />
         </div>
       </div>
       {/* main part */}

@@ -12,6 +12,7 @@ import TourCard from "./tour-card";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "../ui/pagination";
 import { Tour } from "@/lib/types";
 import TourCardSkeleton from "../skeleton/tour-card-skeleton";
+import { useSearchParams } from "react-router";
 
 interface TourListing {
   tours: Tour[];
@@ -31,6 +32,8 @@ const TourListing = ({
   loading,
 }: TourListing) => {
   const [viewType, setViewType] = useState<"grid" | "list">("grid");
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const basePath =
     typeof window !== "undefined" ? window.location.pathname : "/tours";
 
@@ -111,6 +114,18 @@ const TourListing = ({
     return items;
   }
 
+  const handleSortTours = (value: string) => {
+    if (value.includes("price")) {
+      const sortPrice = value.split("-");
+      searchParams.set("sortBy", sortPrice[0]);
+      searchParams.set("sortOrder", sortPrice[1]);
+    } else {
+      searchParams.set("sortBy", value);
+      searchParams.set("sortOrder", "desc");
+    }
+    setSearchParams(searchParams);
+  };
+
   return (
     <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-5">
       {/* Header */}
@@ -141,15 +156,16 @@ const TourListing = ({
           <Button variant="outline" size="icon">
             <MapPin className="h-4 w-4" />
           </Button>
-          <Select defaultValue="popular">
+          <Select defaultValue="createdAt" onValueChange={handleSortTours}>
             <SelectTrigger className="w-[180px]">
               <span className="text-sm">Sort by:</span>
               <SelectValue placeholder="Popular" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="popular">Popular</SelectItem>
-              <SelectItem value="price-low">Low to High</SelectItem>
-              <SelectItem value="price-high">High to Low</SelectItem>
+              <SelectItem value="createdAt">Latest</SelectItem>
+              <SelectItem value="slot">Slot</SelectItem>
+              <SelectItem value="price-asc">Low to High</SelectItem>
+              <SelectItem value="price-desc">High to Low</SelectItem>
               <SelectItem value="rating">Rating</SelectItem>
             </SelectContent>
           </Select>
@@ -176,13 +192,25 @@ const TourListing = ({
         <Pagination>
           <PaginationContent>
             <PaginationItem>
-              <PaginationPrevious href="#" />
+              <PaginationPrevious 
+                href={`${basePath}?page=${Math.max(1, currentPage - 1)}${
+                  currentSortBy
+                    ? `&sortBy=${currentSortBy}&sortOrder=${currentSortOrder}`
+                    : ""
+                }`}
+              />
             </PaginationItem>
             
             {getPaginationItems()}
 
             <PaginationItem>
-              <PaginationNext href="#" />
+              <PaginationNext
+                href={`${basePath}?page=${Math.min(total, currentPage + 1)}${
+                  currentSortBy
+                    ? `&sortBy=${currentSortBy}&sortOrder=${currentSortOrder}`
+                    : ""
+                }`}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
