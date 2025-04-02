@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NavLink, Outlet, useParams } from "react-router";
-import { UserRound } from "lucide-react"
+import { Cake, UserRound } from "lucide-react"
 import { Star } from "lucide-react"
 import { UserRoundCheck } from "lucide-react"
 import { Mail } from "lucide-react";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/hooks/redux";
 import { useGetUserInfoByUsernameQuery } from "@/services/user-api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSelector } from "react-redux";
 
 const ProfileLayout = () => {
     const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
@@ -19,9 +20,11 @@ const ProfileLayout = () => {
     // get username from url
     const { username } = useParams<{ username: string }>();
     const { data: user, isLoading } = useGetUserInfoByUsernameQuery(username as string);
-
-    if (isLoading) {
-        return (
+    // const currentUser = useSelector((state: any) => state.auth.user);
+    // const isMyProfile = currentUser?._id === user?._id;
+    // const isFollowing = user?.followers?.includes(currentUser?._id);
+    if (isLoading) {        
+        return (    
             <div className="w-full">
                 <Skeleton className="w-full" />
             </div>
@@ -69,7 +72,10 @@ const ProfileLayout = () => {
                             <MapPin className="w-4 h-4 mx-1 stroke-slate-600 " />
                             <p className="font-medium text-slate-600 text-sm">From {user?.result?.address}</p>
                         </div>
-                        <a href="" className="mx-1 text-blue-900 font-medium underline py-2 text-sm">More</a>
+                        <div className="flex items-center py-2">
+                            <Cake className="w-4 h-4 mx-1 stroke-slate-600 " />
+                            <p className="font-medium text-slate-600 text-sm">{user?.result?.dateOfBirth ? new Date(user.result.dateOfBirth).toLocaleDateString("en-GB") : "N/A"}</p>
+                        </div>
                     </div>
                     <div className="my-2 mx-14 h-36 flex flex-col justify-items-start gap-2">
                         <p className="font-medium text-slate-600 text-sm">Introduction</p>
@@ -117,28 +123,35 @@ const ProfileLayout = () => {
                         >
                             Photos
                         </NavLink>
-                        <NavLink
-                            to={`/${username}/tours`}
-                            className={({ isActive }) =>
-                                cn(
-                                    "bg-white px-4 py-2 font-medium text-sm",
-                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
-                                )
-                            }
-                        >
-                            Tours
-                        </NavLink>
-                        <NavLink
-                            to={`/${username}/reviews`}
-                            className={({ isActive }) =>
-                                cn(
-                                    "bg-white px-4 py-2 font-medium text-sm",
-                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
-                                )
-                            }
-                        >
-                            Reviews
-                        </NavLink>
+                        {user?.result?.role === "TOUR_GUIDE" && (
+                            <>
+                                <NavLink
+                                    to={`/${username}/tours`}
+                                    className={({ isActive }) =>
+                                        cn(
+                                            "bg-white px-4 py-2 font-medium text-sm",
+                                            isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                        )
+                                    }
+                                >
+                                    Tours
+                                </NavLink>
+                                <NavLink
+                                    to={`/${username}/reviews`}
+                                    className={({ isActive }) =>
+                                        cn(
+                                            "bg-white px-4 py-2 font-medium text-sm",
+                                            isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                        )
+                                    }
+                                >
+                                    Reviews
+                                </NavLink>
+                            </>
+                        )}
+                    </div>
+                    <div>
+                        
                     </div>
                 </div>
             </div>
