@@ -18,16 +18,17 @@ import { formatDistanceToNow } from "date-fns";
 import PostCardAction from "./post-card-action";
 import PostImagesLightbox from "./post-images-lightbox";
 import useAuthInfo from "@/hooks/useAuth";
+import { useLikePostMutation } from "@/services/posts/mutation";
 
 const PostCard = ({ postData }: { postData: Post }) => {
   const auth = useAuthInfo();
-  const [isLiked, setIsLiked] = useState<boolean>(postData.likes.some(like => like._id === auth?._id));
+  const likePostMutation = useLikePostMutation();
+
   const [isSave, setIsSave] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSharePostModelOpen, setIsSharePostModelOpen] = useState(false);
   const [postUrl, setPostUrl] = useState<string>("");
-  const [likes, setLikes] = useState<number>(postData?.likes?.length);
 
   const showSharePost = (postId: string) => {
     const baseUrl = window.location.origin || "http://localhost:5173";
@@ -36,9 +37,11 @@ const PostCard = ({ postData }: { postData: Post }) => {
     setPostUrl(shareUrl);
   };
 
+  const isLiked = postData.likes.some((like) => like._id === auth?._id);
+  const likeCount = postData.likes.length;
+
   const handleLikePost = () => {
-    setIsLiked((prev) => !prev);
-    setLikes(like => like + 1);
+    likePostMutation.mutate(postData._id);
   };
 
   const handleSavePost = () => {
@@ -166,9 +169,12 @@ const PostCard = ({ postData }: { postData: Post }) => {
                 )}
                 <span className="text-sm font-medium leading-none">Like</span>
               </div>
-              <div className="flex items-center justify-center py-1 px-1.5 rounded-xl bg-primary/20">
-                <span className="text-sm font-semibold leading-none text-primary">
-                  {likes}
+              <div className={cn(
+                "flex items-center justify-center py-1 px-1.5 rounded-xl",
+                isLiked ? "text-red-400 hover:text-red-400 bg-red-500/20" : "text-primary bg-primary/20"
+              )}>
+                <span className="text-sm font-semibold leading-none">
+                  {likeCount}
                 </span>
               </div>
             </Button>
