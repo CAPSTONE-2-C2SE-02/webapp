@@ -1,6 +1,7 @@
 import { ApiResponse, Post, PostsNewFeed } from "@/lib/types";
 import axios from "axios";
 import axiosInstance from "@/config/api";
+import { API } from "@/config/constants";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -31,4 +32,9 @@ export const fetchNewsFeed = async ({ pageParam = 1 }: { pageParam: number }): P
 export const deletePost = async (postId: string): Promise<Post> => {
   const response = await axiosInstance.delete(`/posts/${postId}`);
   return response.data.result;
+};
+
+export const likePost = async (postId: string): Promise<ApiResponse<string[]>> => {
+  const response = await axiosInstance.post(API.POST.LIKE, { postId });
+  return response.data;
 };

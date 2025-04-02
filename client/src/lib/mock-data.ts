@@ -1,4 +1,4 @@
-import { Tour } from "./types";
+import { Notification, Tour } from "./types";
 
 export const hashtagsMockData = [
   {
@@ -272,3 +272,150 @@ export const userData = {
     }
   ]
 };
+
+export const notifications: Notification[] = [
+  {
+    id: "1",
+    type: "follow",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "2",
+    type: "like",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    postTitle: "Only by working can",
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "3",
+    type: "follow",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "4",
+    type: "share",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    postTitle: "Only by working c...",
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "5",
+    type: "follow",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "6",
+    type: "book",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    extraInfo: "Ha Giang Loop and Dong Van Kast Plateau A...",
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "7",
+    type: "follow",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "8",
+    type: "book",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    extraInfo: "Ha Giang Loop and Dong Van Kast Plateau A...",
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "9",
+    type: "reply",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    postTitle: "Only by working can...",
+    content: "Babe, I don't have money to decide our relation...",
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "10",
+    type: "reply",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    postTitle: "Only by working can...",
+    content: "Babe, I don't have money to decide our relation...",
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "11",
+    type: "reply",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    postTitle: "Only by working can...",
+    content: "Babe, I don't have money to decide our relation...",
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+  {
+    id: "12",
+    type: "reply",
+    user: {
+      name: "Ngoc Anh",
+      avatar: "/placeholder.svg?height=40&width=40",
+    },
+    postTitle: "Only by working can...",
+    content: "Babe, I don't have money to decide our relation...",
+    timestamp: "Monday 4:04 PM",
+    timeAgo: "1 hour ago",
+    read: false,
+  },
+]

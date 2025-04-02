@@ -9,7 +9,7 @@ export type Post = {
   hashtag: string[];
   content: string[];
   imageUrls: string[];
-  likes: UserInfo[];
+  likes: Pick<UserInfo, | "_id" | "username" | "fullName">[];
   tourAttachment?: TourAttachment;
   createdAt: string;
   updatedAt: string;
@@ -114,4 +114,19 @@ export type ErrorResponse = {
     error: string;
     success: boolean;
   }
+}
+
+export type Notification = {
+  id: string;
+  type: string;
+  user: {
+    name: string;
+    avatar: string;
+  };
+  extraInfo?: string;
+  postTitle?: string;
+  content?: string;
+  timestamp: string;
+  timeAgo: string;
+  read: boolean;
 }
