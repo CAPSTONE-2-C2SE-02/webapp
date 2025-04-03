@@ -1,6 +1,9 @@
+import axios from "axios";
 import { StatusCodes } from "http-status-codes";
+import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
 import { uploadSingleImage } from "../utils/uploadImage.util.js";
+import notificationController from "./notification.controller.js";
 
 class ProfileController {
 
@@ -279,6 +282,22 @@ class ProfileController {
                 await targetUser.save();
                 await currentUser.save();
 
+                // Send notification
+                await notificationController.sendNotification({
+                    body: {
+                        type: "FOLLOW",
+                        senderId: currentUserId,
+                        receiverId: targetUserId,
+                        relatedId: currentUserId,
+                        relatedModel: "User",
+                        message: `Người dùng ${currentUserId} đã follow bạn`
+                    },
+                }, {
+                    status: () => ({
+                        json: () => { },
+                    }),
+                });
+
                 return res.status(StatusCodes.OK).json({
                     success: true,
                     message: "Followed the user successfully.",
@@ -333,6 +352,42 @@ class ProfileController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 result: user.followings,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/profiles/photos
+    async getProfilePhotos(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await User.findById(userId).select("profilePicture coverPhoto");
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            const posts = await Post.find({ createdBy: userId }).select("imageUrls");
+            const postImages = posts.reduce((acc, post) => {
+                return acc.concat(post.imageUrls);
+            }, []);
+
+            const allPhotos = {
+                profilePicture: user.profilePicture,
+                coverPhoto: user.coverPhoto,
+                postImages,
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: allPhotos,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

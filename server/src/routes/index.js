@@ -12,6 +12,7 @@ import chatRouter from "./conversation.route.js";
 import messageRouter from "./message.route.js";
 import paymentRouter from "./payment.route.js";
 import profileRouter from "./profile.route.js";
+import notificationRouter from "./notification.route.js";
 
 
 const router = express.Router();
@@ -28,5 +29,6 @@ router.use('/chats', chatRouter);
 router.use('/messages', messageRouter);
 router.use('/payments', paymentRouter);
 router.use('/profiles', profileRouter);
+router.use('/notifications', notificationRouter);
 
 export default router;

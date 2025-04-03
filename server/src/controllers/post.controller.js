@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
+import notificationController from "../controllers/notification.controller.js";
 
 class PostController {
 
@@ -224,6 +225,24 @@ class PostController {
                 { [updateOperator]: { likes: userId } },
                 { new: true }
             ).populate("likes", "_id username fullName");
+
+            // Send notification
+            if (user._id != post.createdBy) {
+                await notificationController.sendNotification({
+                    body: {
+                        type: "LIKE",
+                        senderId: user._id,
+                        receiverId: post.createdBy,
+                        relatedId: post._id,
+                        relatedModel: "Post",
+                        message: `Người dùng ${user.username} đã thích bài viết của bạn`,
+                    },
+                }, {
+                    status: () => ({
+                        json: () => { },
+                    }),
+                });
+            }
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -455,6 +474,43 @@ class PostController {
                 success: false,
                 error: error.message
             })
+        }
+    }
+
+    // [GET] /api/v1/post/hashtag
+    async getPostsByHashtag(req, res) {
+        try {
+            const { hashtag } = req.body;
+
+            if (!hashtag) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Hashtag is required and must be a string.",
+                });
+            }
+
+            const posts = await Post.find({ hashtag: hashtag })
+                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("likes", "_id username fullName")
+                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .sort({ createdAt: -1 });
+
+            if (posts.length === 0) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "No posts found with the given hashtag.",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: posts,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
         }
     }
 }

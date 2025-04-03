@@ -57,7 +57,7 @@ class BookingController {
             tour.availableSlots -= slots;
             await tour.save();
 
-            await sendToQueue("booking_created", { bookingId: newBooking._id });
+            await sendToQueue("BOOKING_CREATED", { bookingId: newBooking._id });
 
             return res.status(StatusCodes.CREATED).json({
                 success: true,
