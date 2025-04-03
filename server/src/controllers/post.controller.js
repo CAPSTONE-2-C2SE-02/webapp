@@ -188,8 +188,18 @@ class PostController {
     async likePost(req, res) {
         try {
             const { postId } = req.body;
+            const userId = req.user.userId;
 
-            const user = await User.findOne({ _id: req.user.userId });
+            // validate post id input
+            if (!postId) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                  success: false,
+                  error: "Post ID is required",
+                });
+            }
+
+            // check if user exists
+            const user = await User.findOne({ _id: userId }).select("_id");
             if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -197,8 +207,8 @@ class PostController {
                 });
             }
 
+            // check if post exists
             const post = await Post.findOne({ _id: postId });
-
             if (!post) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -206,20 +216,19 @@ class PostController {
                 });
             }
 
-            const index = post.likes.indexOf(user._id);
+            const isLiked = post.likes.includes(userId);
+            const updateOperator = isLiked ? '$pull' : '$addToSet';
 
-            if (index === -1) {
-                post.likes.push(user._id);
-            } else {
-                post.likes.splice(index, 1);
-            }
-
-            await post.save();
+            const updatedPost = await Post.findByIdAndUpdate(
+                postId,
+                { [updateOperator]: { likes: userId } },
+                { new: true }
+            ).populate("likes", "_id username fullName");
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                message: index === -1 ? "Post liked" : "Post unliked",
-                result: post.likes,
+                message: isLiked ? "Post unliked" : "Post liked",
+                result: updatedPost.likes,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

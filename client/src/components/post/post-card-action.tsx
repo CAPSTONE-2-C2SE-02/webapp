@@ -25,7 +25,7 @@ const PostCardAction = ({ id, author }: PostCardActionProps) => {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>
           <Button variant={"ghost"} size={"icon"}>
             <EllipsisVertical />
           </Button>
