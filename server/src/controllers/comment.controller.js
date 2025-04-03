@@ -31,6 +31,24 @@ class CommentController {
                 parentComment: parentComment || null
             });
 
+            // Send notification
+            if (user._id != post.createdBy) {
+                await notificationController.sendNotification({
+                    body: {
+                        type: "COMMENT",
+                        senderId: user._id,
+                        receiverId: post.createdBy,
+                        relatedId: post._id,
+                        relatedModel: "Post",
+                        message: `Người dùng ${user.username} đã bình luận vào viết của bạn`,
+                    },
+                }, {
+                    status: () => ({
+                        json: () => { },
+                    }),
+                });
+            }
+
             return res.status(StatusCodes.CREATED).json({
                 success: true,
                 message: "Comment added successfully",

@@ -1,12 +1,18 @@
 import amqp from "amqplib";
 
-async function sendToQueue(queue, msg) {
-    const connection = await amqp.connect("amqp://localhost");
-    const channel = await connection.createChannel();
-    await channel.assertQueue(queue, { durable: true });
-    channel.sendToQueue(queue, Buffer.from(JSON.stringify(msg)), { persistent: true });
-    console.log(`📩 [x] Sent ${queue}:`, msg);
-    setTimeout(() => connection.close(), 500);
-}
+export const sendToQueue = async (queue, message) => {
+    try {
+        const connection = await amqp.connect(process.env.RABBITMQ_URL);
+        const channel = await connection.createChannel();
+        await channel.assertQueue(queue, { durable: true });
 
-export { sendToQueue };
+        await channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)), { persistent: true });
+
+        console.log("📩 [Sent] Message to queue:", message);
+
+        await channel.close();
+        await connection.close();
+    } catch (error) {
+        console.error("❌ Error sending message to queue:", error);
+    }
+};

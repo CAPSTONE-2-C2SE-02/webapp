@@ -234,6 +234,18 @@ class UserController {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
         }
     };
+
+    async findUserByIdNoRes(id) {
+        try {
+            const user = await User.findOne({ _id: id }).select("-password");
+            if (!user) {
+                throw new Error("User not found");
+            }
+            return user;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
 };
 
 export default new UserController;
