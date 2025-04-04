@@ -297,7 +297,14 @@ class ProfileController {
         try {
             const userId = req.user.userId;
 
-            const user = await User.findById(userId).populate("followers", "_id username fullName profilePicture");
+            const user = await User.findById(userId).populate({
+                path: "followers",
+                select: "_id username fullName profilePicture role followers",
+                populate: {
+                    path: "role", // Populate the role field
+                    select: "name", // Select only the name of the role
+                },
+            });
             if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -322,7 +329,14 @@ class ProfileController {
         try {
             const userId = req.user.userId;
 
-            const user = await User.findById(userId).populate("followings", "_id username fullName profilePicture");
+            const user = await User.findById(userId).populate({
+                path: "followings",
+                select: "_id username fullName profilePicture role followers",
+                populate: {
+                    path: "role", // Populate the role field
+                    select: "name", // Select only the name of the role
+                },
+            });
             if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,

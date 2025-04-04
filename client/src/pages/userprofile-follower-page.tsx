@@ -17,8 +17,27 @@ import {
 } from "@/components/ui/tabs"
 import SearchNav from "@/components/layout/search-nav"
 import FollowCard from "@/components/user/follower-card"
-import { userData } from "@/lib/mock-data"
+import { useAppSelector } from "@/hooks/redux"
+import { fetchFollowers, fetchFollowings } from "@/services/user-api"
+import { useQuery } from "@tanstack/react-query"
+
+
 const UserProfileFollowPage = () => {
+
+    const { isAuthenticated } = useAppSelector((state) => state.auth);
+
+    const { data: followers, isLoading: isLoadingFollowers } = useQuery({
+        queryKey: ["user-profile"],
+        queryFn: fetchFollowers,
+        enabled: isAuthenticated, 
+    });
+
+    const { data: followings, isLoading: isLoadingFollowings } = useQuery({
+        queryKey: ["user-profile"],
+        queryFn: fetchFollowings,
+        enabled: isAuthenticated, 
+    });
+
     return (
         <div className="my-1 w-full flex flex-col items-start gap-3 bg-white rounded-t-xl">
             <div className="flex w-full rounded-none">
@@ -30,17 +49,21 @@ const UserProfileFollowPage = () => {
                     <TabsContent value="followers">
                         <SearchNav />
                         <div className="flex flex-wrap gap-5 justify-start px-6 w-full">
-                           {userData.follower.map((follower) => (
-                                <FollowCard data={follower} />
-                           ))}
+                        {isLoadingFollowers ? (
+                                <p>loading</p>
+                            ) : (
+                                followers?.map((follower) => <FollowCard key={follower._id} user={follower} />)
+                            )}
                         </div>
                     </TabsContent>
                     <TabsContent value="following">
                         <SearchNav />
                         <div className="flex flex-wrap gap-5 justify-start px-6 w-full">
-                        {userData.following.map((follower) => (
-                                <FollowCard data={follower} />
-                           ))}
+                        {isLoadingFollowings ? (
+                                <p>loading</p>
+                            ) : (
+                                followings?.map((following) => <FollowCard key={following._id} user={following} />)
+                            )}
                         </div>
                     </TabsContent>
                 </Tabs>
