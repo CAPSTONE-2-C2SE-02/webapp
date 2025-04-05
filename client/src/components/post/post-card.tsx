@@ -5,7 +5,6 @@ import {
   Clock,
   Forward,
   Heart,
-  MessageSquareMore,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useMemo, useState } from "react";
@@ -19,6 +18,7 @@ import PostCardAction from "./post-card-action";
 import PostImagesLightbox from "./post-images-lightbox";
 import useAuthInfo from "@/hooks/useAuth";
 import { useLikePostMutation } from "@/services/posts/mutation";
+import CommentPostModal from "../modals/comment-post-modal";
 
 const PostCard = ({ postData }: { postData: Post }) => {
   const auth = useAuthInfo();
@@ -178,31 +178,16 @@ const PostCard = ({ postData }: { postData: Post }) => {
                 </span>
               </div>
             </Button>
+            {/* Commend Modal */}
+            <CommentPostModal />
             <Button
               variant={"ghost"}
               className="text-primary py-3 px-3.5 gap-4"
-            >
-              <div className="flex items-center gap-1.5">
-                <MessageSquareMore className="size-5" />
-                <span className="text-sm font-medium leading-none">
-                  Comment
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-1 px-1.5 rounded-xl bg-primary/20">
-                <span className="text-sm font-semibold leading-none">13</span>
-              </div>
-            </Button>
-            <Button
-              variant={"ghost"}
-              className="text-primary py-3 px-3.5 gap-4"
-              onClick={() => showSharePost("postId")}
+              onClick={() => showSharePost(postData._id)}
             >
               <div className="flex items-center gap-1.5">
                 <Forward className="size-5" />
                 <span className="text-sm font-medium leading-none">Share</span>
-              </div>
-              <div className="flex items-center justify-center py-1 px-1.5 rounded-xl bg-primary/20">
-                <span className="text-sm font-semibold leading-none">13</span>
               </div>
             </Button>
           </div>

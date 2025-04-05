@@ -9,6 +9,7 @@ import UserProfileFollowPage from "@/pages/userprofile-follower-page";
 import UserProfileToursPage from "@/pages/userprofile-tours-page";
 import UserProfileReviewPage from "@/pages/userprofile-review-page";
 import CreateTourPage from "@/pages/createtour-page";
+import LoadingPage from "@/components/layout/loading-page";
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -68,7 +69,7 @@ const routes = createBrowserRouter([
 
 export default function AppRoutes() {
   return (
-    <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading....</div>}>
+    <Suspense fallback={<LoadingPage />}>
       <RouterProvider router={routes} />
     </Suspense>
   )
