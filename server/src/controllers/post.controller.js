@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
+import notificationController from "../controllers/notification.controller.js";
 
 class PostController {
 
@@ -188,8 +189,18 @@ class PostController {
     async likePost(req, res) {
         try {
             const { postId } = req.body;
+            const userId = req.user.userId;
 
-            const user = await User.findOne({ _id: req.user.userId });
+            // validate post id input
+            if (!postId) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                  success: false,
+                  error: "Post ID is required",
+                });
+            }
+
+            // check if user exists
+            const user = await User.findOne({ _id: userId }).select("_id");
             if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -197,8 +208,8 @@ class PostController {
                 });
             }
 
+            // check if post exists
             const post = await Post.findOne({ _id: postId });
-
             if (!post) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -206,20 +217,37 @@ class PostController {
                 });
             }
 
-            const index = post.likes.indexOf(user._id);
+            const isLiked = post.likes.includes(userId);
+            const updateOperator = isLiked ? '$pull' : '$addToSet';
 
-            if (index === -1) {
-                post.likes.push(user._id);
-            } else {
-                post.likes.splice(index, 1);
+            const updatedPost = await Post.findByIdAndUpdate(
+                postId,
+                { [updateOperator]: { likes: userId } },
+                { new: true }
+            ).populate("likes", "_id username fullName");
+
+            // Send notification
+            if (user._id != post.createdBy) {
+                await notificationController.sendNotification({
+                    body: {
+                        type: "LIKE",
+                        senderId: user._id,
+                        receiverId: post.createdBy,
+                        relatedId: post._id,
+                        relatedModel: "Post",
+                        message: `Người dùng ${user.username} đã thích bài viết của bạn`,
+                    },
+                }, {
+                    status: () => ({
+                        json: () => { },
+                    }),
+                });
             }
-
-            await post.save();
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                message: index === -1 ? "Post liked" : "Post unliked",
-                result: post.likes,
+                message: isLiked ? "Post unliked" : "Post liked",
+                result: updatedPost.likes,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -446,6 +474,43 @@ class PostController {
                 success: false,
                 error: error.message
             })
+        }
+    }
+
+    // [GET] /api/v1/post/hashtag
+    async getPostsByHashtag(req, res) {
+        try {
+            const { hashtag } = req.body;
+
+            if (!hashtag) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Hashtag is required and must be a string.",
+                });
+            }
+
+            const posts = await Post.find({ hashtag: hashtag })
+                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("likes", "_id username fullName")
+                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .sort({ createdAt: -1 });
+
+            if (posts.length === 0) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "No posts found with the given hashtag.",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: posts,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
         }
     }
 }

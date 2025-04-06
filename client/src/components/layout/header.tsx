@@ -1,11 +1,12 @@
 import { Link, NavLink } from "react-router";
 import tripConnectLogo from "@/assets/tripconnect.svg";
 import SearchInput from "./search-input";
-import { Home, Plane, HandHeart, MessageCircle, Bell, Bookmark } from "lucide-react";
+import { Home, Plane, HandHeart, MessageCircle, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import UserNav from "./user-nav";
 import { useAppSelector } from "@/hooks/redux";
+import Notification from "../notification/notification";
 
 const NAV_ITEMS = [
   {
@@ -67,10 +68,8 @@ const Header = () => {
 
         {/* header personal action */}
         <div className="flex items-center gap-5 flex-1 justify-end">
-          <Button variant="secondary" className="rounded-xl size-10">
-            <Bell className="size-5" />
-          </Button>
-          <Button variant="secondary" className="rounded-xl size-10">
+          <Notification />
+          <Button variant="outline" className="rounded-xl size-10">
             <Bookmark className="size-5" />
           </Button>
           {isAuthenticated ? (

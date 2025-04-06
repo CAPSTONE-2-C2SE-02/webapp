@@ -16,13 +16,21 @@ import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { Post } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 import PostCardAction from "./post-card-action";
+import PostImagesLightbox from "./post-images-lightbox";
+import useAuthInfo from "@/hooks/useAuth";
+import { useLikePostMutation } from "@/services/posts/mutation";
+import CommentPostModal from "../modals/comment-post-modal";
 
 const PostCard = ({ postData }: { postData: Post }) => {
-  const [isLike, setIsLike] = useState(false);
+  const auth = useAuthInfo();
+  const likePostMutation = useLikePostMutation();
+
   const [isSave, setIsSave] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSharePostModelOpen, setIsSharePostModelOpen] = useState(false);
+  const [isCommentModelOpen, setIsCommentPostModelOpen] = useState(false);
   const [postUrl, setPostUrl] = useState<string>("");
-  const [likes, setLikes] = useState<number>(postData?.likes?.length);
 
   const showSharePost = (postId: string) => {
     const baseUrl = window.location.origin || "http://localhost:5173";
@@ -31,19 +39,30 @@ const PostCard = ({ postData }: { postData: Post }) => {
     setPostUrl(shareUrl);
   };
 
+  const isLiked = postData.likes.some((like) => like._id === auth?._id);
+  const likeCount = postData.likes.length;
+
   const handleLikePost = () => {
-    setIsLike((prev) => !prev);
-    setLikes(like => like + 1);
+    likePostMutation.mutate(postData._id);
   };
 
   const handleSavePost = () => {
     setIsSave((prev) => !prev);
   };
 
+  const openLightbox = (index: number) => {
+    setCurrentImageIndex(index);
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+  };
+
   const postImages = useMemo(
     () => (
       postData?.imageUrls && postData?.imageUrls.map((image, index) => (
-        <CarouselItem key={index} className="basis-auto max-h-[260px] max-w-[380px] first:pl-4 pl-2">
+        <CarouselItem key={index} className="basis-auto max-h-[260px] max-w-[380px] first:pl-4 pl-2" onClick={() => openLightbox(index)}>
           <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
             <img src={image} alt="post image" loading="lazy" className="w-full h-full object-cover" />
           </div>
@@ -97,8 +116,8 @@ const PostCard = ({ postData }: { postData: Post }) => {
         <CardContent className="px-4 pb-3">
           {/* Text Content */}
           <div>
-            {postData?.content.length > 0 && postData.content.map(content => (
-              <p key={content} className="text-black text-sm font-normal">{content}</p>
+            {postData?.content.length > 0 && postData.content.map((content, index) => (
+              <p key={`${content}+${index}`} className="text-black text-sm font-normal">{content}</p>
             ))}
             {/* Hashtag */}
             <div className="flex items-center gap-1 mt-1">
@@ -118,7 +137,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
           {postData?.imageUrls.length > 0 && (
             <div className="mt-3">
               {postData?.imageUrls.length === 1 ? (
-                <div className="max-w-full overflow-hidden w-full h-full rounded-lg border border-zinc-300">
+                <div className="max-w-full overflow-hidden w-full h-full rounded-lg border border-zinc-300" onClick={() => setIsLightboxOpen(true)}>
                   <img src={postData?.imageUrls[0]} alt="" className="max-h-[420px] w-full object-cover" />
                 </div>
               ) : (
@@ -140,27 +159,32 @@ const PostCard = ({ postData }: { postData: Post }) => {
               variant={"ghost"}
               className={cn(
                 "py-3 px-3.5 gap-4",
-                isLike ? "text-red-400 hover:text-red-400" : "text-primary"
+                isLiked ? "text-red-400 hover:text-red-400" : "text-primary"
               )}
               onClick={handleLikePost}
             >
               <div className="flex items-center gap-1.5">
-                {isLike ? (
+                {isLiked ? (
                   <Heart className="size-5" fill="oklch(0.704 0.191 22.216)" />
                 ) : (
                   <Heart className="size-5" />
                 )}
                 <span className="text-sm font-medium leading-none">Like</span>
               </div>
-              <div className="flex items-center justify-center py-1 px-1.5 rounded-xl bg-primary/20">
-                <span className="text-sm font-semibold leading-none text-primary">
-                  {likes}
+              <div className={cn(
+                "flex items-center justify-center py-1 px-1.5 rounded-xl",
+                isLiked ? "text-red-400 hover:text-red-400 bg-red-500/20" : "text-primary bg-primary/20"
+              )}>
+                <span className="text-sm font-semibold leading-none">
+                  {likeCount}
                 </span>
               </div>
             </Button>
+            {/* Commend Modal */}
             <Button
               variant={"ghost"}
               className="text-primary py-3 px-3.5 gap-4"
+              onClick={() => setIsCommentPostModelOpen(true)}
             >
               <div className="flex items-center gap-1.5">
                 <MessageSquareMore className="size-5" />
@@ -175,14 +199,11 @@ const PostCard = ({ postData }: { postData: Post }) => {
             <Button
               variant={"ghost"}
               className="text-primary py-3 px-3.5 gap-4"
-              onClick={() => showSharePost("postId")}
+              onClick={() => showSharePost(postData._id)}
             >
               <div className="flex items-center gap-1.5">
                 <Forward className="size-5" />
                 <span className="text-sm font-medium leading-none">Share</span>
-              </div>
-              <div className="flex items-center justify-center py-1 px-1.5 rounded-xl bg-primary/20">
-                <span className="text-sm font-semibold leading-none">13</span>
               </div>
             </Button>
           </div>
@@ -190,12 +211,28 @@ const PostCard = ({ postData }: { postData: Post }) => {
         {/* <CardFooter className="border-t border-slate-200"></CardFooter> */}
       </Card>
 
+      {/* Comment Modal */}
+      <CommentPostModal
+        isOpen={isCommentModelOpen}
+        onOpenChange={setIsCommentPostModelOpen}
+        postId={postData._id}
+      />
+
       {/* Share Modal */}
       <SharePostModal
         isOpen={isSharePostModelOpen}
         onOpenChange={setIsSharePostModelOpen}
         url={postUrl}
       />
+      
+      {isLightboxOpen && (
+        <PostImagesLightbox
+          images={postData.imageUrls}
+          currentIndex={currentImageIndex}
+          setCurrentIndex={setCurrentImageIndex}
+          onClose={closeLightbox}
+        />
+      )}
     </>
   );
 };

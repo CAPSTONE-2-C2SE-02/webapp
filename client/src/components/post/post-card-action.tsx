@@ -12,7 +12,7 @@ interface PostCardActionProps {
     _id: string;
     username: string;
     fullName: string;
-    avatar: string;
+    profilePicture: string;
   }
 }
 
@@ -25,7 +25,7 @@ const PostCardAction = ({ id, author }: PostCardActionProps) => {
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>
           <Button variant={"ghost"} size={"icon"}>
             <EllipsisVertical />
           </Button>

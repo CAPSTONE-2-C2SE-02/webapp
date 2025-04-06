@@ -7,8 +7,6 @@ export const reserveSlots = async (tourId, slots, ttl = 180) => {
     const key = `${BOOKING_SLOT_PREFIX}${tourId}`;
 
     const currentReserved = parseInt(await redis.get(key)) || 0;
-    console.log(currentReserved);
-
 
     const tour = await Tour.findById(tourId);
     if (!tour) throw new Error("Tour not found");

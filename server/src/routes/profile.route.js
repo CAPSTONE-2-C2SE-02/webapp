@@ -286,9 +286,19 @@ const router = express.Router();
  *         description: Profile not found
  */
 
-router.put("/:id", authenticated, upload.array("image"), validate(userSchema), checkOwnerUserId, profileController.updateProfile);
+router.put(
+    "/:id",
+    authenticated,
+    upload.fields([
+        { name: "profilePicture", maxCount: 1 },
+        { name: "coverPhoto", maxCount: 1 },
+    ]),
+    checkOwnerUserId,
+    profileController.updateProfile
+);
 router.delete("/:id", authenticated, checkOwnerUserId, profileController.deleteProfile);
 router.post("/active", authenticated, authorize("ADMIN"), profileController.activeProfile);
+router.get("/photos", authenticated, profileController.getProfilePhotos);
 router.get("/myInfo", authenticated, profileController.myInfo);
 router.get("/search", profileController.searchProfiles);
 router.get("/following", authenticated, profileController.getFollowings);

@@ -1,6 +1,9 @@
+import axios from "axios";
 import { StatusCodes } from "http-status-codes";
+import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
 import { uploadSingleImage } from "../utils/uploadImage.util.js";
+import notificationController from "./notification.controller.js";
 
 class ProfileController {
 
@@ -29,7 +32,15 @@ class ProfileController {
                 return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: errors });
             }
 
-            const image = req.files ? await uploadSingleImage(req.files) : user.profilePicture;
+            // Upload profile picture
+            const profilePicture = req.files?.profilePicture
+                ? await uploadSingleImage(req.files.profilePicture)
+                : user.profilePicture;
+
+            // Upload cover photo
+            const coverPhoto = req.files?.coverPhoto
+                ? await uploadSingleImage(req.files.coverPhoto)
+                : user.coverPhoto;
 
             const today = new Date();
             const minAgeDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
@@ -46,7 +57,8 @@ class ProfileController {
                     phoneNumber: request.phoneNumber || user.phoneNumber,
                     address: request.address || user.address,
                     bio: request.bio || user.bio,
-                    profilePicture: image,
+                    profilePicture: profilePicture,
+                    coverPhoto: coverPhoto,
                     dateOfBirth: request.dateOfBirth || user.dateOfBirth,
                 },
                 { new: true }
@@ -55,6 +67,7 @@ class ProfileController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: "Profile updated successfully.",
+                result: updatedProfile,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -269,6 +282,22 @@ class ProfileController {
                 await targetUser.save();
                 await currentUser.save();
 
+                // Send notification
+                await notificationController.sendNotification({
+                    body: {
+                        type: "FOLLOW",
+                        senderId: currentUserId,
+                        receiverId: targetUserId,
+                        relatedId: currentUserId,
+                        relatedModel: "User",
+                        message: `Người dùng ${currentUserId} đã follow bạn`
+                    },
+                }, {
+                    status: () => ({
+                        json: () => { },
+                    }),
+                });
+
                 return res.status(StatusCodes.OK).json({
                     success: true,
                     message: "Followed the user successfully.",
@@ -323,6 +352,42 @@ class ProfileController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 result: user.followings,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/profiles/photos
+    async getProfilePhotos(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await User.findById(userId).select("profilePicture coverPhoto");
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            const posts = await Post.find({ createdBy: userId }).select("imageUrls");
+            const postImages = posts.reduce((acc, post) => {
+                return acc.concat(post.imageUrls);
+            }, []);
+
+            const allPhotos = {
+                profilePicture: user.profilePicture,
+                coverPhoto: user.coverPhoto,
+                postImages,
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: allPhotos,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

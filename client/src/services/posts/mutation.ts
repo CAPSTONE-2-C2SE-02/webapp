@@ -1,8 +1,9 @@
-import { InfiniteData, QueryFilters, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createNewPost, deletePost } from "./post-api";
-import { PostsNewFeed } from "@/lib/types";
+import { InfiniteData, QueryFilters, QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNewPost, deletePost, likePost } from "./post-api";
+import { Post, PostsNewFeed } from "@/lib/types";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router";
+import useAuthInfo from "@/hooks/useAuth";
 
 // create post mutation
 export function useCreatePostMutation() {
@@ -89,3 +90,100 @@ export function useDeletePostMutation() {
 
   return mutation;
 };
+
+// like post mutation
+export function useLikePostMutation() {
+  const queryClient = useQueryClient();
+  const auth = useAuthInfo();
+
+  const mutation = useMutation({
+    mutationFn: likePost,
+
+    onMutate: async (postId) => {
+      const queryKey: QueryKey = ["post", postId];
+
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey }),
+        queryClient.cancelQueries({ queryKey: ["posts-feed"] }),
+      ]);
+
+      const previousPost = queryClient.getQueryData<Post>(queryKey);
+      const previousPostsFeed = queryClient.getQueryData<InfiniteData<PostsNewFeed>>(["posts-feed"]);
+
+      // optimistically update the individual post cache
+      queryClient.setQueryData<Post>(queryKey, (oldPost) => {
+        if (!oldPost || !auth) return oldPost;
+
+        return {
+          ...oldPost,
+          likes: oldPost.likes.some((like) => like._id === auth._id)
+            ? oldPost.likes.filter((like) => like._id !== auth._id)
+            : [...oldPost.likes, { _id: auth._id, username: auth.username, fullName: auth.fullName }]
+        };
+      });
+
+      // optimistically update the posts-feed cache
+      queryClient.setQueryData<InfiniteData<PostsNewFeed>>(["posts-feed"], (oldData) => {
+        if (!oldData || !auth) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            data: page.data.map((post) =>
+              post._id === postId
+                ? {
+                    ...post,
+                    likes: post.likes.some((like) => like._id === auth._id)
+                      ? post.likes.filter((like) => like._id !== auth._id)
+                      : [...post.likes, { _id: auth._id, username: auth.username, fullName: auth.fullName }],
+                  }
+                : post
+            ),
+          })),
+        };
+      });
+
+      return { previousPost, previousPostsFeed };
+    },
+    onError: (_error, _postId, context) => {
+      if (context?.previousPost) {
+        queryClient.setQueryData(["post", _postId], context.previousPost);
+      }
+      if (context?.previousPostsFeed) {
+        queryClient.setQueryData(["posts-feed"], context.previousPostsFeed);
+      }
+
+      console.log(_error.stack);
+
+      toast.error("Failed to like/unlike post. Please try again.");
+    },
+    onSuccess: (response, postId) => {
+      // toast.success(response.message);
+      queryClient.setQueryData<Post>(["post", postId], (oldPost) => {
+        if (!oldPost) return oldPost;
+        return { ...oldPost, likes: response.result || [] };
+      });
+
+      queryClient.setQueryData<InfiniteData<PostsNewFeed>>(["posts-feed"], (oldData) => {
+        if (!oldData) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page) => ({
+            ...page,
+            data: page.data.map((post) =>
+              post._id === postId ? { ...post, likes: response.result || [] } : post
+            ),
+          })),
+        };
+      });
+    },
+    onSettled: (_data, _error, postId) => {
+      queryClient.invalidateQueries({ queryKey: ["post", postId] });
+      queryClient.invalidateQueries({ queryKey: ["posts-feed"] });
+    },
+  });
+
+  return mutation;
+}

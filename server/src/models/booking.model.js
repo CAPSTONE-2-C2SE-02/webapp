@@ -18,20 +18,20 @@ const bookingSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-    startDay: {
+    startDate: {
         type: Date,
     },
-    endDay: {
+    endDate: {
         type: Date,
     },
     status: {
         type: String,
-        enum: ["PENDING", "PAID", "CONFIRMED", "CANCELED", "TIMEOUT"],
+        enum: ["PENDING", "PAID", "FAILED", "CANCELED", "TIMEOUT"],
         default: "PENDING",
     },
     paymentStatus: {
         type: String,
-        enum: ["PENDING", "PAID", "REFUNDED"],
+        enum: ["PENDING", "TIMEOUT", "FAILED", "PAID", "REFUNDED"],
         default: "PENDING",
     },
     adults: {
@@ -51,7 +51,7 @@ const bookingSchema = new mongoose.Schema({
     },
     timeoutAt: {
         type: Date,
-        index: { expires: 300 },
+        index: true,
     },
 },
     { timestamps: true, versionKey: false }
