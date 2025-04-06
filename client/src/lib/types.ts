@@ -90,10 +90,22 @@ export type UserInfo = {
   profilePicture?: string;
   coverPhoto?: string;
   bio?: string;
-  followers: string[];
-  followings: string[];
+  followers: Follow[];
+  followings: Follow[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type Follow = {
+  _id: string;
+  username: string;
+  fullName: string;
+  profilePicture: string;
+  followers: string[];
+  role: {
+    _id: string;
+    name: string;
+  }
 }
 
 export type LoginInfo = {

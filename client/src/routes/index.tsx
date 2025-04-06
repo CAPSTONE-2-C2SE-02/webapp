@@ -9,6 +9,7 @@ import UserProfileFollowPage from "@/pages/userprofile-follower-page";
 import UserProfileToursPage from "@/pages/userprofile-tours-page";
 import UserProfileReviewPage from "@/pages/userprofile-review-page";
 import CreateTourPage from "@/pages/createtour-page";
+import SetBusySchedulePage from "@/pages/set-busy-schedule-page";
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -53,6 +54,13 @@ const routes = createBrowserRouter([
         element: <ProtectedRoute allowedRoles={["TOUR_GUIDE"]} />,
         children: [
           { index: true, element: <CreateTourPage /> }
+        ]
+      },
+      { 
+        path: "/busySchedule",
+        element: <ProtectedRoute allowedRoles={["TOUR_GUIDE"]} />,
+        children: [
+          { index: true, element: <SetBusySchedulePage /> }
         ]
       },
     ]

@@ -1,40 +1,47 @@
-import { useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "../ui/badge";
 import FollowButton from "./follow-button";
 import { useAppSelector } from "@/hooks/redux";
-import { UserInfo } from "@/lib/types";
+import { Follow } from "@/lib/types";
+import { convertRoleName } from "../utils/convert";
+import { Link } from "react-router";
 
 interface FollowerCardProps {
-  user: UserInfo;
+  user: Follow;
 }
 
-const FollowerCard = ({ user }: FollowerCardProps ) => {
+const FollowerCard = ({ user }: FollowerCardProps) => {
   const { userInfo } = useAppSelector((state) => state.auth);
-  const isFollowing = user?.followers?.includes(userInfo?._id ?? "") as boolean
-  const followerCount = Array.isArray(user.followers) ? user.followers.length : 0
+  const followerCount = Array.isArray(user.followers) ? user.followers.length : 0;
+
+  const isFollowing = userInfo?.followings.map(item => item._id).includes(user?._id) as boolean;
+
   return (
-    <div className="p-3 border border-border rounded-xl w-[290px]">
+    <div className="p-3 border border-border rounded-xl w-full h-full">
       <div className="flex justify-between items-center gap-3">
-        <div className='flex w-full'>
+        <div className='flex w-full items-center gap-4'>
           <div className="flex-shrink-0">
-            <Avatar className="size-14 border border-border">
+            <Avatar className="size-10 border border-border">
               <AvatarImage />
               <AvatarFallback>{user.fullName.charAt(0)}</AvatarFallback>
             </Avatar>
           </div>
-          <div className="ml-4 flex-1 ">
-            <p className="text-base font-bold">{user.fullName}</p>
+          <div className="flex-1 ">
+            <Link
+                to={`/${user?.username}`}
+                className="hover:underline text-sm font-medium"
+              >
+                {user?.fullName}
+            </Link>
             <p className="text-gray-600 text-xs">{followerCount} {followerCount > 1 ? "Followers" : "Follower"}</p>
           </div>
         </div>
-        <Badge className="inline-block px-3 py-1 border bg-white text-primary border-gray-300 rounded-full text-xs truncate min-w-fit">{user.role.name}</Badge>
+        <Badge className="rounded-full text-xs truncate min-w-fit capitalize text-primary" variant={"outline"}>{convertRoleName(user.role.name)}</Badge>
       </div>
-      <div className="mt-4 flex justify-end ">
-        <FollowButton currentUserId={userInfo?._id || ""} targetUserId={user._id} initialIsFollowing={isFollowing}/>
+      <div className="mt-2 flex justify-end ">
+        {user._id !== userInfo?._id && <FollowButton currentUserId={userInfo?._id || ""} targetUserId={user._id} initialIsFollowing={isFollowing} />}
       </div>
     </div>
-
   )
 }
 

@@ -34,7 +34,7 @@ const ProfileLayout = () => {
         )
     }
 
-    const isFollowing = user?.followers?.includes(userInfo?._id ?? "") as boolean
+    const isFollowing = user?.followers.map(item => item._id)?.includes(userInfo?._id ?? "") as boolean;
 
     return (
         <div className="w-full flex flex-col gap-5">
@@ -174,7 +174,7 @@ const ProfileLayout = () => {
                     </div>
                 </div>
             </div>
-            <Outlet />
+            <Outlet context={{ followers: user?.followers, followings: user?.followings }} />
         </div>
     )
 }

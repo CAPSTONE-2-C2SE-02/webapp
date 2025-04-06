@@ -32,7 +32,7 @@ const FollowButton = ({ targetUserId, currentUserId, initialIsFollowing }: Follo
         const updatedUser = {
           ...old,
           followers: isFollowing
-            ? old.followers.filter(id => id !== currentUserId) // Unfollow
+            ? old.followers.filter(user => user._id !== currentUserId) // Unfollow
             : [...old.followers, currentUserId] // Follow
         };
         return updatedUser;
