@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import Comment from "../models/comment.model.js";
 import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
+import NotificationController from "./notification.controller.js";
 
 class CommentController {
     // [POST] /api/v1/comments
@@ -24,16 +25,24 @@ class CommentController {
 
             const userId = user._id;
 
-            const newComment = await Comment.create({
+            const newComment = await Comment({
                 postId,
-                userId,
+                author: userId,
                 content,
-                parentComment: parentComment || null
+                parentComment,
             });
+
+            if (parentComment) {
+                await Comment.findByIdAndUpdate(parentComment, {
+                    $push: { childComments: newComment._id },
+                })
+            }
+
+            await newComment.save();
 
             // Send notification
             if (user._id != post.createdBy) {
-                await notificationController.sendNotification({
+                await NotificationController.sendNotification({
                     body: {
                         type: "COMMENT",
                         senderId: user._id,
@@ -63,9 +72,20 @@ class CommentController {
     async getCommentsByPost(req, res) {
         try {
             const { postId } = req.params;
-            const comments = await Comment.find({ postId })
-                .populate("userId", "username fullName profilePicture")
+            const comments = await Comment.find({ postId, parentComment: null })
+                .populate("author", "username fullName profilePicture")
                 .populate("likes", "username fullName")
+                .populate({
+                    path: 'childComments',
+                    populate: {
+                      path: 'childComments',
+                    },
+                    populate: {
+                        path: 'author',
+                        select: 'username fullName profilePicture'
+                    },
+                    options: { sort: { createdAt: -1 } }
+                })
                 .sort({ createdAt: -1 });
 
             return res.status(StatusCodes.OK).json({

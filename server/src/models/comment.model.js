@@ -7,13 +7,19 @@ const commentSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Post"
         },
-        profileId: {
+        author: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
         },
         content: {
             type: String,
         },
+        childComments: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Comment",
+            },
+        ],
         parentComment: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Comment",

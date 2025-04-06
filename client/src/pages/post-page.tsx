@@ -1,5 +1,6 @@
 import PostCard from "@/components/post/post-card";
 import PostCardSkeleton from "@/components/skeleton/post-card-skeleton";
+import MetaData from "@/components/utils/meta-data";
 import { fetchPostDetail } from "@/services/posts/post-api";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router";
@@ -27,7 +28,12 @@ const PostPage = () => {
 
   return (
     <div className="w-full max-w-[600px] mx-auto py-4">
-      {post && <PostCard postData={post} />}
+      {post && (
+        <>
+          <PostCard postData={post} />
+          <MetaData title={`${post.createdBy.fullName} - ${post.content[0]}`} />
+        </>
+      )}
     </div>
   )
 }
