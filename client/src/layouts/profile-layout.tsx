@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NavLink, Outlet, useParams } from "react-router";
+import { NavLink, Outlet, useNavigate, useParams } from "react-router";
 import { UserRound } from "lucide-react"
 import { Star } from "lucide-react"
 import { UserRoundCheck } from "lucide-react"
@@ -12,13 +12,23 @@ import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/hooks/redux";
 import { useGetUserInfoByUsernameQuery } from "@/services/user-api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 
 const ProfileLayout = () => {
     const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
+    const navigate = useNavigate();
 
     // get username from url
     const { username } = useParams<{ username: string }>();
-    const { data: user, isLoading } = useGetUserInfoByUsernameQuery(username as string);
+    const { data: user, isLoading, isError } = useGetUserInfoByUsernameQuery(username as string);
+
+    useEffect(() => {
+        if (isError) {
+            navigate("/not-found", { replace: true });
+        }
+    }, [isError, navigate]);
+
+    if (isError) return null;
 
     if (isLoading) {
         return (
