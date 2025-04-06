@@ -116,8 +116,8 @@ const PostCard = ({ postData }: { postData: Post }) => {
         <CardContent className="px-4 pb-3">
           {/* Text Content */}
           <div>
-            {postData?.content.length > 0 && postData.content.map(content => (
-              <p key={content} className="text-black text-sm font-normal">{content}</p>
+            {postData?.content.length > 0 && postData.content.map((content, index) => (
+              <p key={`${content}+${index}`} className="text-black text-sm font-normal">{content}</p>
             ))}
             {/* Hashtag */}
             <div className="flex items-center gap-1 mt-1">
