@@ -1,62 +1,34 @@
 import { useState } from "react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { CalendarIcon, CameraIcon, X } from "lucide-react";
-
-// Utility function to format date to dd/mm/yyyy
-const formatDateToDDMMYYYY = (dateString: string): string => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return ""; // Handle invalid date
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-};
-
-// Utility function to parse dd/mm/yyyy back to ISO format for saving
-const parseDDMMYYYYToISO = (dateString: string): string => {
-    if (!dateString) return "";
-    const [day, month, year] = dateString.split("/").map(Number);
-    if (!day || !month || !year) return "";
-    const date = new Date(year, month - 1, day, 17, 0, 0); // Set time to 17:00:00 to match original
-    return date.toISOString();
-};
+import { CalendarIcon, CameraIcon } from "lucide-react";
+import { EditProfileData } from "@/lib/types";
 
 interface EditProfileModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSave: (profileData: {
-        firstName: string;
-        lastName: string;
-        email: string;
-        phone: string;
-        city: string;
-        dateOfBirth: string;
-        introduction: string;
-        avatar?: string | File;
-        coverPhoto?: string | File;
-    }) => void;
-    initialData?: {
-        firstName: string;
-        lastName: string;
-        email: string;
-        phone: string;
-        city: string;
-        dateOfBirth: string;
-        introduction: string;
-        avatar?: string;
-        coverPhoto?: string;
-    };
+    onSave: (profileData: EditProfileData) => void;
+    initialData?: EditProfileData;
 }
+
+const formatDateToDDMMYYYY = (dateString: string): string => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+};
+
+const parseDDMMYYYYToISO = (dateString: string): string => {
+    if (!dateString) return "";
+    const [day, month, year] = dateString.split("/").map(Number);
+    if (!day || !month || !year) return "";
+    return new Date(year, month - 1, day).toISOString();
+};
 
 export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditProfileModalProps) {
     const [profileData, setProfileData] = useState({
@@ -95,7 +67,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
     };
 
     const handleSave = () => {
-        const updatedProfileData = {
+        const updatedProfileData: EditProfileData = {
             firstName: profileData.firstName,
             lastName: profileData.lastName,
             email: profileData.email,
@@ -107,35 +79,26 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
             coverPhoto: profileData.coverPhotoFile || profileData.coverPhoto,
         };
         onSave(updatedProfileData);
-        onClose();
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent
-                className="sm:max-w-[425px] rounded-lg max-h-[90vh] flex flex-col"
+                className="sm:max-w-[625px] rounded-lg max-h-[90vh] flex flex-col"
                 aria-describedby="edit-profile-description"
             >
-                {/* Hidden description for accessibility */}
                 <span id="edit-profile-description" className="sr-only">
                     A dialog to edit your profile information, including name, email, phone, city, birthday, and introduction.
                 </span>
-
                 <DialogHeader>
                     <DialogTitle className="text-center text-lg font-semibold">Edit Profile</DialogTitle>
-
                 </DialogHeader>
-
-                {/* Scrollable content area */}
                 <div className="flex-1 overflow-y-auto space-y-4 px-4">
-                    {/* Avatar */}
                     <div className="flex flex-col items-center">
                         <div className="relative">
                             <Avatar className="h-24 w-24">
-                                <AvatarImage src={profileData.avatar} alt="Avatar" />
-                                <AvatarFallback>
-                                    {profileData.firstName.charAt(0) || "U"}
-                                </AvatarFallback>
+                                <AvatarImage src={typeof profileData.avatar === "string" ? profileData.avatar : undefined} alt="Avatar" />
+                                <AvatarFallback>{profileData.firstName.charAt(0) || "U"}</AvatarFallback>
                             </Avatar>
                             <label
                                 htmlFor="avatar-upload"
@@ -153,11 +116,9 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                         </div>
                         <span className="mt-2 text-sm text-gray-500">Avatar</span>
                     </div>
-
-                    {/* Cover Photo */}
                     <div className="relative">
                         <img
-                            src={profileData.coverPhoto}
+                            src={typeof profileData.coverPhoto === "string" ? profileData.coverPhoto : undefined}
                             alt="Cover Photo"
                             className="w-full h-32 object-cover rounded-lg"
                         />
@@ -176,13 +137,9 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                         />
                         <span className="block mt-2 text-sm text-gray-500">Cover Photo</span>
                     </div>
-
-                    {/* Form Fields */}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                First Name
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">First Name</label>
                             <Input
                                 name="firstName"
                                 value={profileData.firstName}
@@ -191,9 +148,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Last Name
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">Last Name</label>
                             <Input
                                 name="lastName"
                                 value={profileData.lastName}
@@ -202,7 +157,6 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                             />
                         </div>
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -214,9 +168,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Phone Number
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">Phone Number</label>
                             <Input
                                 name="phone"
                                 value={profileData.phone}
@@ -225,12 +177,9 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                             />
                         </div>
                     </div>
-
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                From City/Town
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">From City/Town</label>
                             <Input
                                 name="city"
                                 value={profileData.city}
@@ -239,9 +188,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Birthday
-                            </label>
+                            <label className="block text-sm font-medium text-gray-700">Birthday</label>
                             <div className="relative">
                                 <Input
                                     name="dateOfBirth"
@@ -254,11 +201,8 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                             </div>
                         </div>
                     </div>
-
                     <div>
-                        <label className="block text-sm font-medium text-gray-700">
-                            Introduction
-                        </label>
+                        <label className="block text-sm font-medium text-gray-700">Introduction</label>
                         <textarea
                             name="introduction"
                             value={profileData.introduction}
@@ -268,8 +212,6 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                         />
                     </div>
                 </div>
-
-                {/* Dialog Footer with Buttons */}
                 <DialogFooter className="mt-4 flex justify-end gap-2 px-4 py-3 border-t">
                     <Button
                         variant="outline"

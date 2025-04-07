@@ -39,7 +39,7 @@ export type Comment = {
   likes: Pick<UserInfo, | "_id" | "username" | "fullName">[];
   createdAt: string;
   updatedAt: string;
-} 
+}
 
 export type TourAttachment = {
   _id: string;
@@ -146,4 +146,26 @@ export type Notification = {
   timestamp: string;
   timeAgo: string;
   read: boolean;
+}
+
+export type AuthUserInfo = {
+  _id: string;
+  username: string;
+  email: string;
+};
+
+export interface UserResponse {
+  result: UserInfo;
+}
+
+export interface EditProfileData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  city: string;
+  dateOfBirth: string;
+  introduction: string;
+  avatar?: string | File;
+  coverPhoto?: string | File;
 }
