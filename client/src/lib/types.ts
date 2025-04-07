@@ -108,10 +108,22 @@ export type UserInfo = {
   profilePicture?: string;
   coverPhoto?: string;
   bio?: string;
-  followers: string[];
-  followings: string[];
+  followers: Follow[];
+  followings: Follow[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type Follow = {
+  _id: string;
+  username: string;
+  fullName: string;
+  profilePicture: string;
+  followers: string[];
+  role: {
+    _id: string;
+    name: string;
+  }
 }
 
 export type LoginInfo = {
@@ -147,4 +159,20 @@ export type Notification = {
   timestamp: string;
   timeAgo: string;
   read: boolean;
+}
+
+export interface DateEntry {
+  date: string; // "YYYY-MM-DD"
+  status: 'UNAVAILABLE'; // As expected by the backend
+}
+
+export interface Calendar {
+  tourGuideId: string;
+  dates: DateEntry[];
+}
+
+export interface SetAvailabilityResponse {
+  success: boolean;
+  message: string;
+  result: Calendar;
 }
