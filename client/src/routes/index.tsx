@@ -60,7 +60,7 @@ const routes = createBrowserRouter([
         ]
       },
       { 
-        path: "/busySchedule",
+        path: "/busy-schedule",
         element: <ProtectedRoute allowedRoles={["TOUR_GUIDE"]} />,
         children: [
           { index: true, element: <SetBusySchedulePage /> }
