@@ -8,9 +8,9 @@ import { useGetUserInfoByUsernameQuery } from "@/services/user-api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { EditProfileModal } from "@/components/modals/edit-profile-modal";
+import axiosInstance from "@/config/api";
 import axios from "axios";
 
-// Define the UserInfo type for user?.result
 interface UserInfo {
     _id: string;
     fullName: string;
@@ -30,22 +30,20 @@ interface UserResponse {
     result: UserInfo;
 }
 
-// Define the type for userInfo (authenticated user)
 interface AuthUserInfo {
     _id: string;
     username: string;
     email: string;
-    // Add other fields as needed
 }
 
 const ProfileLayout = () => {
-    const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth) as {
+    const { isAuthenticated, userInfo, token } = useAppSelector((state) => state.auth) as {
         isAuthenticated: boolean;
         userInfo: AuthUserInfo | null;
+        token: string | null;
     };
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-    // Get username from URL
     const { username } = useParams<{ username: string }>();
     const { data: user, isLoading, refetch } = useGetUserInfoByUsernameQuery(username as string) as {
         data: UserResponse | undefined;
@@ -53,11 +51,10 @@ const ProfileLayout = () => {
         refetch: () => void;
     };
 
-    // Log user and userInfo to debug
     console.log("User data:", user);
     console.log("Authenticated userInfo:", userInfo);
+    console.log("Auth token:", token);
 
-    // Handle save profile data with API call
     const handleSaveProfile = async (profileData: {
         firstName: string;
         lastName: string;
@@ -69,7 +66,6 @@ const ProfileLayout = () => {
         avatar?: string | File;
         coverPhoto?: string | File;
     }) => {
-        // Check if user is authenticated (based on Redux state or session)
         if (!isAuthenticated) {
             alert("You are not logged in. Please log in to update your profile.");
             window.location.href = "/login";
@@ -77,97 +73,187 @@ const ProfileLayout = () => {
         }
 
         let userId = user?.result?._id || userInfo?._id;
-
         if (!userId) {
             try {
-                const response = await axios.get("/api/v1/profiles/myInfo");
+                const response = await axiosInstance.get("/profiles/myInfo");
                 userId = response.data.result?._id;
                 console.log("Fetched user ID from myInfo:", userId);
             } catch (error) {
-                console.error("Error fetching user ID from myInfo:", error);
+                console.error("Error fetching user ID:", error);
                 alert("Cannot update profile: Unable to fetch user ID.");
                 return;
             }
         }
 
-        if (!userId) {
-            console.error("User ID is not available");
-            alert("Cannot update profile: User ID is missing.");
+        const fullName = `${profileData.firstName} ${profileData.lastName}`.trim();
+        if (!fullName) {
+            alert("Full name is required.");
             return;
         }
 
-        // Validate payload
-        const fullName = `${profileData.firstName} ${profileData.lastName}`.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!fullName || !profileData.email) {
-            alert("Full name and email are required.");
-            return;
-        }
         if (!emailRegex.test(profileData.email)) {
             alert("Please enter a valid email address.");
             return;
         }
 
-        try {
+        const phoneRegex = /^[0-9]{10,11}$/;
+        if (profileData.phone && !phoneRegex.test(profileData.phone)) {
+            alert("Phone number must be 10-11 digits.");
+            return;
+        }
+        const hasFiles = profileData.avatar instanceof File || profileData.coverPhoto instanceof File;
+
+        let requestData;
+        let headers: Record<string, string> = {
+            "Authorization": `Bearer ${token}`
+        };
+
+        if (hasFiles) {
             const formData = new FormData();
-            formData.append("fullName", fullName);
-            formData.append("email", profileData.email);
-            formData.append("phoneNumber", profileData.phone);
-            formData.append("address", profileData.city || "");
-            formData.append("dateOfBirth", profileData.dateOfBirth || "");
-            formData.append("bio", profileData.introduction || "");
+            if (fullName) formData.append("fullName", fullName);
+
+            const currentEmail = user?.result?.email || "";
+            if (profileData.email && profileData.email !== currentEmail) {
+                formData.append("email", profileData.email);
+            }
+
+            const currentPhone = user?.result?.phoneNumber || "";
+            if (profileData.phone && profileData.phone !== currentPhone) {
+                formData.append("phoneNumber", profileData.phone);
+            }
+
+            if (profileData.city) formData.append("address", profileData.city);
+            if (profileData.introduction) formData.append("bio", profileData.introduction);
+
+            if (profileData.dateOfBirth) {
+                const birthDate = new Date(profileData.dateOfBirth);
+                if (isNaN(birthDate.getTime())) {
+                    alert("Invalid date of birth format.");
+                    return;
+                }
+                const today = new Date();
+                const minAgeDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+                if (birthDate > minAgeDate) {
+                    alert("You must be at least 13 years old.");
+                    return;
+                }
+                formData.append("dateOfBirth", birthDate.toISOString().split("T")[0]);
+            }
 
             if (profileData.avatar instanceof File) {
                 formData.append("profilePicture", profileData.avatar);
-            } else {
-                formData.append("profilePicture", user?.result?.profilePicture || "");
             }
-
             if (profileData.coverPhoto instanceof File) {
                 formData.append("coverPhoto", profileData.coverPhoto);
-            } else {
-                formData.append("coverPhoto", user?.result?.coverPhoto || "");
             }
 
-            console.log("Updating profile with data:", {
-                userId,
-                fullName,
-                email: profileData.email,
-                phoneNumber: profileData.phone,
-                address: profileData.city || "",
-                dateOfBirth: profileData.dateOfBirth || "",
-                bio: profileData.introduction || "",
-                profilePicture: profileData.avatar instanceof File ? profileData.avatar.name : profileData.avatar,
-                coverPhoto: profileData.coverPhoto instanceof File ? profileData.coverPhoto.name : profileData.coverPhoto,
+            requestData = formData;
+            headers["Content-Type"] = "multipart/form-data";
+        } else {
+            const jsonData: Record<string, any> = {};
+            if (fullName) jsonData.fullName = fullName;
+
+            const currentEmail = user?.result?.email || "";
+            if (profileData.email && profileData.email !== currentEmail) {
+                jsonData.email = profileData.email;
+            }
+
+            const currentPhone = user?.result?.phoneNumber || "";
+            if (profileData.phone && profileData.phone !== currentPhone) {
+                jsonData.phoneNumber = profileData.phone;
+            }
+
+            if (profileData.city) jsonData.address = profileData.city;
+            if (profileData.introduction) jsonData.bio = profileData.introduction;
+
+            if (profileData.dateOfBirth) {
+                const birthDate = new Date(profileData.dateOfBirth);
+                if (isNaN(birthDate.getTime())) {
+                    alert("Invalid date of birth format.");
+                    return;
+                }
+                const today = new Date();
+                const minAgeDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+                if (birthDate > minAgeDate) {
+                    alert("You must be at least 13 years old.");
+                    return;
+                }
+                jsonData.dateOfBirth = birthDate.toISOString().split("T")[0];
+            }
+
+            requestData = jsonData;
+            headers["Content-Type"] = "application/json";
+        }
+
+        console.log("Sending request data:", requestData);
+        if (hasFiles) {
+            for (let [key, value] of requestData.entries()) {
+                console.log(`${key}: ${value}`);
+            }
+        } else {
+            console.log(JSON.stringify(requestData, null, 2));
+        }
+
+        try {
+            console.log("Updating profile for user ID:", userId);
+            console.log("Using token:", token);
+
+            const response = await axios({
+                method: 'put',
+                url: `http://localhost:8080/api/v1/profiles/${userId}`,
+                data: requestData,
+                headers
             });
 
-            // Make the API call without Authorization header
-            const response = await axios.put(`/api/v1/profiles/${userId}`, formData, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
-
-            console.log("Profile updated successfully:", response.data);
-            refetch();
-            alert("Profile updated successfully!");
-        } catch (error: any) {
+            console.log("Complete response:", response);
+            if (response && response.data) {
+                console.log("Profile update successful:", response.data);
+                if (response.data.success) {
+                    alert(response.data.message || "Profile updated successfully!");
+                    refetch();
+                } else {
+                    console.error("API returned success:false", response.data);
+                    alert("Profile update failed: " + (response.data.message || "Unknown error"));
+                }
+            } else {
+                console.error("Response or response.data is undefined");
+                alert("Profile update failed: No response data received");
+            }
+        } catch (error) {
             console.error("Error updating profile:", error);
-            if (error.response) {
-                console.error("Response status:", error.response.status);
-                console.error("Response data:", error.response.data);
-                if (error.response.status === 401) {
+            if (axios.isAxiosError(error) && error.response) {
+                const status = error.response.status;
+                const errorData = error.response.data;
+                console.error(`Server responded with ${status}:`, errorData);
+                if (errorData && errorData.error && Array.isArray(errorData.error)) {
+                    const errorMessages = errorData.error.join('\n');
+                    alert(`Failed to update profile: ${errorMessages}`);
+                } else {
+                    const errorMessage = errorData?.error || errorData?.message || "Unknown server error";
+                    if (errorMessage === "Email already exists") {
+                        alert("The email you entered is already in use. Please choose a different email.");
+                    } else if (errorMessage === "Phone number already exists") {
+                        alert("The phone number you entered is already in use. Please choose a different phone number.");
+                    } else {
+                        alert(`Failed to update profile: ${errorMessage}`);
+                    }
+                }
+                if (status === 401) {
                     alert("Session expired. Please log in again.");
                     window.location.href = "/login";
-                } else {
-                    alert(`Failed to update profile: ${error.response.data.error || "Unknown error"}`);
                 }
-            } else if (error.request) {
+            } else if (axios.isAxiosError(error) && error.request) {
                 console.error("No response received:", error.request);
-                alert("Failed to update profile: No response from server. Please check your network connection.");
+                alert("No response from server. Check your network.");
             } else {
-                console.error("Error message:", error.message);
-                alert(`Failed to update profile: ${error.message}`);
+                if (error instanceof Error) {
+                    console.error("Error details:", error.message);
+                    alert(`Error: ${error.message}`);
+                } else {
+                    console.error("Error details:", error);
+                    alert("Unknown error occurred");
+                }
             }
         }
     };
@@ -180,19 +266,16 @@ const ProfileLayout = () => {
         );
     }
 
-    // Split fullName into firstName and lastName (if fullName is available)
     const [firstName, lastName] = user?.result?.fullName?.split(" ") || ["", ""];
 
     return (
         <div className="w-full flex flex-col gap-5">
             <div className="relative w-full pt-8">
-                {/* Cover Photo */}
                 <img
                     src={user?.result?.coverPhoto || "https://placehold.co/1920x400"}
                     className="rounded-t-2xl w-full h-64 object-cover"
                 />
                 <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
-                    {/* Avatar */}
                     <Avatar className="size-48 border border-border">
                         <AvatarImage src={user?.result?.profilePicture} />
                         <AvatarFallback>{user?.result?.fullName?.charAt(0)}</AvatarFallback>
@@ -222,7 +305,6 @@ const ProfileLayout = () => {
                     </div>
                 </div>
 
-                {/* Profile Info and Edit Button */}
                 <div className="flex justify-end items-start px-6 py-10 bg-white">
                     <div className="flex-col justify-items-start content-center">
                         <div className="flex items-center py-2">
@@ -328,7 +410,6 @@ const ProfileLayout = () => {
                 </div>
             </div>
 
-            {/* Edit Profile Modal with initial data */}
             {user?.result && (
                 <EditProfileModal
                     isOpen={isEditModalOpen}
@@ -347,8 +428,6 @@ const ProfileLayout = () => {
                     }}
                 />
             )}
-
-            {/* Outlet for child routes */}
             <Outlet />
         </div>
     );

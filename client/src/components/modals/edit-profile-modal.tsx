@@ -123,13 +123,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
 
                 <DialogHeader>
                     <DialogTitle className="text-center text-lg font-semibold">Edit Profile</DialogTitle>
-                    <Button
-                        variant="ghost"
-                        className="absolute right-4 top-4"
-                        onClick={onClose}
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
+
                 </DialogHeader>
 
                 {/* Scrollable content area */}
