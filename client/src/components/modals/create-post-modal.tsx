@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Hash, Image, Loader2, MapPin, Smile, X } from "lucide-react";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
 import { Description } from "@radix-ui/react-dialog";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -17,10 +19,10 @@ import TourAttachment from "../tour/tour-attachment";
 import TourAttachmentSelector from "../tour/tour-attachment-selector";
 import { Tour } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useAppSelector } from "@/hooks/redux";
-// import { useCreatePostMutation } from "@/services/posts/post-api";
 import { toast } from "sonner";
 import { useCreatePostMutation } from "@/services/posts/mutation";
+import useAuthInfo from "@/hooks/useAuth";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 interface CreateNewPostModalProps {
   isOpen: boolean;
@@ -31,8 +33,7 @@ const CreateNewPostModal = ({
   isOpen,
   onOpenChange,
 }: CreateNewPostModalProps) => {
-  const { userInfo } = useAppSelector((state) => state.auth);
-  // const [createPost, { isLoading, isError, error }] = useCreatePostMutation();
+  const auth = useAuthInfo();  
   const createPostMutation = useCreatePostMutation();
 
   const [isShowTagInput, setIsShowTagInput] = useState(false);
@@ -140,17 +141,17 @@ const CreateNewPostModal = ({
             <div className="flex items-start gap-3">
               <div className="size-9 rounded-full overflow-hidden flex-shrink">
                 <img
-                  src={userInfo?.profilePicture || "https://ui-avatars.com/api/?size=128&background=random"}
+                  src={auth?.profilePicture || "https://ui-avatars.com/api/?size=128&background=random"}
                   alt="avatar"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="w-full flex-1 space-y-4">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-base font-semibold text-primary">{userInfo?.fullName}</span>
-                  <Badge className="text-xs rounded-full">@{userInfo?.username}</Badge>
+                  <span className="text-base font-semibold text-primary">{auth?.fullName}</span>
+                  <Badge className="text-xs rounded-full">@{auth?.username}</Badge>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-3 overflow-x-auto overflow-y-auto max-h-[calc(100vh-400px)]">
                   <div className="relative">
                     {content.length == 0 && (
                       <span className="absolute top-0 left-0 text-gray-400 pointer-events-none text-sm">
@@ -165,7 +166,7 @@ const CreateNewPostModal = ({
                       contentEditable="true"
                       spellCheck="false"
                       onInput={handleInput}
-                      className="w-full select-text break-words rounded focus:outline-none min-h-[1rem] text-sm whitespace-pre-wrap overflow-x-auto overflow-y-auto"
+                      className="w-full select-text break-words rounded focus:outline-none min-h-[1rem] text-sm whitespace-pre-wrap"
                     />
                   </div>
                   {isShowTagInput && (
@@ -220,12 +221,36 @@ const CreateNewPostModal = ({
                   <Button size={"icon"} variant={"ghost"} onClick={() => setIsShowTagInput(prev => !prev)}>
                     <Hash className="size-5" />
                   </Button>
-                  <Button size={"icon"} variant={"ghost"} onClick={() => setShowTourSelector(true)}>
-                    <MapPin className="size-5" />
-                  </Button>
+                  {auth?.role === "TOUR_GUIDE" && (
+                    <Button size={"icon"} variant={"ghost"} onClick={() => setShowTourSelector(true)}>
+                      <MapPin className="size-5" />
+                    </Button>
+                  )}
                   <Button size={"icon"} variant={"ghost"}>
                     <Smile className="size-5" />
                   </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button size={"icon"} variant={"ghost"}>
+                        <Smile className="size-5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0">
+                      <Picker
+                        data={data}
+                        theme="light"
+                        emojiSize={24}
+                        previewPosition="none"
+                        showSkinTones={false}
+                        onEmojiSelect={(emoji: { native: string; }) => {
+                          if (contentRef.current) {
+                            contentRef.current.innerText += emoji.native;
+                          }
+                          handleInput();
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </div>

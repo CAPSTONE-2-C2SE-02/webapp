@@ -1,5 +1,5 @@
 import { sendToQueue } from "../services/queue.service.js";
-import { processVnpayCallback } from "../workers/payment.worker.js";
+import { processVnpayCallback } from "../consumers/payment.consumer.js";
 import { StatusCodes } from "http-status-codes";
 import Payment from "../models/payment.model.js";
 

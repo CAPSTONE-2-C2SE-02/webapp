@@ -8,6 +8,7 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { Input } from "../ui/input";
+import { toast } from "sonner";
 
 interface SharePostModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ const SharePostModal = ({ isOpen, onOpenChange, url }: SharePostModalProps) => {
 
     try {
         await navigator.clipboard.writeText(url);
+        toast.success("Post URL copied to clipboard");
     } catch (error) {
         console.error(error);
     }

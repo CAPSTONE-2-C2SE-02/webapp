@@ -10,7 +10,7 @@ class BookingController {
     // [POST] /api/v1/bookings/
     async createBooking(req, res) {
         try {
-            const { tourId, startDay, endDay, adults = 0, youths = 0, children = 0 } = req.body;
+            const { tourId, startDate, endDate, adults = 0, youths = 0, children = 0 } = req.body;
             const travelerId = req.user.userId;
             const slots = adults + youths + children;
 
@@ -43,8 +43,8 @@ class BookingController {
                 travelerId,
                 tourId,
                 tourGuideId: tourGuide._id,
-                startDay,
-                endDay,
+                startDate,
+                endDate,
                 adults,
                 youths,
                 children,
@@ -57,7 +57,7 @@ class BookingController {
             tour.availableSlots -= slots;
             await tour.save();
 
-            await sendToQueue("booking_created", { bookingId: newBooking._id });
+            await sendToQueue("BOOKING_CREATED", { bookingId: newBooking._id });
 
             return res.status(StatusCodes.CREATED).json({
                 success: true,

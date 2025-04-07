@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NavLink, Outlet, useParams } from "react-router";
+import { NavLink, Outlet, useNavigate, useParams } from "react-router";
 import { Cake, MessageSquare, UserRound } from "lucide-react"
 import { Star } from "lucide-react"
 import { UserRoundCheck } from "lucide-react"
@@ -12,19 +12,27 @@ import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/hooks/redux";
 import { getUserByUsername } from "@/services/user-api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 import FollowButton from "@/components/user/follow-button";
 import { useQuery } from "@tanstack/react-query";
 
 const ProfileLayout = () => {
     const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
+    const navigate = useNavigate();
 
     // get username from url
     const { username } = useParams<{ username: string }>();
 
-    const { data: user, isLoading } = useQuery({
+    const { data: user, isLoading, isError } = useQuery({
         queryKey: ["user-profile", username],
         queryFn: () => getUserByUsername(username!)
     });
+
+    useEffect(() => {
+        if (isError) {
+            navigate("/not-found", { replace: true });
+        }
+    }, [isError, navigate]);
 
     if (isLoading) {
         return (

@@ -2,19 +2,22 @@ import amqp from "amqplib";
 import { StatusCodes } from "http-status-codes";
 import { ProductCode, VNPay, VnpLocale, dateFormat, ignoreLogger } from "vnpay";
 import vnpayConfig from "../config/vnpay.config.js";
+import notificationController from "../controllers/notification.controller.js";
 import Booking from "../models/booking.model.js";
 import Payment from "../models/payment.model.js";
 import Tour from "../models/tour.model.js";
+import User from "../models/user.model.js";
 import { releaseSlots } from "../services/booking.service.js";
 import { sendEmail } from "../services/email.service.js";
-import User from "../models/user.model.js";
+
+const QUEUE_NAME = "PAYMENT_QUEUE";
 
 async function processPayment() {
-    const connection = await amqp.connect("amqp://localhost");
+    const connection = await amqp.connect(process.env.RABBITMQ_URL);
     const channel = await connection.createChannel();
-    await channel.assertQueue("PAYMENT_QUEUE", { durable: true });
+    await channel.assertQueue(QUEUE_NAME, { durable: true });
 
-    channel.consume("PAYMENT_QUEUE", async (msg) => {
+    channel.consume(QUEUE_NAME, async (msg) => {
         if (msg !== null) {
             const { bookingId, fullName, country, address, city, note, userId } = JSON.parse(msg.content.toString());
             console.log(`💳 Processing payment for bookingId: ${bookingId}`);
@@ -121,14 +124,49 @@ async function processVnpayCallback(vnpParams, res) {
                 return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Traveler not found" });
             }
 
+            const tourGuide = await User.findById({ _id: tour.author });
+
+            // Send notification for traveler
+            await notificationController.sendNotification({
+                body: {
+                    type: "BOOKING",
+                    senderId: null,
+                    receiverId: traveler._id,
+                    relatedId: tour._id,
+                    relatedModel: "Tour",
+                    message: `Bạn đã đăng ký thành công ${tour.title} của ${tourGuide.fullName}`
+                },
+            }, {
+                status: () => ({
+                    json: () => { },
+                }),
+            });
+
+            // Send notification for tour guide
+            await notificationController.sendNotification({
+                body: {
+                    type: "BOOKING",
+                    senderId: traveler._id,
+                    receiverId: tour.author,
+                    relatedId: tour._id,
+                    relatedModel: "Tour",
+                    message: `Người dùng ${traveler.username} vừa mới đặt tour ${tour.title} của bạn`,
+                },
+            }, {
+                status: () => ({
+                    json: () => { },
+                }),
+            });
+
+            // Send mail
             const subject = "Xác nhận đặt tour thành công!";
             const html = `
             <h2>Xin chào ${traveler.fullName},</h2>
             <p>Bạn đã đặt tour thành công. Dưới đây là thông tin booking của bạn:</p>
             <ul>
                 <li><strong>Tour:</strong> ${tour.title}</li>
-                <li><strong>Ngày bắt đầu:</strong> ${booking.startDay.toString()}</li>
-                <li><strong>Ngày kết thúc:</strong> ${booking.endDay.toString()}</li>
+                <li><strong>Ngày bắt đầu:</strong> ${booking.startDay}</li>
+                <li><strong>Ngày kết thúc:</strong> ${booking.endDay}</li>
                 <li><strong>Số người:</strong> ${booking.adults + booking.youths + booking.children}</li>
                 <li><strong>Tổng tiền:</strong> ${booking.totalAmount} VND</li>
             </ul>

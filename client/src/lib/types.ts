@@ -4,7 +4,7 @@ export type Post = {
     _id: string;
     username: string;
     fullName: string;
-    avatar: string;
+    profilePicture: string;
   },
   hashtag: string[];
   content: string[];
@@ -23,6 +23,23 @@ export type PostsNewFeed = {
   nextPage: number;
   data: Post[];
 }
+
+export type Comment = {
+  _id: string;
+  postId: string;
+  author: {
+    _id: string;
+    username: string;
+    fullName: string;
+    profilePicture: string;
+  },
+  content: string;
+  childComments?: Comment[];
+  parentComment?: string;
+  likes: Pick<UserInfo, | "_id" | "username" | "fullName">[];
+  createdAt: string;
+  updatedAt: string;
+} 
 
 export type TourAttachment = {
   _id: string;

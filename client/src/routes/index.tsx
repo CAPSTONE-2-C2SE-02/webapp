@@ -10,6 +10,9 @@ import UserProfileToursPage from "@/pages/userprofile-tours-page";
 import UserProfileReviewPage from "@/pages/userprofile-review-page";
 import CreateTourPage from "@/pages/createtour-page";
 import SetBusySchedulePage from "@/pages/set-busy-schedule-page";
+import LoadingPage from "@/components/layout/loading-page";
+import RankingPage from "@/pages/ranking-page";
+import NotFoundPage from "@/pages/not-found-page";
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -63,6 +66,13 @@ const routes = createBrowserRouter([
           { index: true, element: <SetBusySchedulePage /> }
         ]
       },
+
+      // Ranking Route
+      { path: "/ranking", element: <RankingPage /> },
+
+      // Not found route
+      {  path: "/not-found", element: <NotFoundPage /> },
+      {  path: "*", element: <NotFoundPage /> },
     ]
   },
   {
@@ -76,7 +86,7 @@ const routes = createBrowserRouter([
 
 export default function AppRoutes() {
   return (
-    <Suspense fallback={<div className="w-full h-screen flex items-center justify-center">Loading....</div>}>
+    <Suspense fallback={<LoadingPage />}>
       <RouterProvider router={routes} />
     </Suspense>
   )
