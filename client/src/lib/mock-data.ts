@@ -49,7 +49,7 @@ const generateTourDataArray = () => {
     title: "Tour Da Nang - Hoi An 5 days 4 nights",
     description: "Lorem ipsum odor amet, consectetuer adipiscing elit. Ullamcorper amet praesent lobortis ultrices consectetur dictumst parturient",
     rating: 4.5,
-    depatureLocation: "Da Nang",
+    departureLocation: "Da Nang",
     destination: "Hoi An",
     duration: "5 days 4 nights",
     priceForAdult: 98.89,
@@ -96,7 +96,7 @@ const generateTourDataArray = () => {
     const newTour = {
       ...baseTour,
       _id: `${parseInt(baseTour._id) + i}`, // Unique ID by incrementing
-      title: `Tour ${baseTour.depatureLocation} - ${destinations[i]} ${baseTour.duration}`,
+      title: `Tour ${baseTour.departureLocation} - ${destinations[i]} ${baseTour.duration}`,
       destination: destinations[i], // Different destination for each tour
       rating: Number((4 + Math.random() * 0.5).toFixed(1)), // Random rating between 4 and 4.5
       priceForAdult: baseTour.priceForAdult + i * 10, // Incremental price increase
@@ -117,7 +117,7 @@ export const tourData: Tour = {
   _id: "93938547389457",
   title: "Tour Da Nang - Hoi An 5 days 4 nights",
   rating: 4.5,
-  depatureLocation: "Da Nang",
+  departureLocation: "Da Nang",
   destination: "Hoi An",
   duration: "5 days 4 nights",
   priceForAdult: 98.89,

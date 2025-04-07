@@ -13,6 +13,7 @@ import SetBusySchedulePage from "@/pages/set-busy-schedule-page";
 import LoadingPage from "@/components/layout/loading-page";
 import RankingPage from "@/pages/ranking-page";
 import NotFoundPage from "@/pages/not-found-page";
+import TourBookingPage from "@/pages/tour-booking-page";
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -48,7 +49,7 @@ const routes = createBrowserRouter([
       {
         element: <ProtectedRoute />,
         children: [
-          { path: "/tours/:tourId/book", element: <div>TourBookingPage</div> },
+          { path: "/tours/:tourId/book", element: <TourBookingPage /> },
           { path: "/tours/:tourId/payment", element: <div>TourPaymentPage</div> },
         ]
       },

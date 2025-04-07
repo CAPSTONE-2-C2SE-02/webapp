@@ -79,7 +79,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full overflow-hidden">
               <img
-                src="https://images.unsplash.com/profile-1441298803695-accd94000cac?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&cs=tinysrgb&fit=crop&h=64&w=64&s=5a9dc749c43ce5bd60870b129a40902f"
+                src={postData.createdBy.profilePicture}
                 alt=""
                 className="w-full h-full"
               />
