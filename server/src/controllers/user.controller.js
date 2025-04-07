@@ -104,6 +104,22 @@ class UserController {
         try {
             const user = await User.findOne({ _id: req.user.userId })
                 .populate("role")
+                .populate({
+                    path: "followers",
+                    select: "_id username fullName profilePicture role followers",
+                    populate: {
+                        path: "role", // Populate the role field
+                        select: "name", // Select only the name of the role
+                    },
+                })
+                .populate({
+                    path: "followings",
+                    select: "_id username fullName profilePicture role followers",
+                    populate: {
+                        path: "role", // Populate the role field
+                        select: "name", // Select only the name of the role
+                    },
+                })
                 .select("-password");
 
             if (!user) {
@@ -128,7 +144,25 @@ class UserController {
     async getUserByUsername(req, res) {
         try {
             const username = req.params.username;
-            const user = await User.findOne({ username: username }).populate("role").select("-password");
+            const user = await User.findOne({ username: username })
+                .populate("role")
+                .populate({
+                    path: "followers",
+                    select: "_id username fullName profilePicture role followers",
+                    populate: {
+                        path: "role", // Populate the role field
+                        select: "name", // Select only the name of the role
+                    },
+                })
+                .populate({
+                    path: "followings",
+                    select: "_id username fullName profilePicture role followers",
+                    populate: {
+                        path: "role", // Populate the role field
+                        select: "name", // Select only the name of the role
+                    },
+                })
+                .select("-password");
 
             if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({

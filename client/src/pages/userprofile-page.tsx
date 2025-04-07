@@ -40,7 +40,7 @@ const UserProfilePage = () => {
           mode="single"
           selected={date}
           onSelect={setDate}
-          className={"border rounded-xl bg-primary text-white"}
+          className={"border rounded-xl bg-white"}
         />
       </div>
       {/* main content */}

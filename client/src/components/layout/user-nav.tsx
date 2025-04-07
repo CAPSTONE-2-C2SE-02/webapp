@@ -1,4 +1,4 @@
-import { ChevronDown, Loader2, LogOut, Settings, SquarePen, UserRoundPen } from "lucide-react";
+import { Calendar, ChevronDown, Loader2, LogOut, Settings, SquarePen, UserRoundPen } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import avatarDemo from "@/assets/avatar-demo.jpg";
@@ -62,6 +62,14 @@ export default function UserNav() {
               </Link>
             </DropdownMenuItem>
           )}
+          {userInfo?.role === "TOUR_GUIDE" && (
+            <DropdownMenuItem asChild>
+              <Link to="/busySchedule">
+                <Calendar />
+                Manager Schedule
+              </Link>
+            </DropdownMenuItem>
+           )}
           <DropdownMenuItem asChild>
             <Link to="/profile">
               <Settings />
