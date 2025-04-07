@@ -1,14 +1,17 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NavLink, Outlet, useParams } from "react-router";
-import { UserRound, Star, UserRoundCheck, Mail, Phone, MapPin, Edit } from "lucide-react";
+import { Cake, MessageSquare, UserRound, Star, UserRoundCheck, Mail, Phone, MapPin, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/hooks/redux";
+import { getUserByUsername } from "@/services/user-api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { EditProfileModal } from "@/components/modals/edit-profile-modal";
 import { useUserInfoQuery, useUpdateUserProfileMutation, handleSaveProfile } from "@/services/users/user-mutation";
 import { UserInfo, EditProfileData } from "@/lib/types";
+import FollowButton from "@/components/user/follow-button";
+import { useQuery } from "@tanstack/react-query";
 
 const ProfileLayout = () => {
     const { isAuthenticated, userInfo: authUserInfo, token } = useAppSelector((state) => state.auth) as {
@@ -48,8 +51,8 @@ const ProfileLayout = () => {
     return (
         <div className="w-full flex flex-col gap-5">
             <div className="relative w-full pt-8">
-                <img src={user.coverPhoto || "https://placehold.co/1920x400"} className="rounded-t-2xl w-full h-64 object-cover" />
-                <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
+                <img src="https://placehold.co/1920x400" className="rounded-t-2xl" />
+                <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] [16px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
                         <AvatarImage src={user.profilePicture} />
                         <AvatarFallback>{user.fullName?.charAt(0)}</AvatarFallback>
@@ -142,7 +145,10 @@ const ProfileLayout = () => {
                         <NavLink
                             to={`/${username}/tours`}
                             className={({ isActive }) =>
-                                cn("bg-white px-4 py-2 font-medium text-sm", isActive ? "border-b-2 border-primary" : "text-muted-foreground")
+                                cn(
+                                    "bg-white px-4 py-2 font-medium text-sm",
+                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                )
                             }
                         >
                             Tours
@@ -150,7 +156,10 @@ const ProfileLayout = () => {
                         <NavLink
                             to={`/${username}/reviews`}
                             className={({ isActive }) =>
-                                cn("bg-white px-4 py-2 font-medium text-sm", isActive ? "border-b-2 border-primary" : "text-muted-foreground")
+                                cn(
+                                    "bg-white px-4 py-2 font-medium text-sm",
+                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                )
                             }
                         >
                             Reviews
@@ -158,7 +167,6 @@ const ProfileLayout = () => {
                     </div>
                 </div>
             </div>
-
             {user && (
                 <EditProfileModal
                     isOpen={isEditModalOpen}

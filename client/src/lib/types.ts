@@ -55,7 +55,7 @@ export type Tour = {
   introduction: string;
   imageUrls: string[];
   rating: number;
-  depatureLocation: string;
+  departureLocation: string;
   destination: string;
   priceForAdult: number;
   priceForYoung: number;
@@ -67,13 +67,14 @@ export type Tour = {
     title: string;
     description: string;
   }[];
-  includes: string[];
-  notIncludes: string[];
+  include: string[];
+  notInclude: string[];
   reviews: Review[];
   author: {
     _id: string,
-    name: string,
-    avatar: string,
+    fullName: string,
+    username: string;
+    profilePicture: string,
     busyDates: Date[]
   };
 }
@@ -107,10 +108,22 @@ export type UserInfo = {
   profilePicture?: string;
   coverPhoto?: string;
   bio?: string;
-  followers: string[];
-  followings: string[];
+  followers: Follow[];
+  followings: Follow[];
   createdAt: string;
   updatedAt: string;
+}
+
+export type Follow = {
+  _id: string;
+  username: string;
+  fullName: string;
+  profilePicture: string;
+  followers: string[];
+  role: {
+    _id: string;
+    name: string;
+  }
 }
 
 export type LoginInfo = {
@@ -138,7 +151,7 @@ export type Notification = {
   type: string;
   user: {
     name: string;
-    avatar: string;
+    profilePicture: string;
   };
   extraInfo?: string;
   postTitle?: string;
@@ -168,4 +181,20 @@ export interface EditProfileData {
   introduction: string;
   avatar?: string | File;
   coverPhoto?: string | File;
+}
+
+export interface DateEntry {
+  date: string; // "YYYY-MM-DD"
+  status: 'UNAVAILABLE'; // As expected by the backend
+}
+
+export interface Calendar {
+  tourGuideId: string;
+  dates: DateEntry[];
+}
+
+export interface SetAvailabilityResponse {
+  success: boolean;
+  message: string;
+  result: Calendar;
 }

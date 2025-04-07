@@ -1,13 +1,13 @@
 import { bookingSchema, BookingValues } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
-import { AlertCircle, CalendarIcon, DollarSign, Minus, Plus } from "lucide-react";
+import { AlertCircle, CalendarIcon, Minus, Plus } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { Separator } from "../ui/separator";
 import { format, isSameDay } from "date-fns";
@@ -15,14 +15,15 @@ import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Tour } from "@/lib/types";
 import { useAppSelector } from "@/hooks/redux";
 import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 interface TourBookingSectionProps {
-  toursGuide: Tour['author'];
-  price: number;
+  tourData: Tour;
 }
 
-const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
-  const [totalPrice, setTotalPrice] = useState<number>(0);
+const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
+  const navigate = useNavigate();
+
   const [busyDates, setBusyDates] = useState<Date[]>([]);
   const [dateAvailability, setDateAvailability] = useState<{
     available: boolean
@@ -46,19 +47,22 @@ const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
 
   useEffect(() => {
     // Update busy dates for the selected tour
-    setBusyDates(toursGuide.busyDates);
+    if (!tourData?.author?.busyDates) return;
+    const busyDates = tourData.author.busyDates.map((date) => new Date(date));
+    setBusyDates(busyDates);
     setDateAvailability({ available: true });
-  }, [])
+  }, [tourData?.author?.busyDates]);
 
   const adults = form.watch("adults");
   const youths = form.watch("youths");
   const children = form.watch("children");
   const dateRange = form.watch("dateRange")
 
-  useEffect(() => {
-    const total = (adults + youths + children) * price;
-    setTotalPrice(total);
-  }, [adults, youths, children, price]);
+  const totalPrice = useMemo(() => {
+    return (adults * tourData.priceForAdult) +
+      (youths * tourData.priceForYoung) +
+      (children * tourData.priceForChildren);
+  }, [adults, youths, children, tourData]);
 
   const onSubmit = (values: BookingValues) => {
     if (!isAuthenticated) {
@@ -70,7 +74,10 @@ const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
       });
       return;
     }
-    console.log(values);
+    console.log({ ...values, tourId: tourData._id });
+    navigate(`/tours/${tourData._id}/book`, {
+      state: { ...values, tour: tourData, total: totalPrice },
+    });
   }
 
   const checkAvailabilitySchedule = (dateRange: { from: Date; to: Date }): { available: boolean; conflictingDates: Date[] } => {
@@ -111,11 +118,11 @@ const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              <div className="flex items-center gap-2 text-xl font-semibold">
+              {/* <div className="flex items-center gap-2 text-xl font-semibold">
                 <DollarSign className="h-5 w-5 text-primary" />
                 <span>{price}</span>
                 /person
-              </div>
+              </div> */}
               <FormField 
                 control={form.control}
                 name="dateRange"
@@ -206,7 +213,7 @@ const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
                     render={({ field }) => (
                       <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-base">Adults (Age 14-80)</FormLabel>
+                        <FormLabel className="text-base">Adults - <span className="bg-teal-200 px-2 py-0.5 rounded-sm">${tourData.priceForAdult}</span></FormLabel>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -239,7 +246,7 @@ const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
                     render={({ field }) => (
                       <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-base">Youths (Age 6-13)</FormLabel>
+                        <FormLabel className="text-base">Youths - <span className="bg-teal-200 px-2 py-0.5 rounded-sm">${tourData.priceForYoung}</span></FormLabel>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -272,7 +279,7 @@ const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
                     render={({ field }) => (
                       <FormItem>
                       <div className="flex items-center justify-between">
-                        <FormLabel className="text-base">Children (Age 0-5)</FormLabel>
+                        <FormLabel className="text-base">Children - <span className="bg-teal-200 px-2 py-0.5 rounded-sm">${tourData.priceForChildren}</span></FormLabel>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -304,7 +311,7 @@ const TourBookingSection = ({ toursGuide, price }: TourBookingSectionProps) => {
 
               <Separator />
 
-              <div className="bg-muted/50 p-3 rounded-md">
+              <div className="bg-muted/90 p-3 rounded-md">
                 <div className="flex items-center justify-between">
                   <span className="text-base font-medium">Total Price</span>
                   <span className="text-lg font-semibold text-primary">$ {totalPrice}</span>

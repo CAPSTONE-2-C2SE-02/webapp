@@ -1,4 +1,4 @@
-import { MapPin, Clock } from "lucide-react";
+import { MapPin, Clock, UsersRound } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tour } from "@/lib/types";
 import TourImageGallery from "./tour-image-gallery";
@@ -9,20 +9,24 @@ interface TourInfoProps {
 
 export default function TourInfo({ tour }: TourInfoProps) {
   return (
-    <div className="w-full bg-white p-6 rounded-lg shadow-md">
+    <div className="w-full bg-white px-6 py-5 rounded-lg shadow-md border border-border">
       <h1 className="text-3xl font-bold mb-4">{tour.title}</h1>
-      <div className="flex gap-4 mb-4">
-        <div className="flex items-center gap-2 text-gray-600">
-          <MapPin size={20} className="text-primary" />
-          <span>Departure location: {tour.depatureLocation}</span>
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="flex items-center gap-2 text-primary col-span-2">
+          <MapPin className="size-5" />
+          <span className="font-medium">Destination: <span className="text-teal-500">{tour.destination}</span></span>
         </div>
-        <div className="flex items-center gap-2 text-gray-600">
-          <MapPin size={20} className="text-primary" />
-          <span>Destination: {tour.destination}</span>
+        <div className="flex items-center gap-2 text-primary">
+          <Clock className="size-5" />
+          <span className="font-medium">Duration: <span className="text-teal-500">{tour.duration}</span></span>
         </div>
-        <div className="flex items-center gap-2 text-gray-600">
-          <Clock size={20} className="text-primary" />
-          <span>Duration: {tour.duration}</span>
+        <div className="flex items-center gap-2 text-primary col-span-2">
+          <MapPin className="size-5"/>
+          <span className="font-medium">Departure location: <span className="text-teal-500">{tour.departureLocation}</span></span>
+        </div>
+        <div className="flex items-center gap-2 text-primary">
+          <UsersRound className="size-5" />
+          <span className="font-medium">Max participants: <span className="text-teal-500">{tour.maxParticipants}</span></span>
         </div>
       </div>
 
@@ -53,14 +57,14 @@ export default function TourInfo({ tour }: TourInfoProps) {
         </TabsContent>
         <TabsContent value="include" className="mt-4">
           <ul className="list-disc list-inside">
-            {tour.includes.map((item, index) => (
+            {tour.include.map((item, index) => (
               <li key={index}>{item}</li>
             ))}
           </ul>
         </TabsContent>
         <TabsContent value="notInclude" className="mt-4">
           <ul className="list-disc list-inside">
-            {tour.notIncludes.map((item, index) => (
+            {tour.notInclude.map((item, index) => (
               <li key={index}>{item}</li>
             ))}
           </ul>

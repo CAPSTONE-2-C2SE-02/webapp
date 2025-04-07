@@ -7,10 +7,11 @@ import { useDispatch } from "react-redux";
 import { Outlet } from "react-router";
 
 const MainLayout = () => {
-  const isAuthenticated = useAppSelector(state => state.auth.isAuthenticated);
+  const { isAuthenticated, userInfo } = useAppSelector(state => state.auth);
   const dispatch = useDispatch();
   const { data, isSuccess } = useGetUserAuthQuery(undefined, {
-    skip: !isAuthenticated,
+    skip: !isAuthenticated || !!userInfo,
+    refetchOnMountOrArgChange: true,
   });
 
   useEffect(() => {
