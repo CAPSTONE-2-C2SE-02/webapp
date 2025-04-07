@@ -12,7 +12,7 @@ interface PostCardActionProps {
     _id: string;
     username: string;
     fullName: string;
-    avatar: string;
+    profilePicture: string;
   }
 }
 

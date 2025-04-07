@@ -10,6 +10,8 @@ import UserProfileToursPage from "@/pages/userprofile-tours-page";
 import UserProfileReviewPage from "@/pages/userprofile-review-page";
 import CreateTourPage from "@/pages/createtour-page";
 import LoadingPage from "@/components/layout/loading-page";
+import RankingPage from "@/pages/ranking-page";
+import NotFoundPage from "@/pages/not-found-page";
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -56,6 +58,13 @@ const routes = createBrowserRouter([
           { index: true, element: <CreateTourPage /> }
         ]
       },
+
+      // Ranking Route
+      { path: "/ranking", element: <RankingPage /> },
+
+      // Not found route
+      {  path: "/not-found", element: <NotFoundPage /> },
+      {  path: "*", element: <NotFoundPage /> },
     ]
   },
   {

@@ -5,6 +5,7 @@ import {
   Clock,
   Forward,
   Heart,
+  MessageSquareMore,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useMemo, useState } from "react";
@@ -28,6 +29,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSharePostModelOpen, setIsSharePostModelOpen] = useState(false);
+  const [isCommentModelOpen, setIsCommentPostModelOpen] = useState(false);
   const [postUrl, setPostUrl] = useState<string>("");
 
   const showSharePost = (postId: string) => {
@@ -114,8 +116,8 @@ const PostCard = ({ postData }: { postData: Post }) => {
         <CardContent className="px-4 pb-3">
           {/* Text Content */}
           <div>
-            {postData?.content.length > 0 && postData.content.map(content => (
-              <p key={content} className="text-black text-sm font-normal">{content}</p>
+            {postData?.content.length > 0 && postData.content.map((content, index) => (
+              <p key={`${content}+${index}`} className="text-black text-sm font-normal">{content}</p>
             ))}
             {/* Hashtag */}
             <div className="flex items-center gap-1 mt-1">
@@ -179,7 +181,21 @@ const PostCard = ({ postData }: { postData: Post }) => {
               </div>
             </Button>
             {/* Commend Modal */}
-            <CommentPostModal />
+            <Button
+              variant={"ghost"}
+              className="text-primary py-3 px-3.5 gap-4"
+              onClick={() => setIsCommentPostModelOpen(true)}
+            >
+              <div className="flex items-center gap-1.5">
+                <MessageSquareMore className="size-5" />
+                <span className="text-sm font-medium leading-none">
+                  Comment
+                </span>
+              </div>
+              <div className="flex items-center justify-center py-1 px-1.5 rounded-xl bg-primary/20">
+                <span className="text-sm font-semibold leading-none">13</span>
+              </div>
+            </Button>
             <Button
               variant={"ghost"}
               className="text-primary py-3 px-3.5 gap-4"
@@ -194,6 +210,13 @@ const PostCard = ({ postData }: { postData: Post }) => {
         </CardContent>
         {/* <CardFooter className="border-t border-slate-200"></CardFooter> */}
       </Card>
+
+      {/* Comment Modal */}
+      <CommentPostModal
+        isOpen={isCommentModelOpen}
+        onOpenChange={setIsCommentPostModelOpen}
+        postId={postData._id}
+      />
 
       {/* Share Modal */}
       <SharePostModal
