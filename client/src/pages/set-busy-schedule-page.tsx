@@ -6,43 +6,90 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Trash2, CalendarRange, ArrowLeft } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAppSelector } from "@/hooks/redux"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { getBusyDates, saveBusyDatesToServer } from "@/services/user-api"
+
+const normalizeDate = (date: Date): Date => {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+};
 
 const SetBusySchedulePage = () => {
+  const { userInfo } = useAppSelector((state) => state.auth)
+  const tourGuideId = userInfo?._id
+
+  const queryClient = useQueryClient()
   const [selectedDates, setSelectedDates] = useState<Date[]>([])
   const [busyDates, setBusyDates] = useState<Date[]>([])
   const [activeTab, setActiveTab] = useState("select")
 
-  // Add selected dates to busy schedule
+    // Fetch busy dates
+  const { isLoading } = useQuery({
+    queryKey: ["busyDates", tourGuideId],
+    queryFn: async () => {
+      const result = await getBusyDates(tourGuideId || "")
+      const parsed = result.map((d) => new Date(d))
+      setBusyDates(parsed)
+      return parsed
+    },
+  })
+
+  // Save busy dates
+  const { mutate: saveBusyDates} = useMutation({
+    mutationFn: saveBusyDatesToServer,  // Use the correct function to save to the backend
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["busyDates", tourGuideId] })
+      setSelectedDates([]) // Clear selected dates after saving
+      alert("Busy schedule saved successfully!");
+    },
+  })
+  // Add selected dates to busy dates (only on the "Select" tab)
   const addBusyDates = () => {
     if (selectedDates.length === 0) return
 
-    // Filter out dates that are already in the busy schedule
+    // Lọc ra các ngày chưa có trong busyDates
     const newDates = selectedDates.filter(
-      (selectedDate) => !busyDates.some((busyDate) => isSameDay(busyDate, selectedDate)),
+      (selectedDate) =>
+        !busyDates.some((busyDate) => isSameDay(busyDate, selectedDate))
     )
-
-    // Add new dates to busy schedule
-    setBusyDates([...busyDates, ...newDates])
-
-    // Reset selection
-    setSelectedDates([])
+    setBusyDates([...busyDates, ...newDates]) 
+    setSelectedDates([]) 
   }
 
-  // Remove a busy date
+  // Remove a specific busy date
   const removeBusyDate = (dateToRemove: Date) => {
-    setBusyDates(busyDates.filter((date) => !isSameDay(date, dateToRemove)))
+    setBusyDates(busyDates.filter((date) => !isSameDay(date, dateToRemove))) 
   }
 
-  // Save the busy schedule
+  // Save all busy dates to the backend
   const saveSchedule = () => {
-    // In a real app, you would send this data to your backend
-    alert(`Saved ${busyDates.length} busy dates`)
-    console.log(busyDates)
+      // Lưu các ngày bận vào backend
+    const normalizedSelectedDates = selectedDates.map(normalizeDate);
+
+    // Lọc các ngày đã có trong busyDates trước khi thêm vào
+    const newDates = normalizedSelectedDates.filter(
+      (selectedDate) =>
+        !busyDates.some((busyDate: Date) => isSameDay(busyDate, selectedDate))
+    );
+
+    
+    const updatedDates = [...busyDates, ...newDates];
+    saveBusyDates(updatedDates);
+    }
+
+  // Clear selected dates
+  const clearSelection = () => {
+    setSelectedDates([]) // Xóa hết ngày đã chọn
   }
 
-  // Clear all selected dates (not busy dates)
-  const clearSelection = () => {
-    setSelectedDates([])
+  if (isLoading) {
+    return <div>Loading</div>
+  }
+
+  if (!tourGuideId) {
+    return <div>PLease Login to set busy schedule</div>
   }
 
   return (
@@ -70,28 +117,13 @@ const SetBusySchedulePage = () => {
                 <Calendar
                   mode="multiple"
                   selected={selectedDates}
-                  onSelect={setSelectedDates}
+                  onSelect={(days) => setSelectedDates(days || [])}
                   className="rounded-md border place-items-center"
                   modifiers={{
                     busy: busyDates,
                   }}
                   modifiersClassNames={{
-                    busy: "bg-orange-100 text-orange-900 font-bold",
-                  }}
-                  components={{
-                    day: (props) => {
-                      const date = props.date
-                      const isBusy = busyDates.some((busyDate) => isSameDay(busyDate, date))
-
-                      return (
-                        <div
-                          {...props}
-                          className={`${props.className} ${isBusy ? "bg-green-100 text-orange-900 font-bold" : ""}`}
-                        >
-                          {props.children}
-                        </div>
-                      )
-                    },
+                    busy: "bg-green-100 text-primary font-bold",
                   }}
                 />
               </div>
@@ -99,7 +131,7 @@ const SetBusySchedulePage = () => {
               <div className="flex-1 gap-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-medium">Selected Dates</h3>
+                    <h3 className="text-base font-medium">Selected Dates</h3>
                     <Button variant="default" size="sm" onClick={clearSelection} disabled={selectedDates.length === 0}>
                       Clear
                     </Button>
@@ -108,13 +140,13 @@ const SetBusySchedulePage = () => {
                   {selectedDates.length > 0 ? (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {selectedDates.map((date, index) => (
-                        <Badge key={index} variant="secondary">
+                        <Badge key={index} variant="secondary" className="rounded-full bg-white border-slate-200">
                           {format(date, "MMM d, yyyy")}
                         </Badge>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-muted-foreground mb-4">
+                    <div className="text-muted-foreground mb-4 text-sm">
                       No dates selected. Click on multiple dates in the calendar.
                     </div>
                   )}
@@ -126,22 +158,21 @@ const SetBusySchedulePage = () => {
                 </div>
 
                 <div className="mt-6 pt-6 border-t">
-                  <h3 className="text-lg font-medium mb-2">Legend</h3>
+                  <h3 className="font-medium mb-2 text-base">Legend</h3>
                   <div className="space-y-2">
                     <div className="flex items-center">
-                      <div className="w-6 h-6 rounded-lg border mr-2"></div>
-                      <span>Available Date</span>
+                      <div className="w-6 h-6 rounded-lg border mr-2 "></div>
+                      <span className="text-sm" >Available Date</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-6 h-6 rounded-lg border mr-2 bg-primary text-primary-foreground flex items-center justify-center text-xs">
-                        ✓
+                      <div className="w-6 h-6 rounded-lg border mr-2 bg-primary flex ">
                       </div>
-                      <span>Selected Date</span>
+                      <span className="text-sm">Selected Date</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="w-6 h-6 rounded-lg border mr-2 bg-green-100 text-orange-900 flex items-center justify-center text-xs font-bold">
+                      <div className="w-6 h-6 rounded-lg border mr-2 bg-green-100 flex">
                       </div>
-                      <span>Busy Date</span>
+                      <span className="text-sm">Busy Date</span>
                     </div>
                   </div>
                 </div>

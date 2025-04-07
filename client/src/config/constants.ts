@@ -6,6 +6,10 @@ export const API = {
     FOLLOW: (userId: string) => `/profiles/follow/${userId}`,
     USER_INFO: (username: string) => `/users/profile/${username}`,
     FOLLOWERS: `/profiles/followers`,
-    FOLLOWINGS: `/profiles/followings`
+    FOLLOWINGS: `/profiles/followings`,
+  },
+  CALENDER: {
+    SCHEDULE: `/calendars`,
+    SCHEDULE_INFO: (userId: string) => `/calendars/${userId}`
   }
 }

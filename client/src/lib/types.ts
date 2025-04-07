@@ -142,3 +142,19 @@ export type Notification = {
   timeAgo: string;
   read: boolean;
 }
+
+export interface DateEntry {
+  date: string; // "YYYY-MM-DD"
+  status: 'UNAVAILABLE'; // As expected by the backend
+}
+
+export interface Calendar {
+  tourGuideId: string;
+  dates: DateEntry[];
+}
+
+export interface SetAvailabilityResponse {
+  success: boolean;
+  message: string;
+  result: Calendar;
+}
