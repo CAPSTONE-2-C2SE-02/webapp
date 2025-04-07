@@ -73,3 +73,16 @@ export const createTourSchema = z.object({
 });
 
 export type CreateTourValues = z.infer<typeof createTourSchema>;
+
+export const bookingFormSchema = z.object({
+  fullName: z.string().min(1, "Full name is required"),
+  email: z.string().email("Invalid email address"),
+  country: z.string().min(1, "Country is required"),
+  phoneNumber: z.string().min(1, "Phone number is required"),
+  address: z.string().optional(),
+  city: z.string().min(1, "City is required"),
+  note: z.string().optional(),
+  type: z.enum(["payment", "reserve"]),
+});
+
+export type BookingFormValues = z.infer<typeof bookingFormSchema>;

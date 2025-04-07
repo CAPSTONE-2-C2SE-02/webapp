@@ -55,7 +55,7 @@ export type Tour = {
   introduction: string;
   imageUrls: string[];
   rating: number;
-  depatureLocation: string;
+  departureLocation: string;
   destination: string;
   priceForAdult: number;
   priceForYoung: number;
@@ -67,13 +67,14 @@ export type Tour = {
     title: string;
     description: string;
   }[];
-  includes: string[];
-  notIncludes: string[];
+  include: string[];
+  notInclude: string[];
   reviews: Review[];
   author: {
     _id: string,
-    name: string,
-    avatar: string,
+    fullName: string,
+    username: string;
+    profilePicture: string,
     busyDates: Date[]
   };
 }
@@ -138,7 +139,7 @@ export type Notification = {
   type: string;
   user: {
     name: string;
-    avatar: string;
+    profilePicture: string;
   };
   extraInfo?: string;
   postTitle?: string;
