@@ -165,8 +165,8 @@ async function processVnpayCallback(vnpParams, res) {
             <p>Bạn đã đặt tour thành công. Dưới đây là thông tin booking của bạn:</p>
             <ul>
                 <li><strong>Tour:</strong> ${tour.title}</li>
-                <li><strong>Ngày bắt đầu:</strong> ${booking.startDay}</li>
-                <li><strong>Ngày kết thúc:</strong> ${booking.endDay}</li>
+                <li><strong>Ngày bắt đầu:</strong> ${booking.startDate}</li>
+                <li><strong>Ngày kết thúc:</strong> ${booking.endDate}</li>
                 <li><strong>Số người:</strong> ${booking.adults + booking.youths + booking.children}</li>
                 <li><strong>Tổng tiền:</strong> ${booking.totalAmount} VND</li>
             </ul>
