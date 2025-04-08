@@ -1,9 +1,11 @@
 import express from "express";
 import tourController from "../controllers/tour.controller.js";
 import { authenticated, authorize, checkOwnerTour } from "../middlewares/authorize.middleware.js";
-import upload from '../middlewares/multer.middleware.js';
+import upload from "../middlewares/multer.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import tourSchema from "../validations/tour.validation.js";
+
+const router = express.Router();
 
 /**
  * @swagger
@@ -17,7 +19,7 @@ import tourSchema from "../validations/tour.validation.js";
  * /tours:
  *   post:
  *     summary: Create a new tour
- *     description: Create a new tour. Only authenticated users with the "TOUR_GUIDE" role can create tours.
+ *     description: Allows a tour guide to create a new tour.
  *     tags:
  *       - Tour
  *     security:
@@ -31,29 +33,43 @@ import tourSchema from "../validations/tour.validation.js";
  *             properties:
  *               title:
  *                 type: string
- *                 description: The title of the tour
+ *                 description: The title of the tour.
  *               description:
  *                 type: string
- *                 description: A detailed description of the tour
- *               price:
+ *                 description: The description of the tour.
+ *               priceForAdult:
  *                 type: number
- *                 description: The price of the tour
+ *                 description: Price for adults.
+ *               priceForYoung:
+ *                 type: number
+ *                 description: Price for youths.
+ *               priceForChildren:
+ *                 type: number
+ *                 description: Price for children.
+ *               maxParticipants:
+ *                 type: number
+ *                 description: Maximum number of participants.
  *               destination:
  *                 type: string
- *                 description: The destination of the tour
+ *                 description: The destination of the tour.
+ *               schedule:
+ *                 type: string
+ *                 description: JSON string representing the schedule of the tour.
  *               images:
  *                 type: array
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Array of image files for the tour
+ *                 description: Images for the tour.
  *     responses:
  *       201:
- *         description: Tour created successfully
+ *         description: Tour created successfully.
  *       400:
- *         description: Validation error
+ *         description: Validation error.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
@@ -64,91 +80,51 @@ import tourSchema from "../validations/tour.validation.js";
  *     description: Retrieve a list of all tours.
  *     tags:
  *       - Tour
- *     responses:
- *       200:
- *         description: A list of tours
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Tour'
- */
-
-/**
- * @swagger
- * /tours/my-tours:
- *   get:
- *     summary: Get my tours
- *     description: Retrieve a list of tours created by the authenticated user. Only users with the "TOUR_GUIDE" role can access this endpoint.
- *     tags:
- *       - Tour
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: A list of the user's tours
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Tour'
- *       401:
- *         description: Unauthorized
- */
-
-/**
- * @swagger
- * /tours/profile/{username}:
- *   get:
- *     summary: Get all tours by username
- *     description: Retrieve a list of all tours created by a specific user.
- *     tags:
- *       - Tour
- *     parameters:
- *       - in: path
- *         name: username
- *         required: true
- *         schema:
- *           type: string
- *         description: The username of the tour creator
- *     responses:
- *       200:
- *         description: A list of tours created by the user
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Tour'
- *       404:
- *         description: User not found
- */
-
-/**
- * @swagger
- * /tours/search:
- *   get:
- *     summary: Search tours by destination
- *     description: Search for tours based on the destination.
- *     tags:
- *       - Tour
  *     parameters:
  *       - in: query
- *         name: destination
+ *         name: sortBy
  *         schema:
  *           type: string
- *         description: The destination to search for
+ *         description: Sort by field (e.g., "price", "rating").
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sort order (ascending or descending).
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number for pagination.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of tours per page.
  *     responses:
  *       200:
- *         description: A list of matching tours
+ *         description: A list of tours.
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Tour'
+ *               type: object
+ *               properties:
+ *                 totalTours:
+ *                   type: integer
+ *                   description: Total number of tours.
+ *                 totalPage:
+ *                   type: integer
+ *                   description: Total number of pages.
+ *                 currentPage:
+ *                   type: integer
+ *                   description: Current page number.
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Tour'
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
@@ -165,16 +141,18 @@ import tourSchema from "../validations/tour.validation.js";
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the tour
+ *         description: The ID of the tour.
  *     responses:
  *       200:
- *         description: The requested tour
+ *         description: The requested tour.
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Tour'
  *       404:
- *         description: Tour not found
+ *         description: Tour not found.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
@@ -193,7 +171,7 @@ import tourSchema from "../validations/tour.validation.js";
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the tour to update
+ *         description: The ID of the tour to update.
  *     requestBody:
  *       required: true
  *       content:
@@ -203,33 +181,45 @@ import tourSchema from "../validations/tour.validation.js";
  *             properties:
  *               title:
  *                 type: string
- *                 description: The updated title of the tour
+ *                 description: The updated title of the tour.
  *               description:
  *                 type: string
- *                 description: The updated description of the tour
- *               price:
+ *                 description: The updated description of the tour.
+ *               priceForAdult:
  *                 type: number
- *                 description: The updated price of the tour
+ *                 description: Updated price for adults.
+ *               priceForYoung:
+ *                 type: number
+ *                 description: Updated price for youths.
+ *               priceForChildren:
+ *                 type: number
+ *                 description: Updated price for children.
+ *               maxParticipants:
+ *                 type: number
+ *                 description: Updated maximum number of participants.
  *               destination:
  *                 type: string
- *                 description: The updated destination of the tour
+ *                 description: Updated destination of the tour.
+ *               schedule:
+ *                 type: string
+ *                 description: JSON string representing the updated schedule of the tour.
  *               images:
  *                 type: array
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Array of updated image files for the tour
+ *                 description: Updated images for the tour.
  *     responses:
  *       200:
- *         description: Tour updated successfully
+ *         description: Tour updated successfully.
  *       400:
- *         description: Validation error
+ *         description: Validation error.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
  *       403:
- *         description: Forbidden (not the owner of the tour)
+ *         description: Forbidden (not the owner of the tour).
  *       404:
- *         description: Tour not found
+ *         description: Tour not found.
  */
 
 /**
@@ -248,20 +238,95 @@ import tourSchema from "../validations/tour.validation.js";
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the tour to delete
+ *         description: The ID of the tour to delete.
  *     responses:
  *       204:
- *         description: Tour deleted successfully
+ *         description: Tour deleted successfully.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
  *       403:
- *         description: Forbidden (not the owner of the tour)
+ *         description: Forbidden (not the owner of the tour).
  *       404:
- *         description: Tour not found
+ *         description: Tour not found.
  */
 
-const router = express.Router();
+/**
+ * @swagger
+ * /tours/my-tours:
+ *   get:
+ *     summary: Get my tours
+ *     description: Retrieve a list of tours created by the authenticated user. Only users with the "TOUR_GUIDE" role can access this endpoint.
+ *     tags:
+ *       - Tour
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: A list of the user's tours.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Tour'
+ *       401:
+ *         description: Unauthorized.
+ */
 
+/**
+ * @swagger
+ * /tours/search:
+ *   get:
+ *     summary: Search tours by destination
+ *     description: Search for tours based on the destination.
+ *     tags:
+ *       - Tour
+ *     parameters:
+ *       - in: query
+ *         name: destination
+ *         schema:
+ *           type: string
+ *         description: The destination to search for.
+ *     responses:
+ *       200:
+ *         description: A list of matching tours.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Tour'
+ */
+
+/**
+ * @swagger
+ * /tours/profile/{username}:
+ *   get:
+ *     summary: Get all tours by username
+ *     description: Retrieve a list of all tours created by a specific user.
+ *     tags:
+ *       - Tour
+ *     parameters:
+ *       - in: path
+ *         name: username
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The username of the tour creator.
+ *     responses:
+ *       200:
+ *         description: A list of tours created by the user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Tour'
+ *       404:
+ *         description: User not found.
+ */
+
+// Routes
 router.post("/", authenticated, upload.array("images"), authorize("TOUR_GUIDE"), validate(tourSchema), tourController.createTour);
 router.get("/", tourController.getAllTours);
 router.get("/my-tours", authenticated, authorize("TOUR_GUIDE"), tourController.getMyTours);

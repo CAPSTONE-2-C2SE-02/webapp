@@ -1,7 +1,9 @@
 import express from "express";
 import postController from "../controllers/post.controller.js";
 import { authenticated, authorize, checkOwnerPost } from "../middlewares/authorize.middleware.js";
-import upload from '../middlewares/multer.middleware.js';
+import upload from "../middlewares/multer.middleware.js";
+
+const router = express.Router();
 
 /**
  * @swagger
@@ -15,7 +17,7 @@ import upload from '../middlewares/multer.middleware.js';
  * /posts:
  *   post:
  *     summary: Create a new post
- *     description: Create a new post with content and optional images. Only authenticated users can create posts.
+ *     description: Allows an authenticated user to create a new post with optional images.
  *     tags:
  *       - Post
  *     security:
@@ -29,20 +31,22 @@ import upload from '../middlewares/multer.middleware.js';
  *             properties:
  *               content:
  *                 type: string
- *                 description: The content of the post
+ *                 description: The content of the post.
  *               images:
  *                 type: array
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Array of image files for the post
+ *                 description: Array of image files for the post.
  *     responses:
  *       201:
- *         description: Post created successfully
+ *         description: Post created successfully.
  *       400:
- *         description: Validation error
+ *         description: Validation error.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
@@ -50,76 +54,25 @@ import upload from '../middlewares/multer.middleware.js';
  * /posts:
  *   get:
  *     summary: Get all posts
- *     description: Retrieve a list of all posts.
- *     tags:
- *       - Post
- *     responses:
- *       200:
- *         description: A list of posts
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Post'
- */
-
-/**
- * @swagger
- * /posts/search:
- *   get:
- *     summary: Search posts
- *     description: Search for posts by content or hashtags.
+ *     description: Retrieve a paginated list of all posts.
  *     tags:
  *       - Post
  *     parameters:
  *       - in: query
- *         name: q
- *         required: true
+ *         name: page
  *         schema:
- *           type: string
- *         description: The search query
+ *           type: integer
+ *         description: The page number for pagination.
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: The number of posts per page.
  *     responses:
  *       200:
- *         description: A list of matching posts
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Post'
- *       400:
- *         description: Validation error
- *       404:
- *         description: No posts found
- */
-
-/**
- * @swagger
- * /posts/profile/{username}:
- *   get:
- *     summary: Get all posts by username
- *     description: Retrieve a list of all posts created by a specific user.
- *     tags:
- *       - Post
- *     parameters:
- *       - in: path
- *         name: username
- *         required: true
- *         schema:
- *           type: string
- *         description: The username of the post creator
- *     responses:
- *       200:
- *         description: A list of posts created by the user
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Post'
- *       404:
- *         description: User not found
+ *         description: A paginated list of posts.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
@@ -136,16 +89,14 @@ import upload from '../middlewares/multer.middleware.js';
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the post
+ *         description: The ID of the post.
  *     responses:
  *       200:
- *         description: The requested post
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Post'
+ *         description: The requested post.
  *       404:
- *         description: Post not found
+ *         description: Post not found.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
@@ -153,7 +104,7 @@ import upload from '../middlewares/multer.middleware.js';
  * /posts/{id}:
  *   put:
  *     summary: Update a post
- *     description: Update a post's content and/or images. Only the owner of the post can update it.
+ *     description: Update the content and/or images of a post. Only the owner of the post can update it.
  *     tags:
  *       - Post
  *     security:
@@ -164,7 +115,7 @@ import upload from '../middlewares/multer.middleware.js';
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the post to update
+ *         description: The ID of the post to update.
  *     requestBody:
  *       required: true
  *       content:
@@ -174,24 +125,26 @@ import upload from '../middlewares/multer.middleware.js';
  *             properties:
  *               content:
  *                 type: string
- *                 description: The updated content of the post
+ *                 description: The updated content of the post.
  *               images:
  *                 type: array
  *                 items:
  *                   type: string
  *                   format: binary
- *                 description: Array of updated image files for the post
+ *                 description: Array of updated image files for the post.
  *     responses:
  *       200:
- *         description: Post updated successfully
+ *         description: Post updated successfully.
  *       400:
- *         description: Validation error
+ *         description: Validation error.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
  *       403:
- *         description: Forbidden (not the owner of the post)
+ *         description: Forbidden (not the owner of the post).
  *       404:
- *         description: Post not found
+ *         description: Post not found.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
@@ -210,24 +163,26 @@ import upload from '../middlewares/multer.middleware.js';
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the post to delete
+ *         description: The ID of the post to delete.
  *     responses:
  *       204:
- *         description: Post deleted successfully
+ *         description: Post deleted successfully.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
  *       403:
- *         description: Forbidden (not the owner of the post)
+ *         description: Forbidden (not the owner of the post).
  *       404:
- *         description: Post not found
+ *         description: Post not found.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
  * @swagger
  * /posts/like:
  *   post:
- *     summary: Like a post
- *     description: Like a post as an authenticated user.
+ *     summary: Like or unlike a post
+ *     description: Toggle like or unlike for a specific post.
  *     tags:
  *       - Post
  *     security:
@@ -241,12 +196,16 @@ import upload from '../middlewares/multer.middleware.js';
  *             properties:
  *               postId:
  *                 type: string
- *                 description: The ID of the post to like
+ *                 description: The ID of the post to like or unlike.
  *     responses:
  *       200:
- *         description: Post liked successfully
+ *         description: Post liked or unliked successfully.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
+ *       404:
+ *         description: Post not found.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
@@ -268,12 +227,16 @@ import upload from '../middlewares/multer.middleware.js';
  *             properties:
  *               postId:
  *                 type: string
- *                 description: The ID of the post to re-post
+ *                 description: The ID of the post to re-post.
  *     responses:
  *       200:
- *         description: Post re-posted successfully
+ *         description: Post re-posted successfully.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
+ *       404:
+ *         description: Post not found.
+ *       500:
+ *         description: Internal server error.
  */
 
 /**
@@ -292,7 +255,7 @@ import upload from '../middlewares/multer.middleware.js';
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the post
+ *         description: The ID of the post.
  *     requestBody:
  *       required: true
  *       content:
@@ -303,20 +266,21 @@ import upload from '../middlewares/multer.middleware.js';
  *               privacy:
  *                 type: string
  *                 enum: [public, private]
- *                 description: The privacy setting of the post
+ *                 description: The privacy setting of the post.
  *     responses:
  *       200:
- *         description: Post privacy updated successfully
+ *         description: Post privacy updated successfully.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
  *       403:
- *         description: Forbidden (not the owner of the post)
+ *         description: Forbidden (not the owner of the post).
  *       404:
- *         description: Post not found
+ *         description: Post not found.
+ *       500:
+ *         description: Internal server error.
  */
 
-const router = express.Router();
-
+// Routes
 router.post("/", authenticated, upload.array("images"), postController.createPost);
 router.get("/", postController.getAllPosts);
 router.get("/search", postController.searchPost);

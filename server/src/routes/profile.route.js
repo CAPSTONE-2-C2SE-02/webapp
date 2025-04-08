@@ -2,8 +2,6 @@ import express from "express";
 import profileController from "../controllers/profile.controller.js";
 import { authenticated, authorize, checkOwnerUserId } from "../middlewares/authorize.middleware.js";
 import upload from '../middlewares/multer.middleware.js';
-import { validate } from "../middlewares/validate.middleware.js";
-import { userSchema } from "../validations/user.validation.js";
 
 const router = express.Router();
 
@@ -31,76 +29,56 @@ const router = express.Router();
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the user to follow/unfollow
+ *         description: The ID of the user to follow/unfollow.
  *     responses:
  *       200:
- *         description: Follow/unfollow action completed successfully
- *       400:
- *         description: Invalid request
+ *         description: Follow/unfollow action completed successfully.
  *       404:
- *         description: User not found
+ *         description: User not found.
  */
 
-// Get followers of a user
+// Get followers of the authenticated user
 /**
  * @swagger
- * /profiles/followers/{id}:
+ * /profiles/followers:
  *   get:
- *     summary: Get followers of a user
- *     description: Retrieve the list of followers for a user by their ID.
+ *     summary: Get followers of the authenticated user
+ *     description: Retrieve the list of followers for the authenticated user.
  *     tags:
  *       - Profile
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The ID of the user to get followers for
  *     responses:
  *       200:
- *         description: A list of followers
+ *         description: A list of followers.
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Profile'
- *       404:
- *         description: User not found
  */
 
-// Get following of a user
+// Get following of the authenticated user
 /**
  * @swagger
- * /profiles/following/{id}:
+ * /profiles/following:
  *   get:
- *     summary: Get following of a user
- *     description: Retrieve the list of users that a user is following by their ID.
+ *     summary: Get following of the authenticated user
+ *     description: Retrieve the list of users that the authenticated user is following.
  *     tags:
  *       - Profile
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: The ID of the user to get following for
  *     responses:
  *       200:
- *         description: A list of users being followed
+ *         description: A list of users being followed.
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Profile'
- *       404:
- *         description: User not found
  */
 
 /**
@@ -127,29 +105,43 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               name:
+ *               fullName:
  *                 type: string
- *                 description: The name of the user
+ *                 description: The full name of the user.
+ *               username:
+ *                 type: string
+ *                 description: The username of the user.
+ *               email:
+ *                 type: string
+ *                 description: The email of the user.
+ *               phoneNumber:
+ *                 type: string
+ *                 description: The phone number of the user.
+ *               address:
+ *                 type: string
+ *                 description: The address of the user.
  *               bio:
  *                 type: string
- *                 description: A short bio of the user
- *               image:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: binary
- *                 description: Profile image files
+ *                 description: A short bio of the user.
+ *               profilePicture:
+ *                 type: string
+ *                 format: binary
+ *                 description: Profile picture file.
+ *               coverPhoto:
+ *                 type: string
+ *                 format: binary
+ *                 description: Cover photo file.
  *     responses:
  *       200:
- *         description: Profile updated successfully
+ *         description: Profile updated successfully.
  *       400:
- *         description: Validation error
+ *         description: Validation error.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
  *       403:
- *         description: Forbidden (not the owner of the profile)
+ *         description: Forbidden (not the owner of the profile).
  *       404:
- *         description: Profile not found
+ *         description: Profile not found.
  */
 
 /**
@@ -168,16 +160,16 @@ const router = express.Router();
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the user profile to delete
+ *         description: The ID of the user profile to delete.
  *     responses:
  *       204:
- *         description: Profile deleted successfully
+ *         description: Profile deleted successfully.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
  *       403:
- *         description: Forbidden (not the owner of the profile)
+ *         description: Forbidden (not the owner of the profile).
  *       404:
- *         description: Profile not found
+ *         description: Profile not found.
  */
 
 /**
@@ -199,14 +191,14 @@ const router = express.Router();
  *             properties:
  *               userId:
  *                 type: string
- *                 description: The ID of the user profile to activate
+ *                 description: The ID of the user profile to activate.
  *     responses:
  *       200:
- *         description: Profile activated successfully
+ *         description: Profile activated successfully.
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
  *       403:
- *         description: Forbidden (not an admin)
+ *         description: Forbidden (not an admin).
  */
 
 /**
@@ -221,13 +213,13 @@ const router = express.Router();
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: The profile information of the authenticated user
+ *         description: The profile information of the authenticated user.
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Profile'
  *       401:
- *         description: Unauthorized
+ *         description: Unauthorized.
  */
 
 /**
@@ -243,15 +235,10 @@ const router = express.Router();
  *         name: name
  *         schema:
  *           type: string
- *         description: The name of the user to search for
- *       - in: query
- *         name: bio
- *         schema:
- *           type: string
- *         description: A keyword to search in user bios
+ *         description: The name of the user to search for.
  *     responses:
  *       200:
- *         description: A list of matching user profiles
+ *         description: A list of matching user profiles.
  *         content:
  *           application/json:
  *             schema:
@@ -274,16 +261,62 @@ const router = express.Router();
  *         required: true
  *         schema:
  *           type: string
- *         description: The ID of the user profile to retrieve
+ *         description: The ID of the user profile to retrieve.
  *     responses:
  *       200:
- *         description: The requested user profile
+ *         description: The requested user profile.
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Profile'
  *       404:
- *         description: Profile not found
+ *         description: Profile not found.
+ */
+
+/**
+ * @swagger
+ * /profiles/photos:
+ *   get:
+ *     summary: Get profile photos
+ *     description: Retrieve the profile picture and cover photo of the authenticated user, along with images from their posts.
+ *     tags:
+ *       - Profile
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile photos retrieved successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 result:
+ *                   type: object
+ *                   properties:
+ *                     profilePicture:
+ *                       type: string
+ *                       description: URL of the profile picture.
+ *                       example: "https://example.com/profile-picture.jpg"
+ *                     coverPhoto:
+ *                       type: string
+ *                       description: URL of the cover photo.
+ *                       example: "https://example.com/cover-photo.jpg"
+ *                     postImages:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                         description: URLs of images from the user's posts.
+ *                         example: ["https://example.com/post-image1.jpg", "https://example.com/post-image2.jpg"]
+ *       401:
+ *         description: Unauthorized.
+ *       404:
+ *         description: User not found.
+ *       500:
+ *         description: Internal server error.
  */
 
 router.put(
@@ -298,8 +331,8 @@ router.put(
 );
 router.delete("/:id", authenticated, checkOwnerUserId, profileController.deleteProfile);
 router.post("/active", authenticated, authorize("ADMIN"), profileController.activeProfile);
-router.get("/photos", authenticated, profileController.getProfilePhotos);
 router.get("/myInfo", authenticated, profileController.myInfo);
+router.get("/photos", authenticated, profileController.getProfilePhotos);
 router.get("/search", profileController.searchProfiles);
 router.get("/following", authenticated, profileController.getFollowings);
 router.get("/followers", authenticated, profileController.getFollowers);

@@ -78,7 +78,7 @@ class CommentController {
                 .populate({
                     path: 'childComments',
                     populate: {
-                      path: 'childComments',
+                        path: 'childComments',
                     },
                     populate: {
                         path: 'author',
