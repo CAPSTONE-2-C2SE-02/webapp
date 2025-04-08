@@ -1,54 +1,73 @@
 import { Notification } from "@/lib/types"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
+import { Link } from "react-router";
+import { format, formatDistanceToNow } from "date-fns";
+import NotificationContent from "./notification-content";
+import useAuthInfo from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
+import { Trash2 } from "lucide-react";
 
 interface NotificationCardProps {
   notification: Notification;
+  onMarkAsRead: () => void;
 }
 
-const NotificationCard = ({ notification }: NotificationCardProps) => {
-  const getNotificationText = (notification: Notification) => {
+const NotificationCard = ({ notification, onMarkAsRead }: NotificationCardProps) => {
+  const auth = useAuthInfo();
+
+  const getRelatedLink = (notification: Notification) => {
     switch (notification.type) {
-      case "follow":
-        return "followed you"
-      case "like":
-        return `liked the post "${notification.postTitle}"`
-      case "share":
-        return `shared the post "${notification.postTitle}"`
-      case "book":
-        return "booked a tour"
-      case "reply":
-        return `reply you in a comment on "${notification.postTitle}"`
+      case "BOOKING":
+        return `tours/${notification.relatedId._id}`
+      case "FOLLOW":
+        return `${notification.relatedId.username}`
+      case "COMMENT":
+      case "LIKE":
+        return `${auth?.username}/post/${notification.relatedId._id}`
       default:
         return ""
     }
-  }
+  };
+
+  const handleDeleteNotification = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+  };
 
   return (
-    <div className="flex items-start gap-3 py-3.5 px-2 relative hover:bg-slate-50 cursor-pointer">
-      <Avatar className="h-8 w-8 border border-muted">
-        <AvatarImage src="https://images.unsplash.com/profile-1441298803695-accd94000cac?ixlib=rb-0.3.5&q=80&fm=jpg&crop=faces&cs=tinysrgb&fit=crop&h=64&w=64&s=5a9dc749c43ce5bd60870b129a40902f" alt="avatar user" />
-        <AvatarFallback>Username</AvatarFallback>
-      </Avatar>
-      <div className="flex-1">
-        <div className="text-[13px]">
-          <span className="font-semibold text-primary">{notification.user.name}</span>{" "}
-          <span className="text-slate-500">{getNotificationText(notification)}</span>
-        </div>
-        {notification.content && (
-          <div className="my-2 text-xs text-gray-700 line-clamp-1 border-l rounded-sm py-2 border-primary pl-2 bg-gradient-to-r from-slate-200 to-transparent">
-            {notification.content}
+    <Link to={`/${getRelatedLink(notification)}`} onClick={onMarkAsRead} className="block py-1">
+      <div className={cn(
+        "flex items-start gap-3 py-2 pl-4 pr-2 relative rounded-md hover:bg-slate-50 cursor-pointer group",
+        notification.isRead ? "opacity-80 bg-white" : "opacity-100"
+      )}>
+        <Avatar className="h-8 w-8 border border-muted">
+          <AvatarImage src={notification.senderId.profilePicture} alt="avatar user" />
+          <AvatarFallback>Username</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 space-y-2">
+          <NotificationContent notification={notification} />
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-gray-500">
+              {format(new Date(notification.createdAt), 'EEEE h:mm a')}
+            </div>
+            <div className="text-xs text-gray-500 whitespace-nowrap">
+              {formatDistanceToNow(new Date(notification.createdAt), {
+                addSuffix: true,
+              })}
+            </div>
           </div>
-        )}
-        {notification.extraInfo && (
-          <div className="my-2 text-xs text-gray-700 bg-slate-200 p-2 rounded line-clamp-1">{notification.extraInfo}</div>
-        )}
-        <div className="flex items-center justify-between">
-          <div className="text-xs text-gray-500">{notification.timestamp}</div>
-          <div className="text-xs text-gray-500 whitespace-nowrap">{notification.timeAgo}</div>
+          {!notification.isRead && <div className="absolute top-0 left-2 w-2 h-2 rounded-full bg-emerald-500" />}
+          <Button
+            variant={"outline"}
+            size={"icon"}
+            className="absolute h-7 w-7 hidden group-hover:inline-flex [&_svg]:size-4 right-2 top-0"
+            onClick={handleDeleteNotification}
+          >
+            <Trash2 className="size-3 text-red-400" />
+          </Button>
         </div>
-        {!notification.read && <div className="absolute top-4 right-2 w-2 h-2 rounded-full bg-emerald-500" />}
       </div>
-    </div>
+    </Link>
   )
 }
 

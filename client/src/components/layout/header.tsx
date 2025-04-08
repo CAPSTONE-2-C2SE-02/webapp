@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import UserNav from "./user-nav";
 import { useAppSelector } from "@/hooks/redux";
-import Notification from "../notification/notification";
+import NotificationSheet from "../notification/notification-sheet";
 
 const NAV_ITEMS = [
   {
@@ -68,18 +68,27 @@ const Header = () => {
 
         {/* header personal action */}
         <div className="flex items-center gap-5 flex-1 justify-end">
-          <Notification />
-          <Button variant="outline" className="rounded-xl size-10">
-            <Bookmark className="size-5" />
-          </Button>
           {isAuthenticated ? (
-            <UserNav />
-          ) : (
-            <Link to="/login">
-              <Button variant="default" className="rounded-xl">
-                Login
+            <>
+              <NotificationSheet />
+              <Button variant="outline" className="rounded-xl size-10">
+                <Bookmark className="size-5" />
               </Button>
-            </Link>
+              <UserNav />
+            </>
+          ) : (
+            <div className="space-x-2">
+              <Link to="/login">
+                <Button variant="default" className="rounded-xl">
+                  Login
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button variant="outline" className="rounded-xl">
+                  New Account
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
       </div>

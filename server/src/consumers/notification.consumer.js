@@ -1,14 +1,14 @@
 import amqp from "amqplib";
-import { Server } from "socket.io";
+// import { Server } from "socket.io";
 import Notification from "../models/notification.model.js";
 
-const io = new Server(3001, {
-    cors: { origin: "*" },
-});
+// const io = new Server(3001, {
+//     cors: { origin: "*" },
+// });
 
 const QUEUE_NAME = "NOTIFICATION_QUEUE";
 
-export const consumeNotifications = async () => {
+export const consumeNotifications = async (io) => {
     try {
         const connection = await amqp.connect(process.env.RABBITMQ_URL);
         const channel = await connection.createChannel();
@@ -35,9 +35,14 @@ export const consumeNotifications = async () => {
 
                     await newNotification.save();
 
+                    const sendNotification = await Notification.findById(newNotification._id)
+                        .populate("senderId", "username fullName profilePicture")
+                        .populate("relatedId")
+                        .sort({ createdAt: -1 });
+
                     const recipient = global.oneLineUses.find(user => user.userId === receiverId);
                     if (recipient) {
-                        io.to(recipient.socketId).emit("new_notification", newNotification);
+                        io.to(recipient.socketId).emit("new_notification", sendNotification);
                         console.log("🔔 Sent notification to:", receiverId);
                     }
 
@@ -50,6 +55,7 @@ export const consumeNotifications = async () => {
         });
     } catch (error) {
         console.error("❌ Error consuming notifications:", error);
-        setTimeout(consumeNotifications, 5000);
+        // setTimeout(consumeNotifications, 5000);
+        setTimeout(() => consumeNotifications(io), 5000);
     }
 };

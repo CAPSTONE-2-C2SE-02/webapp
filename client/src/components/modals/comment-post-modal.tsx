@@ -124,8 +124,8 @@ const CommentPostModal = ({ isOpen, onOpenChange, postId }: CommentPostModalProp
           {isAuthenticated && (
             <div className="relative flex items-center justify-start gap-3">
               <Avatar className="w-10 h-10 border">
-                <AvatarImage src="" alt="" />
-                <AvatarFallback>TC</AvatarFallback>
+                <AvatarImage src={auth?.profilePicture} alt="avatar" />
+                <AvatarFallback>{auth?.fullName}</AvatarFallback>
               </Avatar>
               <Input
                 className="rounded-full h-10 pl-4"

@@ -14,7 +14,7 @@ interface CommentProps {
 }
 
 const CommentCard = ({ comment, onAddReply }: CommentProps) => {
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
   const [isReplying, setIsReplying] = useState<boolean>(false);
   const [replyComment, setReplyComment] = useState<string>("");
   const inputReplyRef = useRef<HTMLInputElement>(null);
@@ -98,8 +98,8 @@ const CommentCard = ({ comment, onAddReply }: CommentProps) => {
       {isAuthenticated && isReplying && (
         <div className="relative flex items-center justify-start gap-3 pr-2 ml-8">
           <Avatar className="border w-9 h-9">
-            <AvatarImage src="" alt="" />
-            <AvatarFallback>TC</AvatarFallback>
+            <AvatarImage src={userInfo?.profilePicture} alt="avatar" />
+            <AvatarFallback>{userInfo?.fullName}</AvatarFallback>
           </Avatar>
           <Input
             className="rounded-full h-9 pl-4"
