@@ -64,7 +64,7 @@ export default function UserNav() {
           )}
           {userInfo?.role === "TOUR_GUIDE" && (
             <DropdownMenuItem asChild>
-              <Link to="/busy-Schedule">
+              <Link to="/busy-schedule">
                 <Calendar />
                 Manager Schedule
               </Link>

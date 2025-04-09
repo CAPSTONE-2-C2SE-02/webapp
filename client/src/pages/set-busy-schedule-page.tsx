@@ -32,8 +32,6 @@ const SetBusySchedulePage = () => {
     queryFn: () => getBusyDates(tourGuideId as string)
   });
 
-  console.log(busyDatesData);
-
   const { mutate: saveBusyDates } = useMutation({
     mutationFn: saveBusyDatesToServer, 
     onSuccess: () => {
