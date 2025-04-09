@@ -13,9 +13,6 @@ export const consumeNotifications = async () => {
         const connection = await amqp.connect(process.env.RABBITMQ_URL);
         const channel = await connection.createChannel();
         await channel.assertQueue(QUEUE_NAME, { durable: true });
-
-        console.log(`✅ Listening for messages on queue: ${QUEUE_NAME}`);
-
         channel.consume(QUEUE_NAME, async (msg) => {
             if (msg !== null) {
                 try {

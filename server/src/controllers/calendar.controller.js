@@ -107,13 +107,13 @@ class CalendarController {
         }
     }
 
-    // [PUT] /api/v1/calendars/:id
+    // [PUT] /api/v1/calendars
     async updateCalendar(req, res) {
         try {
-            const { id } = req.params;
+            const tourGuideId = req.user.userId;
             const { date, status } = req.body;
 
-            const calendar = await Calendar.findOne({ tourGuideId: id });
+            const calendar = await Calendar.findOne({ tourGuideId: tourGuideId });
 
             if (!calendar) {
                 return res.status(StatusCodes.NOT_FOUND).json({
@@ -148,12 +148,12 @@ class CalendarController {
         }
     };
 
-    // [DELETE] /api/v1/calendars/:id
+    // [DELETE] /api/v1/calendars
     async deleteCalendar(req, res) {
         try {
-            const { id } = req.params;
+            const tourGuideId = req.user.userId;
 
-            const calendar = await Calendar.findOne({ _id: id });
+            const calendar = await Calendar.findOne({ tourGuideId: tourGuideId });
 
             if (!calendar) {
                 return res.status(StatusCodes.NOT_FOUND).json({
@@ -176,6 +176,48 @@ class CalendarController {
         }
     };
 
+    // [DELETE] /api/v1/calendars/:id/busy-date
+    async deleteBusyDate(req, res) {
+        try {
+            const tourGuideId = req.user.userId;
+            const { date } = req.body;
+
+            const calendar = await Calendar.findOne({ tourGuideId: tourGuideId });
+
+            if (!calendar) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Calendar not found.",
+                });
+            }
+
+            const dateEntry = calendar.dates.find(
+                (d) => new Date(d.date).toISOString() === new Date(date).toISOString()
+            );
+
+            if (!dateEntry) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Date not found in calendar.",
+                });
+            }
+
+            dateEntry.status = "AVAILABLE";
+
+            await calendar.save();
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                message: "Busy date removed successfully.",
+                result: calendar,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
 }
 
 export default new CalendarController;

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Booking from "../models/booking.model.js";
 import Review from "../models/review.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
+import Ranking from "../models/ranking.model.js";
 
 class ReviewController {
     // [POST] /api/v1/reviews
@@ -49,6 +50,24 @@ class ReviewController {
             });
 
             const savedReview = await review.save();
+
+            // Cập nhật điểm ranking
+            const reviews = await Review.find({ tourGuideId: booking.tourGuideId });
+            const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+            const averageRating = totalRating / reviews.length;
+
+            const ranking = await Ranking.findOneAndUpdate(
+                { tourGuideId: booking.tourGuideId },
+                { reviewScore: averageRating },
+                { upsert: true, new: true }
+            );
+
+            const { attendanceScore, reviewScore, rankingWeight } = ranking;
+            ranking.totalScore =
+                attendanceScore * rankingWeight.attendanceWeight +
+                reviewScore * rankingWeight.reviewWeight;
+
+            await ranking.save();
 
             return res.status(StatusCodes.CREATED).json({ success: true, result: savedReview, message: 'Review created successfully' });
         } catch (error) {
