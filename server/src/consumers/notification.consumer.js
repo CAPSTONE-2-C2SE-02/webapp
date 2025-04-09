@@ -27,9 +27,14 @@ export const consumeNotifications = async (io) => {
 
                     await newNotification.save();
 
+                    const sendNotification = await Notification.findById(newNotification._id)
+                        .populate("senderId", "username fullName profilePicture")
+                        .populate("relatedId")
+                        .sort({ createdAt: -1 });
+
                     const recipient = global.oneLineUses.find(user => user.userId === receiverId);
                     if (recipient) {
-                        io.to(recipient.socketId).emit("new_notification", newNotification);
+                        io.to(recipient.socketId).emit("new_notification", sendNotification);
                         console.log("🔔 Sent notification to:", receiverId);
                     }
 
@@ -42,6 +47,7 @@ export const consumeNotifications = async (io) => {
         });
     } catch (error) {
         console.error("❌ Error consuming notifications:", error);
-        setTimeout(consumeNotifications, 5000);
+        // setTimeout(consumeNotifications, 5000);
+        setTimeout(() => consumeNotifications(io), 5000);
     }
 };

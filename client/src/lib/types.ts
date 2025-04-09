@@ -146,20 +146,37 @@ export type ErrorResponse = {
   }
 }
 
-export type Notification = {
-  id: string;
-  type: string;
-  user: {
-    name: string;
+type BaseNotification = {
+  _id: string;
+  message: string;
+  isRead: boolean;
+  senderId: {
+    _id: string;
+    username: string;
+    fullName: string;
     profilePicture: string;
   };
-  extraInfo?: string;
-  postTitle?: string;
-  content?: string;
-  timestamp: string;
-  timeAgo: string;
-  read: boolean;
-}
+  receiverId: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type Notification =
+  | (BaseNotification & {
+      type: "LIKE" | "COMMENT";
+      relatedModel: "Post";
+      relatedId: Post;
+    })
+  | (BaseNotification & {
+      type: "BOOKING";
+      relatedModel: "Tour";
+      relatedId: Tour;
+    })
+  | (BaseNotification & {
+      type: "FOLLOW";
+      relatedModel: "User";
+      relatedId: UserInfo;
+    });
 
 export interface DateEntry {
   date: string; // "YYYY-MM-DD"
