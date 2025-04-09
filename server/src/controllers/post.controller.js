@@ -194,13 +194,13 @@ class PostController {
             // validate post id input
             if (!postId) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
-                  success: false,
-                  error: "Post ID is required",
+                    success: false,
+                    error: "Post ID is required",
                 });
             }
 
             // check if user exists
-            const user = await User.findOne({ _id: userId }).select("_id");
+            const user = await User.findOne({ _id: userId });
             if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -226,22 +226,24 @@ class PostController {
                 { new: true }
             ).populate("likes", "_id username fullName");
 
-            // Send notification
-            if (user._id != post.createdBy) {
-                await notificationController.sendNotification({
-                    body: {
-                        type: "LIKE",
-                        senderId: user._id,
-                        receiverId: post.createdBy,
-                        relatedId: post._id,
-                        relatedModel: "Post",
-                        message: `Người dùng ${user.username} đã thích bài viết của bạn`,
-                    },
-                }, {
-                    status: () => ({
-                        json: () => { },
-                    }),
-                });
+            if (!isLiked) {
+                // Send notification
+                if (user._id != post.createdBy) {
+                    await notificationController.sendNotification({
+                        body: {
+                            type: "LIKE",
+                            senderId: user._id,
+                            receiverId: post.createdBy,
+                            relatedId: post._id,
+                            relatedModel: "Post",
+                            message: `Người dùng ${user.username} đã thích bài viết của bạn`,
+                        },
+                    }, {
+                        status: () => ({
+                            json: () => { },
+                        }),
+                    });
+                }
             }
 
             return res.status(StatusCodes.OK).json({

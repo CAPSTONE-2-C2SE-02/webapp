@@ -1,14 +1,9 @@
 import amqp from "amqplib";
-import { Server } from "socket.io";
 import Notification from "../models/notification.model.js";
-
-const io = new Server(3001, {
-    cors: { origin: "*" },
-});
 
 const QUEUE_NAME = "NOTIFICATION_QUEUE";
 
-export const consumeNotifications = async () => {
+export const consumeNotifications = async (io) => {
     try {
         const connection = await amqp.connect(process.env.RABBITMQ_URL);
         const channel = await connection.createChannel();
