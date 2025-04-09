@@ -162,11 +162,13 @@ export type Notification = {
 }
 
 export interface DateEntry {
-  date: string; // "YYYY-MM-DD"
+  _id: string;
+  date: Date; // "YYYY-MM-DD"
   status: 'UNAVAILABLE'; // As expected by the backend
 }
 
 export interface Calendar {
+  _id: string;
   tourGuideId: string;
   dates: DateEntry[];
 }

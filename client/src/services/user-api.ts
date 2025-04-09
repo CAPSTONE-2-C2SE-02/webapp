@@ -1,4 +1,4 @@
-import { ApiResponse, SetAvailabilityResponse, UserInfo } from "@/lib/types";
+import { ApiResponse, Calendar, SetAvailabilityResponse, UserInfo } from "@/lib/types";
 import { rootApi } from "./root-api";
 import { API } from "@/config/constants";
 import axiosInstance from "@/config/api";
@@ -34,16 +34,9 @@ export const getUserByUsername = async (username: string): Promise<UserInfo> => 
 //   return response.data.result
 // }
 
-export const getBusyDates = async (userId: string): Promise<string[]> => {
+export const getBusyDates = async (userId: string): Promise<Calendar> => {
   const response = await axiosInstance.get(API.CALENDER.SCHEDULE_INFO(userId));
-  const dates = response.data.result;
-  // Ensure dates is an array; return empty array if not
-  if (!Array.isArray(dates)) {
-    console.error('Invalid response from getBusyDates:', dates);
-    return [];
-  }
-  // Filter out invalid date strings
-  return dates.filter((date: unknown) => typeof date === 'string' && !isNaN(new Date(date).getTime()));
+  return response.data.result;
 };
 
 export const saveBusyDatesToServer = async (dates: Date[]): Promise<SetAvailabilityResponse> => {
