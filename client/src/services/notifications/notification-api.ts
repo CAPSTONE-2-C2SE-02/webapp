@@ -11,7 +11,12 @@ export const markNotificationAsRead = async (notificationId: string) => {
   return response.data;
 };
 
-// export const markAllNotificationsAsRead = async () => {
-//   const response = await axiosInstance.put("/notifications/read-all");
-//   return response.data;
-// }; 
+export const markAllNotificationsAsRead = async () => {
+  const response = await axiosInstance.put("/notifications/read-all");
+  return response.data;
+}; 
+
+export const deleteNotification = async (notificationId: string) => {
+  const response = await axiosInstance.delete(`/notifications/${notificationId}`);
+  return response.data;
+};

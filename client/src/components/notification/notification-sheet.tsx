@@ -12,12 +12,13 @@ const NotificationSheet = () => {
   const {
     notifications,
     markAsRead,
-    // markAllAsRead,
+    markAllAsRead,
+    deleteNotification,
   } = useNotifications();
 
-  // const handleMarkAllAsRead = () => {
-  //   markAllAsRead();
-  // };
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
+  };
 
   const handleMakeAsRead = (id: string) => {
     markAsRead(id);
@@ -44,7 +45,7 @@ const NotificationSheet = () => {
       <SheetContent className="p-0">
         <SheetHeader className="py-4 px-6 border-b">
           <div className="flex items-center gap-2">
-            <SheetTitle>Notification</SheetTitle>
+            <SheetTitle className="text-primary">Notification</SheetTitle>
             <SheetDescription className="sr-only">Notification</SheetDescription>
             {unreadCount > 0 && (
               <span className="px-2 py-0.5 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
@@ -63,6 +64,7 @@ const NotificationSheet = () => {
                     key={notification._id}
                     notification={notification}
                     onMarkAsRead={() => handleMakeAsRead(notification._id)}
+                    onDelete={() => deleteNotification(notification._id)}
                   />
                 ))
                 ) : (
@@ -80,7 +82,7 @@ const NotificationSheet = () => {
             variant="outline"
             size="sm"
             className="text-primary"
-            // onClick={markAllAsRead}
+            onClick={handleMarkAllAsRead}
             disabled={unreadCount === 0}
           >
             <CheckCheck className="h-4 w-4" />

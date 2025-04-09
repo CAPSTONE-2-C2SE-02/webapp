@@ -51,6 +51,25 @@ class NotificationController {
         }
     }
 
+    // [PUT] /api/v1/notifications/read-all
+    async markAllAsRead(req, res) {
+        try {
+            const userId = req.user.userId;
+            const notifications = await Notification.updateMany(
+                { receiverId: userId, isRead: false },
+                { $set: { isRead: true } },
+            );
+            
+            if (!notifications) {
+                return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "All of notifications has been read" });
+            }
+
+            res.json({ success: true, result: notifications, message: "All of notifications marked as read" });
+        } catch (error) {
+            res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message || "Internal server error" });
+        }
+    }
+
     // [DELETE] /api/v1/notifications/:id
     async deleteNotification(req, res) {
         try {

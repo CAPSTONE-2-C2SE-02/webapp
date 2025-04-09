@@ -11,9 +11,10 @@ import { Trash2 } from "lucide-react";
 interface NotificationCardProps {
   notification: Notification;
   onMarkAsRead: () => void;
+  onDelete: () => void;
 }
 
-const NotificationCard = ({ notification, onMarkAsRead }: NotificationCardProps) => {
+const NotificationCard = ({ notification, onMarkAsRead, onDelete }: NotificationCardProps) => {
   const auth = useAuthInfo();
 
   const getRelatedLink = (notification: Notification) => {
@@ -32,6 +33,8 @@ const NotificationCard = ({ notification, onMarkAsRead }: NotificationCardProps)
 
   const handleDeleteNotification = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    e.preventDefault();
+    onDelete();
   };
 
   return (
