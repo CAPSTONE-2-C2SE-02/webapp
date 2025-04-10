@@ -4,14 +4,14 @@ import { Cake, MessageSquare, UserRound, Star, UserRoundCheck, Mail, Phone, MapP
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/hooks/redux";
-import { getUserByUsername } from "@/services/user-api";
+// import { getUserByUsername } from "@/services/user-api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { EditProfileModal } from "@/components/modals/edit-profile-modal";
 import { useUserInfoQuery, useUpdateUserProfileMutation, handleSaveProfile } from "@/services/users/user-mutation";
-import { UserInfo, EditProfileData } from "@/lib/types";
+import { EditProfileData } from "@/lib/types";
 import FollowButton from "@/components/user/follow-button";
-import { useQuery } from "@tanstack/react-query";
+
 
 const ProfileLayout = () => {
     const { isAuthenticated, userInfo: authUserInfo, token } = useAppSelector((state) => state.auth) as {
@@ -47,11 +47,29 @@ const ProfileLayout = () => {
     }
 
     const [firstName, lastName] = user.fullName?.split(" ") || ["", ""];
+    const isFollowing = user?.followers.map(item => item._id)?.includes(authUserInfo?._id ?? "") as boolean;
+
 
     return (
         <div className="w-full flex flex-col gap-5">
-            <div className="relative w-full pt-8">
-                <img src="https://placehold.co/1920x400" className="rounded-t-2xl" />
+            <div className="relative w-full mt-8 px-2 pt-2 rounded-2xl bg-white">
+                {/* cover picture */}
+                <div className="h-[300px] w-full rounded-xl overflow-hidden">
+                    {user?.coverPhoto ? (
+                        <img src={user?.coverPhoto} className=" w-full h-full object-cover" />
+                    ) : (
+                        <div className="bg-gray-200 w-full h-full"></div>
+                    )}
+                </div>
+                {isAuthenticated && user && authUserInfo?.username !== username && (
+                    <div className="absolute space-x-1 right-7 top-[44%]">
+                        <FollowButton currentUserId={authUserInfo?._id || ""} targetUserId={user?._id} initialIsFollowing={isFollowing} />
+                        <Button size={"sm"}>
+                            <MessageSquare /> Message
+                        </Button>
+                    </div>
+                )}
+                {/* <img src="https://placehold.co/1920x400" className="rounded-t-2xl" /> */}
                 <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] [16px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
                         <AvatarImage src={user.profilePicture} />

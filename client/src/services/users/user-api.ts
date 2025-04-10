@@ -58,19 +58,14 @@ export const saveBusyDatesToServer = async (dates: Date[]): Promise<SetAvailabil
 export const updateUserProfile = async ({
   userId,
   data,
-  token,
 }: {
   userId: string;
   data: FormData | Record<string, any>;
-  token: string;
 }): Promise<UserInfo> => {
   try {
-    const response = await axiosInstance.put(`/profiles/${userId}`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...(data instanceof FormData ? { "Content-Type": "multipart/form-data" } : { "Content-Type": "application/json" }),
-      },
-    });
+    const response = await axiosInstance.put(API.PROFILE.UPDATE_INFO(userId), data,
+      {
+      });
 
     console.log("Response from server:", response.status, response.data);
 

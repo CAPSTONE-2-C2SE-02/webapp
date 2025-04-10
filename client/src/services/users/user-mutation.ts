@@ -98,7 +98,7 @@ export function useUpdateUserProfileMutation() {
     const navigate = useNavigate();
 
     const mutation = useMutation<UserInfo, Error, { userId: string; data: FormData | Record<string, any>; token: string }>({
-        mutationFn: ({ userId, data, token }) => updateUserProfile({ userId, data, token }),
+        mutationFn: ({ userId, data }) => updateUserProfile({ userId, data }),
         onSuccess: (updatedUser) => {
             queryClient.setQueryData(["user", updatedUser.username], updatedUser);
             toast.success("Profile updated successfully");
