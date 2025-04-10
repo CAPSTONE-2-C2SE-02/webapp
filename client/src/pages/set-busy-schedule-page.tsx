@@ -9,8 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/hooks/redux"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { getBusyDates, saveBusyDatesToServer } from "@/services/user-api"
-import BusyScheduleSkeleton from "@/components/skeleton/busy-schedule-skeleton"
-import { toast } from "sonner"
 
 const normalizeDate = (date: Date): Date => {
   const normalized = new Date(date);
@@ -27,36 +25,57 @@ const SetBusySchedulePage = () => {
   const [busyDates, setBusyDates] = useState<Date[]>([])
   const [activeTab, setActiveTab] = useState("select")
 
-  const { data: busyDatesData, isLoading } = useQuery({
+  // Fetch busy dates
+  const { isLoading } = useQuery({
     queryKey: ["busyDates", tourGuideId],
-    queryFn: () => getBusyDates(tourGuideId as string)
-  });
+    queryFn: async () => {
+      const result = await getBusyDates(tourGuideId || "")
+      const parsed = result.map((d) => new Date(d))
+      setBusyDates(parsed)
+      return parsed
+    },
+  })
 
+  // Save busy dates
   const { mutate: saveBusyDates } = useMutation({
-    mutationFn: saveBusyDatesToServer, 
+    mutationFn: saveBusyDatesToServer,  // Use the correct function to save to the backend
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["busyDates", tourGuideId] })
       setSelectedDates([])
       toast.success("Busy schedule saved successfully!");
     },
   })
+  // Add selected dates to busy dates (only on the "Select" tab)
+  const addBusyDates = () => {
+    if (selectedDates.length === 0) return
 
-  const handleSaveAndUpdateSchedule = () => {
-    if (selectedDates.length === 0) return;
-  
+    // Lọc ra các ngày chưa có trong busyDates
+    const newDates = selectedDates.filter(
+      (selectedDate) =>
+        !busyDates.some((busyDate) => isSameDay(busyDate, selectedDate))
+    )
+    setBusyDates([...busyDates, ...newDates])
+    setSelectedDates([])
+  }
+
+  // Remove a specific busy date
+  const removeBusyDate = (dateToRemove: Date) => {
+    setBusyDates(busyDates.filter((date) => !isSameDay(date, dateToRemove)))
+  }
+
+  // Save all busy dates to the backend
+  const saveSchedule = () => {
+    // Lưu các ngày bận vào backend
     const normalizedSelectedDates = selectedDates.map(normalizeDate);
     const newDates = normalizedSelectedDates.filter(
       (selectedDate) =>
         !busyDates.some((busyDate: Date) => isSameDay(busyDate, selectedDate))
     );
 
-    const updatedBusyDates = [...busyDates, ...newDates];
-    setBusyDates(updatedBusyDates);
-    setSelectedDates([]);
 
-    saveBusyDates(updatedBusyDates); 
-  };
-
+    const updatedDates = [...busyDates, ...newDates];
+    saveBusyDates(updatedDates);
+  }
 
   // Remove a specific busy date
   const removeBusyDate = () => {
@@ -84,14 +103,14 @@ const SetBusySchedulePage = () => {
   }
 
   return (
-    <div className="container mx-auto py-6">
-      <Card className="w-full max-w-3xl mx-auto"> 
+    <div className="container mx-auto py-10">
+      <Card className="w-full max-w-3xl mx-auto">
         <CardHeader>
           <div className="flex gap-52 mb-3">
-              <button className="text-gray-500 hover:text-gray-700">
-                  <ArrowLeft size={20} />
-              </button>
-              <CardTitle className="text-2xl">Manage Your Busy Schedule</CardTitle>
+            <button className="text-gray-500 hover:text-gray-700">
+              <ArrowLeft size={20} />
+            </button>
+            <CardTitle className="text-2xl">Manage Your Busy Schedule</CardTitle>
           </div>
           <CardDescription>Select multiple dates when you're unavailable</CardDescription>
         </CardHeader>
@@ -99,7 +118,7 @@ const SetBusySchedulePage = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="select">Select Busy Dates</TabsTrigger>
-              <TabsTrigger value="view">View Schedule ({busyDatesData?.dates.length})</TabsTrigger>
+              <TabsTrigger value="view">View Schedule ({busyDates.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="select">
@@ -111,12 +130,11 @@ const SetBusySchedulePage = () => {
                     onSelect={(days) => setSelectedDates(days || [])}
                     className="rounded-md border place-items-center"
                     modifiers={{
-                      busy: busyDatesSet as Date[],
+                      busy: busyDates,
                     }}
                     modifiersClassNames={{
-                      busy: " bg-slate-100 text-primary font-bold ",
+                      busy: "bg-green-100 text-primary font-bold",
                     }}
-                    disabled={busyDatesSet}
                   />
                 </div>
 
@@ -142,6 +160,11 @@ const SetBusySchedulePage = () => {
                         No dates selected. Click on multiple dates in the calendar.
                       </div>
                     )}
+
+                    <Button variant={"outline"} onClick={addBusyDates} disabled={selectedDates.length === 0} className="w-full text-primary bg-blue-200 border-primary">
+                      <CalendarRange className="mr-2 w-4" />
+                      Add {selectedDates.length} Date{selectedDates.length !== 1 ? "s" : ""} to Busy Schedule
+                    </Button>
                   </div>
 
                   <div className="mt-6 pt-6 border-t">
@@ -157,7 +180,7 @@ const SetBusySchedulePage = () => {
                         <span className="text-sm">Selected Date</span>
                       </div>
                       <div className="flex items-center">
-                        <div className="w-6 h-6 rounded-lg border mr-2 bg-slate-100 flex">
+                        <div className="w-6 h-6 rounded-lg border mr-2 bg-green-100 flex">
                         </div>
                         <span className="text-sm">Busy Date</span>
                       </div>
@@ -168,13 +191,13 @@ const SetBusySchedulePage = () => {
             </TabsContent>
 
             <TabsContent value="view">
-              {busyDatesData?.dates && busyDatesData?.dates?.length > 0 ? (
+              {busyDates.length > 0 ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {busyDatesData?.dates.map((date) => (
-                      <div key={date._id} className="flex items-center justify-between p-3 border rounded-md">
-                        <Badge variant="outline">{format(date.date, "EEEE, MMMM d, yyyy")}</Badge>
-                        <Button variant="ghost" size="icon">
+                    {busyDates.map((date, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 border rounded-md">
+                        <Badge variant="outline">{format(date, "EEEE, MMMM d, yyyy")}</Badge>
+                        <Button variant="ghost" size="icon" onClick={() => removeBusyDate(date)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -190,9 +213,8 @@ const SetBusySchedulePage = () => {
           </Tabs>
         </CardContent>
         <CardFooter>
-          <Button variant={"outline"} onClick={handleSaveAndUpdateSchedule} disabled={selectedDates.length === 0 && busyDates.length ===0} className="w-full text-primary bg-blue-200 border-primary">
-              <CalendarRange className="mr-2 w-4" />
-              Save Busy Schedule {selectedDates.length} Date{selectedDates.length !== 1 ? "s" : ""} to Busy Schedule
+          <Button onClick={saveSchedule} disabled={busyDates.length === 0} className="w-full">
+            Save Busy Schedule
           </Button>
         </CardFooter>
       </Card>
