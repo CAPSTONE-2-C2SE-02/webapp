@@ -49,7 +49,7 @@ class CommentController {
                         receiverId: post.createdBy,
                         relatedId: post._id,
                         relatedModel: "Post",
-                        message: `Người dùng ${user.username} đã bình luận vào viết của bạn`,
+                        message: `User ${user.username} commented on your post`,
                     },
                 }, {
                     status: () => ({

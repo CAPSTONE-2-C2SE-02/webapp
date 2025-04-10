@@ -25,7 +25,6 @@ class TourController {
                 author: user._id,
                 schedule: scheduleData,
                 ...request,
-                availableSlots: request.maxParticipants,
                 imageUrls: imageUrls,
             };
 
