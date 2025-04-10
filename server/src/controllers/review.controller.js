@@ -54,7 +54,7 @@ class ReviewController {
             // Cập nhật điểm ranking
             const reviews = await Review.find({ tourGuideId: booking.tourGuideId });
             const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-            const averageRating = totalRating / reviews.length;
+            const averageRating = parseFloat((totalRating / reviews.length).toFixed(2));
 
             const ranking = await Ranking.findOneAndUpdate(
                 { tourGuideId: booking.tourGuideId },
@@ -62,10 +62,14 @@ class ReviewController {
                 { upsert: true, new: true }
             );
 
-            const { attendanceScore, reviewScore, rankingWeight } = ranking;
-            ranking.totalScore =
-                attendanceScore * rankingWeight.attendanceWeight +
-                reviewScore * rankingWeight.reviewWeight;
+            const {
+                attendanceScore = 0,
+                completionScore = 0,
+                postScore = 0,
+                reviewScore = 0
+            } = ranking;
+
+            ranking.totalScore = attendanceScore + completionScore + postScore + reviewScore;
 
             await ranking.save();
 

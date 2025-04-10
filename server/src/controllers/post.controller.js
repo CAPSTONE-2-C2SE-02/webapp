@@ -1,8 +1,10 @@
 import { StatusCodes } from "http-status-codes";
+import notificationController from "../controllers/notification.controller.js";
 import Post from "../models/post.model.js";
+import Ranking from "../models/ranking.model.js";
 import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
-import notificationController from "../controllers/notification.controller.js";
+import dayjs from "dayjs";
 
 class PostController {
 
@@ -26,7 +28,38 @@ class PostController {
                 imageUrls,
             }
 
-            const createdPost = await Post.create(newPost)
+            const createdPost = await Post.create(newPost);
+
+            // Cập nhật điểm ranking
+            const todayStart = dayjs().startOf('day').toDate();
+            const todayEnd = dayjs().endOf('day').toDate();
+
+            const postTodayCount = await Post.countDocuments({
+                createdBy: user._id,
+                createdAt: { $gte: todayStart, $lte: todayEnd }
+            });
+
+            if (postTodayCount <= 5) {
+                await Ranking.findOneAndUpdate(
+                    { tourGuideId: user._id },
+                    { $inc: { postScore: 1 } },
+                    { upsert: true }
+                );
+            }
+
+            const ranking = await Ranking.findOne({ tourGuideId: user._id });
+
+            if (ranking) {
+                const {
+                    attendanceScore = 0,
+                    completionScore = 0,
+                    postScore = 0,
+                    reviewScore = 0
+                } = ranking;
+
+                ranking.totalScore = attendanceScore + completionScore + postScore + reviewScore;
+                await ranking.save();
+            }
 
             const post = await Post.findById(createdPost._id)
                 .populate("createdBy", "_id username fullName profilePicture")
@@ -236,7 +269,7 @@ class PostController {
                             receiverId: post.createdBy,
                             relatedId: post._id,
                             relatedModel: "Post",
-                            message: `Người dùng ${user.username} đã thích bài viết của bạn`,
+                            message: `User ${user.username} liked your post`,
                         },
                     }, {
                         status: () => ({

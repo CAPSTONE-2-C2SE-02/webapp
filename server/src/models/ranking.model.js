@@ -4,9 +4,15 @@ const RankingSchema = new mongoose.Schema({
     tourGuideId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        unique: true
+        unique: true,
+        required: true
     },
+
     attendanceScore: {
+        type: Number,
+        default: 0
+    },
+    completionScore: {
         type: Number,
         default: 0
     },
@@ -14,14 +20,16 @@ const RankingSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    totalScore: {
+    postScore: {
         type: Number,
         default: 0
     },
-    rankingWeight: {
-        reviewWeight: { type: Number, default: 0.6 },
-        attendanceWeight: { type: Number, default: 0.4 }
-    },
+
+    totalScore: {
+        type: Number,
+        default: 0
+    }
+
 }, {
     timestamps: true
 });

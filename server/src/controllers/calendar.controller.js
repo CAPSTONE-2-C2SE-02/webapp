@@ -107,6 +107,38 @@ class CalendarController {
         }
     }
 
+    // [GET] /api/v1/calendars/:id/booked-dates
+    async getBookedDates(req, res) {
+        try {
+            const { id } = req.params;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const calendar = await Calendar.findOne({ tourGuideId: id });
+
+            if (!calendar) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "No calendar found for this tour guide.",
+                });
+            }
+
+            const bookedDates = calendar.dates
+                .filter(item => item.status === "BOOKED" && new Date(item.date) >= today)
+                .map(item => item.date);
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: bookedDates,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
     // [PUT] /api/v1/calendars
     async updateCalendar(req, res) {
         try {
