@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { format, isSameDay } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -8,7 +8,7 @@ import { Trash2, CalendarRange, ArrowLeft } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/hooks/redux"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { getBusyDates, saveBusyDatesToServer } from "@/services/users/user-api"
+import { getBusyDates, saveBusyDatesToServer } from "@/services/user-api"
 
 const normalizeDate = (date: Date): Date => {
   const normalized = new Date(date);
@@ -17,7 +17,7 @@ const normalizeDate = (date: Date): Date => {
 };
 
 const SetBusySchedulePage = () => {
-  const { userInfo } = useAppSelector((state) => state.auth)
+  const userInfo = useAppSelector((state) => state.auth.userInfo)
   const tourGuideId = userInfo?._id
 
   const queryClient = useQueryClient()
@@ -41,8 +41,8 @@ const SetBusySchedulePage = () => {
     mutationFn: saveBusyDatesToServer,  // Use the correct function to save to the backend
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["busyDates", tourGuideId] })
-      setSelectedDates([]) // Clear selected dates after saving
-      alert("Busy schedule saved successfully!");
+      setSelectedDates([])
+      toast.success("Busy schedule saved successfully!");
     },
   })
   // Add selected dates to busy dates (only on the "Select" tab)
@@ -67,8 +67,6 @@ const SetBusySchedulePage = () => {
   const saveSchedule = () => {
     // Lưu các ngày bận vào backend
     const normalizedSelectedDates = selectedDates.map(normalizeDate);
-
-    // Lọc các ngày đã có trong busyDates trước khi thêm vào
     const newDates = normalizedSelectedDates.filter(
       (selectedDate) =>
         !busyDates.some((busyDate: Date) => isSameDay(busyDate, selectedDate))
@@ -79,13 +77,25 @@ const SetBusySchedulePage = () => {
     saveBusyDates(updatedDates);
   }
 
-  // Clear selected dates
-  const clearSelection = () => {
-    setSelectedDates([]) // Xóa hết ngày đã chọn
+  // Remove a specific busy date
+  const removeBusyDate = () => {
+    // setBusyDates(busyDates.filter((date) => !isSameDay(date, dateToRemove)))
+    // api xoa
   }
 
+
+
+  const clearSelection = () => {
+    setSelectedDates([]);
+  }
+
+  const busyDatesSet = useMemo(() => {
+    if (!busyDatesData || !busyDatesData.dates) return [];
+    return busyDatesData.dates.map((item) => new Date(item.date));
+  }, [busyDatesData]);
+
   if (isLoading) {
-    return <div>Loading</div>
+    return <BusyScheduleSkeleton />
   }
 
   if (!tourGuideId) {

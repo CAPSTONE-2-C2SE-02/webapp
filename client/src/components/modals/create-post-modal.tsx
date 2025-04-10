@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Hash, Image, Loader2, MapPin, Smile, X } from "lucide-react";
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
 import { Description } from "@radix-ui/react-dialog";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -23,6 +21,7 @@ import { toast } from "sonner";
 import { useCreatePostMutation } from "@/services/posts/mutation";
 import useAuthInfo from "@/hooks/useAuth";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { EmojiPicker, EmojiPickerContent, EmojiPickerSearch } from "../ui/emoji-picker";
 
 interface CreateNewPostModalProps {
   isOpen: boolean;
@@ -38,6 +37,7 @@ const CreateNewPostModal = ({
 
   const [isShowTagInput, setIsShowTagInput] = useState(false);
   const [showTourSelector, setShowTourSelector] = useState(false);
+  const [isOpenEmoji, setIsOpenEmoji] = useState(false);
 
   const [tags, setTags] = useState<string[]>([]);
   const [content, setContent] = useState<string>("");
@@ -226,29 +226,26 @@ const CreateNewPostModal = ({
                       <MapPin className="size-5" />
                     </Button>
                   )}
-                  <Button size={"icon"} variant={"ghost"}>
-                    <Smile className="size-5" />
-                  </Button>
-                  <Popover>
+                  <Popover open={isOpenEmoji} onOpenChange={setIsOpenEmoji}>
                     <PopoverTrigger asChild>
                       <Button size={"icon"} variant={"ghost"}>
                         <Smile className="size-5" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="p-0">
-                      <Picker
-                        data={data}
-                        theme="light"
-                        emojiSize={24}
-                        previewPosition="none"
-                        showSkinTones={false}
-                        onEmojiSelect={(emoji: { native: string; }) => {
+                    <PopoverContent className="p-0 w-auto" asChild>
+                      <EmojiPicker
+                        className="h-[326px] rounded-lg border shadow-md"
+                        onEmojiSelect={({ emoji }) => {
                           if (contentRef.current) {
-                            contentRef.current.innerText += emoji.native;
+                            contentRef.current.innerText += emoji;
                           }
                           handleInput();
-                        }}
-                      />
+                          setIsOpenEmoji(false);
+                        }}                
+                      >
+                        <EmojiPickerSearch />
+                        <EmojiPickerContent />
+                      </EmojiPicker>
                     </PopoverContent>
                   </Popover>
                 </div>

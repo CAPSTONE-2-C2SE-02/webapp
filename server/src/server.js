@@ -57,7 +57,8 @@ const startServer = () => {
   checkExpiredBookings();
 
   // Consumer notification
-  consumeNotifications().catch(console.error);
+  // consumeNotifications().catch(console.error);
+  consumeNotifications(io).catch(console.error);
 
   // Socket io
   global.oneLineUses = [];
