@@ -38,9 +38,6 @@ const tourSchema = new mongoose.Schema({
     maxParticipants: {
         type: Number
     },
-    availableSlots: {
-        type: Number
-    },
     totalBookings: {
         type: Number,
         default: 0
