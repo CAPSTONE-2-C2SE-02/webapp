@@ -1,10 +1,11 @@
+import dayjs from "dayjs";
 import { StatusCodes } from "http-status-codes";
 import notificationController from "../controllers/notification.controller.js";
+import Notification from "../models/notification.model.js";
 import Post from "../models/post.model.js";
 import Ranking from "../models/ranking.model.js";
 import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
-import dayjs from "dayjs";
 
 class PostController {
 
@@ -204,6 +205,9 @@ class PostController {
             }
 
             const postDeleted = await Post.findOneAndDelete({ _id: id });
+
+            // Xóa tất cả thông báo liên quan đến bài viết
+            await Notification.deleteMany({ relatedId: id, relatedModel: "Post" });
 
             return res.status(StatusCodes.OK).json({
                 success: true,

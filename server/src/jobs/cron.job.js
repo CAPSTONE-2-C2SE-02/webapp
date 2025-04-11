@@ -22,7 +22,7 @@ const checkExpiredBookings = async () => {
         console.log(`⚠️ Found ${expiredBookings.length} expired bookings. Canceling...`);
 
         for (const booking of expiredBookings) {
-            booking.status = "TIMEOUT";
+            booking.status = "CANCELED";
             booking.paymentStatus = "TIMEOUT";
             await booking.save();
 

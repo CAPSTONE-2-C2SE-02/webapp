@@ -191,7 +191,7 @@ async function processVnpayCallback(vnpParams, res) {
         } else {
             payment.status = "FAILED";
             booking.paymentStatus = "FAILED";
-            booking.status = "FAILED";
+            booking.status = "CANCELED";
 
             await releaseBookedDates(booking.tourGuideId, booking.startDate, booking.endDate);
 
