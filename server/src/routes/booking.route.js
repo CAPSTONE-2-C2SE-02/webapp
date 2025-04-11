@@ -157,5 +157,6 @@ router.get("/traveler", authenticated, authorize("TRAVELER"), bookingController.
 router.get("/tour-guide", authenticated, authorize("TOUR_GUIDE"), bookingController.getTourGuideBookings);
 router.post("/:id/confirm/tour-guide", authenticated, authorize("TOUR_GUIDE"), bookingController.confirmByTourGuide);
 router.post("/:id/confirm/traveler", authenticated, authorize("TRAVELER"), bookingController.confirmByTraveler);
+router.post("/:id/cancel", authenticated, bookingController.cancelBooking);
 
 export default router;

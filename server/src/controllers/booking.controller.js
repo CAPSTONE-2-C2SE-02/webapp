@@ -232,6 +232,69 @@ class BookingController {
         }
     }
 
+    // [POST] /api/v1/bookings/:id/cancel
+    async cancelBooking(req, res) {
+        try {
+            const bookingId = req.params.id;
+            const travelerId = req.user.userId;
+            const { reason } = req.body;
+
+            const booking = await Booking.findById(bookingId);
+            if (!booking) {
+                return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Booking not found" });
+            }
+
+            if (booking.travelerId.toString() !== travelerId) {
+                return res.status(StatusCodes.FORBIDDEN).json({ success: false, error: "You are not the traveler of this booking" });
+            }
+
+            if (booking.status === "CANCELED") {
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: "Booking is already canceled" });
+            }
+
+            if (booking.status === "COMPLETED") {
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: "Completed bookings cannot be canceled" });
+            }
+
+            booking.status = "CANCELED";
+            booking.cancellationReason = reason;
+            await booking.save();
+
+            const tour = await Tour.findById(booking.tourId);
+            if (tour) {
+                tour.totalBookings -= 1;
+                await tour.save();
+            }
+
+            await releaseBookedDates(booking.tourGuideId, booking.startDate, booking.endDate);
+
+            const traveler = await User.findById(travelerId);
+            await notificationController.sendNotification({
+                body: {
+                    type: "CANCEL",
+                    senderId: travelerId,
+                    receiverId: booking.tourGuideId,
+                    relatedId: booking._id,
+                    relatedModel: "Booking",
+                    message: `${traveler.username} has canceled the booking with reason ${reason}`,
+                },
+            }, {
+                status: () => ({
+                    json: () => { },
+                }),
+            });
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                message: "Booking canceled successfully",
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
 }
 
 export default new BookingController;

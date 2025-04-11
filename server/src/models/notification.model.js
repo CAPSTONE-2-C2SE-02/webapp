@@ -4,7 +4,7 @@ import MongooseDelete from "mongoose-delete";
 const NotificationSchema = new mongoose.Schema({
     type: {
         type: String,
-        enum: ["FOLLOW", "LIKE", "COMMENT", "BOOKING", "CONFIRM"],
+        enum: ["FOLLOW", "LIKE", "COMMENT", "BOOKING", "CONFIRM", "CANCEL"],
     },
     senderId: {
         type: mongoose.Schema.Types.ObjectId,
