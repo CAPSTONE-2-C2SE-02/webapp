@@ -1,0 +1,134 @@
+Title: Tour Trải Nghiệm Ẩm Thực Đường Phố Hà Nội
+Description: Hành trình khám phá tinh hoa ẩm thực Hà Nội với phở, bún chả, bánh cuốn, cà phê trứng, và chợ đêm phố cổ.
+Duration: 1 ngày
+Price: $45
+--------------------------------------------------
+Title: Tour Văn Hóa & Lịch Sử Hà Nội - Hành Trình Ngược Thời Gian
+Description: Khám phá di sản ngàn năm văn hiến với Lăng Bác, Văn Miếu Quốc Tử Giám, Hoàng Thành Thăng Long và Nhà Thờ Lớn.
+Duration: 2 ngày 1 đêm
+Price: $99
+--------------------------------------------------
+Title: Tour Hồ Tây Hà Nội & Trải Nghiệm Đạp Xe Buổi Sáng
+Description: Đạp xe quanh Hồ Tây trong không khí trong lành, ghé chùa Trấn Quốc, thưởng thức bánh tôm, check-in con đường Nhật Bản.
+Duration: Nửa ngày
+Price: $30
+--------------------------------------------------
+Title: Tour Sài Gòn Về Đêm - Phố Tây & Du Thuyền Trên Sông
+Description: Hành trình khám phá cuộc sống về đêm với phố Tây Bùi Viện, chợ đêm, ngắm cảnh thành phố từ du thuyền trên sông Sài Gòn.
+Duration: 1 ngày
+Price: $60
+--------------------------------------------------
+Title: Tour Đêm Đà Nẵng - Cầu Rồng Phun Lửa & Chợ Đêm Helio
+Description: Hòa mình vào không khí sôi động khi Cầu Rồng phun lửa, dạo phố đi bộ Bạch Đằng, thưởng thức ẩm thực tại chợ đêm Helio.
+Duration: 1 ngày
+Price: $50
+--------------------------------------------------
+Title: Tour Trải Nghiệm Biển Mỹ Khê & Hòn Sơn Trà Đà Nẵng
+Description: Thư giãn tại bãi biển Mỹ Khê tuyệt đẹp, tham quan chùa Linh Ứng trên bán đảo Sơn Trà, tận hưởng hải sản ven biển.
+Duration: 2 ngày 1 đêm
+Price: $130
+--------------------------------------------------
+Title: Tour Lặn Ngắm San Hô Ở Hòn Mun - Nha Trang
+Description: Trải nghiệm lặn biển tại khu bảo tồn Hòn Mun, chiêm ngưỡng hệ sinh thái san hô tuyệt đẹp, khám phá đảo hoang sơ.
+Duration: 1 ngày
+Price: $90
+--------------------------------------------------
+Title: Tour VinWonders & Đảo Hòn Tre - Nha Trang
+Description: Tham quan khu vui chơi VinWonders Nha Trang, khám phá đảo Hòn Tre, tận hưởng biển xanh và các trò chơi cảm giác mạnh.
+Duration: 2 ngày 1 đêm
+Price: $150
+--------------------------------------------------
+Title: Tour Thư Giãn Suối Khoáng Nóng Tháp Bà - Nha Trang
+Description: Trải nghiệm tắm bùn khoáng thiên nhiên, thư giãn trong hồ khoáng nóng tại khu du lịch suối khoáng Tháp Bà.
+Duration: Nửa ngày
+Price: $64
+--------------------------------------------------
+Title: Tour Đà Lạt - Ngắm Bình Minh Trên Đồi Thiên Phúc Đức
+Description: Chuyến du ngoạn Đà Lạt với cảnh bình minh đẹp như tranh vẽ trên đồi Thiên Phúc Đức, tận hưởng không gian thơ mộng.
+Duration: 2 ngày 1 đêm
+Price: $110
+--------------------------------------------------
+Title: Tour Check-in Vườn Hoa & Trang Trại Dâu Tây Đà Lạt
+Description: Tham quan các vườn hoa nổi tiếng Đà Lạt, trải nghiệm hái dâu tây tại trang trại hữu cơ và thưởng thức đặc sản địa phương.
+Duration: 1 ngày
+Price: $80
+--------------------------------------------------
+Title: Tour Chèo Thuyền Trên Sông Thu Bồn - Hội An
+Description: Trải nghiệm chèo thuyền trên dòng sông Thu Bồn thơ mộng, tận hưởng hoàng hôn trên sông và khám phá làng chài ven sông.
+Duration: Nửa ngày
+Price: $55
+--------------------------------------------------
+Title: Tour Cáp Treo Núi Lớn - Khám Phá Vũng Tàu Từ Trên Cao
+Description: Trải nghiệm cáp treo lên đỉnh Núi Lớn, ngắm nhìn toàn cảnh Vũng Tàu từ trên cao, tham quan chùa Thích Ca Phật Đài.
+Duration: Nửa ngày
+Price: $54
+--------------------------------------------------
+Title: Tour Hạ Long - Ngủ Đêm Trên Du Thuyền Sang Trọng
+Description: Trải nghiệm kỳ quan thiên nhiên thế giới với chuyến du ngoạn và nghỉ đêm trên du thuyền cao cấp giữa vịnh Hạ Long.
+Duration: 2 ngày 1 đêm
+Price: $250
+--------------------------------------------------
+Title: Tour Trên Vịnh Lan Hạ - Hạ Long
+Description: Trải nghiệm chèo thuyền  giữa làn nước xanh biếc, khám phá những hòn đảo hoang sơ và hang động kỳ bí trên vịnh Lan Hạ.
+Duration: 1 ngày
+Price: $95
+--------------------------------------------------
+Title: Tour Ngắm Hoàng Hôn Từ Cầu Vàng - Bà Nà Hills
+Description: Trải nghiệm cáp treo lên đỉnh Bà Nà, chiêm ngưỡng Cầu Vàng nổi tiếng trong ánh hoàng hôn, khám phá làng Pháp.
+Duration: 1 ngày
+Price: $75
+--------------------------------------------------
+Title: Tour Trải Nghiệm Fantasy Park & Cáp Treo Bà Nà
+Description: Một ngày vui chơi tại Fantasy Park - khu giải trí trong nhà lớn nhất Đông Nam Á, trải nghiệm cáp treo dài kỷ lục.
+Duration: 1 ngày
+Price: $84
+--------------------------------------------------
+Title: Tour Bà Nà Hills - Một Ngày Giữa Làng Pháp Cổ
+Description: Dạo bước qua những con phố đá của làng Pháp, tham quan vườn hoa Le Jardin D’Amour, chinh phục đỉnh núi Chúa.
+Duration: 1 ngày
+Price: $88
+--------------------------------------------------
+Title: Tour Sài Gòn Xưa & Nay - Hành Trình Xuyên Thời Gian
+Description: Khám phá sự đối lập thú vị giữa Sài Gòn cổ kính và hiện đại. Bắt đầu tại Bảo tàng Chứng tích Chiến tranh, dạo quanh Chợ Lớn sầm uất, ghé thăm một quán cà phê retro đậm chất xưa, rồi bất ngờ lao vào thế giới tương lai với những tòa nhà chọc trời như Landmark 81.
+Duration: 1 ngày
+Price: $56
+--------------------------------------------------
+Title: Tour Sài Gòn Underground - Bí Ẩn Thành Phố Không Ngủ
+Description: Lạc vào những con hẻm nhỏ với những quán bar bí ẩn, quán ăn khuya chỉ dân địa phương biết đến. Khám phá nghệ thuật graffiti, nghe những câu chuyện kỳ bí về Sài Gòn, và kết thúc bằng một bữa tiệc DJ trên rooftop với view toàn cảnh thành phố.
+Duration: 1 đêm
+Price: $65
+--------------------------------------------------
+Title: Tour Chinh Phục Đỉnh Sơn Trà & Chill Trên Bãi Biển Đêm Đà Nẵng
+Description: Sáng leo núi Sơn Trà, check-in với Voọc Chà Vá chân nâu quý hiếm, chiều lướt sóng Mỹ Khê, tối tổ chức tiệc BBQ ngay trên bãi biển, vừa ăn vừa ngắm pháo hoa rực rỡ từ cầu Rồng.
+Duration: 1 ngày
+Price: $68
+--------------------------------------------------
+Title: Tour Hội An - Ký Ức Phố Cổ & Thắp Đèn Hoa Đăng
+Description: Trải nghiệm không gian xưa tại những ngôi nhà cổ, tham quan xưởng làm đèn hoa đăng, tự tay thả đèn xuống sông Hoài và lắng nghe những huyền thưởng về thành phố đèn lồng.
+Duration: 1 đêm
+Price: $40
+--------------------------------------------------
+Title: Tour Check-in Rạng Dừa & Tận Hưởng Tiệc Biển - Hội An
+Description: Làng chài Rạng Dừa hoang sơ là điểm dừng chân hoàn hảo trước khi thưởng thức hải sản tại bãi biển An Bàng, và kết thúc chặng đường bằng một bữa tiệc bên bờ biển lãng mạn.
+Duration: 1 ngày
+Price: $58
+--------------------------------------------------
+Title: Tour Đà Lạt - Săn Mây Trên Cổng Trời & Lửa Trại Ban Đêm
+Description: Chinh phục cắc ngọn đồi tuyệt đẹp, dây chuyền săn mây trên Cổng Trời, tối dự lửa trại giữa đồi thông và thưởng thức cầu lừa giữa không gian tĩnh lặng.
+Duration: 1 ngày
+Price: $65
+--------------------------------------------------
+Title: Tour Vũng Tàu - Lặn Biển Ngắm San Hô & BBQ Hải Sản Trên Bãi Biển
+Description: Trải nghiệm lặn biển khám phá thế giới san hô tuyệt đẹp, thử câu cá trên biển, sau đó tự tay nướng hải sản tươi rói ngay trên bờ biển.
+Duration: 1 ngày
+Price: $70
+--------------------------------------------------
+Title: Tour Vũng Tàu - Đêm Hội Trên Biển
+Description: Đi thuyền ra bãi biển hoang sơ, tham gia party bãi biển với âm nhạc sống động, lửa trại, cocktail, ngắm trăng trên biển và kết thúc bằng một màn bắn pháo hoa nhỏ đầy lãng mạn.
+Duration: 1 đêm
+Price: $78
+--------------------------------------------------
+Title: Tour Hạ Long - Du Thuyền 5 Sao & Khám Phá Hang Động Kỳ Bí
+Description: Lên du thuyền sang trọng, chèo kayak khám phá hang Sửng Sốt, thử thách với thuyền thúng vào hang Luồn, thưởng thức hải sản tươi ngon ngay trên du thuyền giữa vịnh biển kỳ vĩ.
+Duration: 1 ngày
+Price: $85
