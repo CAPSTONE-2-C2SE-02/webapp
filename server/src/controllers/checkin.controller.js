@@ -14,27 +14,22 @@ class CheckinController {
             if (existing) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    error: "You checked in today",
+                    error: "You already checked in today",
                 });
             }
 
             await Checkin.create({ tourGuideId, date: today });
 
-            // Cập nhật điểm ranking
-            const RANKING_WEIGHT = {
-                attendance: 1,
-            };
+            const ATTENDANCE_SCORE = 5;
 
             const ranking = await Ranking.findOneAndUpdate(
                 { tourGuideId },
-                { $inc: { attendanceScore: RANKING_WEIGHT.attendance } },
+                { $inc: { attendanceScore: ATTENDANCE_SCORE } },
                 { upsert: true, new: true }
             );
 
-            const { attendanceScore, reviewScore, rankingWeight } = ranking;
-            ranking.totalScore =
-                attendanceScore * rankingWeight.attendanceWeight +
-                reviewScore * rankingWeight.reviewWeight;
+            const { attendanceScore, completionScore = 0, reviewScore = 0, postScore = 0 } = ranking;
+            ranking.totalScore = attendanceScore + completionScore + reviewScore + postScore;
 
             await ranking.save();
 

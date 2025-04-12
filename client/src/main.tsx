@@ -7,18 +7,21 @@ import AppRoutes from './routes/index.tsx';
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { PersistGate } from 'redux-persist/integration/react';
 import { Toaster } from './components/ui/sonner.tsx';
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <AppRoutes />
-        <Toaster position="top-right" duration={2000} />
-      </PersistGate>
-    </Provider>
-    </QueryClientProvider>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <QueryClientProvider client={queryClient}>
+        <Provider store={store}>
+          <PersistGate loading={null} persistor={persistor}>
+            <AppRoutes />
+            <Toaster position="top-right" duration={2000} />
+          </PersistGate>
+        </Provider>
+      </QueryClientProvider>
+    </GoogleOAuthProvider>
   </StrictMode>,
 )

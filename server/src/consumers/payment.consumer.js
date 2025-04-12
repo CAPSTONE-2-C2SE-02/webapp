@@ -7,7 +7,7 @@ import Booking from "../models/booking.model.js";
 import Payment from "../models/payment.model.js";
 import Tour from "../models/tour.model.js";
 import User from "../models/user.model.js";
-import { releaseSlots } from "../services/booking.service.js";
+import { releaseBookedDates } from "../services/calendar.service.js";
 import { sendEmail } from "../services/email.service.js";
 
 const QUEUE_NAME = "PAYMENT_QUEUE";
@@ -126,22 +126,6 @@ async function processVnpayCallback(vnpParams, res) {
 
             const tourGuide = await User.findById({ _id: tour.author });
 
-            // Send notification for traveler
-            await notificationController.sendNotification({
-                body: {
-                    type: "BOOKING",
-                    senderId: null,
-                    receiverId: traveler._id,
-                    relatedId: tour._id,
-                    relatedModel: "Tour",
-                    message: `Bạn đã đăng ký thành công ${tour.title} của ${tourGuide.fullName}`
-                },
-            }, {
-                status: () => ({
-                    json: () => { },
-                }),
-            });
-
             // Send notification for tour guide
             await notificationController.sendNotification({
                 body: {
@@ -150,7 +134,24 @@ async function processVnpayCallback(vnpParams, res) {
                     receiverId: tour.author,
                     relatedId: tour._id,
                     relatedModel: "Tour",
-                    message: `Người dùng ${traveler.username} vừa mới đặt tour ${tour.title} của bạn`,
+                    message: `User ${traveler.username} has just booked your tour "${tour.title}"`,
+                },
+            }, {
+                status: () => ({
+                    json: () => { },
+                }),
+            });
+
+
+            // Send notification for traveler
+            await notificationController.sendNotification({
+                body: {
+                    type: "BOOKING",
+                    senderId: null,
+                    receiverId: traveler._id,
+                    relatedId: tour._id,
+                    relatedModel: "Tour",
+                    message: `You have successfully booked "${tour.title}" by ${tourGuide.fullName}`,
                 },
             }, {
                 status: () => ({
@@ -190,14 +191,9 @@ async function processVnpayCallback(vnpParams, res) {
         } else {
             payment.status = "FAILED";
             booking.paymentStatus = "FAILED";
-            booking.status = "FAILED";
-            const tour = await Tour.findById(booking.tourId);
-            if (tour) {
-                tour.availableSlots += (booking.adults || 0) + (booking.youths || 0) + (booking.children || 0);
-                await tour.save();
-            }
+            booking.status = "CANCELED";
 
-            releaseSlots(booking.tourId, (booking.adults || 0) + (booking.youths || 0) + (booking.children || 0));
+            await releaseBookedDates(booking.tourGuideId, booking.startDate, booking.endDate);
 
             await payment.save();
             await booking.save();

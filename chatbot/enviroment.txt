@@ -1,0 +1,11 @@
+pinecone
+python-dotenv
+sentence-transformers
+langchain
+transformers_stream_generator 
+transformers accelerate torch
+huggingface_hub
+tiktoken
+Flask
+flask_cors
+jsonify

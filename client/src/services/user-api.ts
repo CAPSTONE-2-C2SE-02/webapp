@@ -23,7 +23,7 @@ export const followUser = async (userId: string) => {
   const response = await axiosInstance.post(API.PROFILE.FOLLOW(userId));
   return response.data;
 };
- 
+
 export const getUserByUsername = async (username: string): Promise<UserInfo> => {
   const response = await axios.get(`${import.meta.env.VITE_API_URL}/${API.PROFILE.USER_INFO(username)}`);
   return response.data.result;
@@ -61,5 +61,51 @@ export const fetchTourGuideBookings = async (): Promise<Booking[]> => {
   if (!response.data.success) {
     throw new Error(response.data.error || "Failed to fetch tour guide bookings");
   }
+  return response.data.result;
+};
+
+export const updateUserProfile = async ({
+  userId,
+  data,
+}: {
+  userId: string;
+  data: FormData | Record<string, any>;
+}): Promise<UserInfo> => {
+  try {
+    const response = await axiosInstance.put(API.PROFILE.UPDATE_INFO(userId), data);
+
+    if (!response?.data) {
+      throw new Error("No data returned from server");
+    }
+
+    if (!response.data.result) {
+      throw new Error("Invalid response format: missing 'result' field");
+    }
+
+    return response.data.result;
+  } catch (error: any) {
+    console.error("Error in updateUserProfile:", {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      config: error.config,
+    });
+    const errorMessage =
+      error.response?.data?.error?.[0] ||
+      (error.response?.status === 400
+        ? "Bad request: Invalid data sent to server"
+        : error.message) ||
+      "Failed to update profile due to an unknown error";
+    throw new Error(errorMessage);
+  }
+};
+
+export const fetchUserInfoByUsername = async (username: string): Promise<UserInfo> => {
+  const response = await axiosInstance.get(`/users/profile/${username}`);
+  return response.data.result;
+};
+
+export const fetchMyInfo = async (): Promise<UserInfo> => {
+  const response = await axiosInstance.get("/profiles/myInfo");
   return response.data.result;
 };

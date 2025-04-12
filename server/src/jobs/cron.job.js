@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import Booking from "../models/booking.model.js";
-import { releaseSlots } from "../services/booking.service.js";
 import Tour from "../models/tour.model.js";
+import { releaseBookedDates } from "../services/calendar.service.js";
 
 const checkExpiredBookings = async () => {
     try {
@@ -22,11 +22,12 @@ const checkExpiredBookings = async () => {
         console.log(`⚠️ Found ${expiredBookings.length} expired bookings. Canceling...`);
 
         for (const booking of expiredBookings) {
-            booking.status = "TIMEOUT";
+            booking.status = "CANCELED";
             booking.paymentStatus = "TIMEOUT";
             await booking.save();
 
-            await releaseSlots(booking.tourId, booking.adults + booking.youths + booking.children);
+            // Set lại ngày rảnh cho tour guide
+            await releaseBookedDates(booking.tourGuideId, booking.startDate, booking.endDate);
 
             const tour = await Tour.findById(booking.tourId);
             if (tour) {

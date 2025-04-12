@@ -155,7 +155,8 @@ const router = express.Router();
 router.post("/", authenticated, authorize("TRAVELER"), validate(bookingSchema), bookingController.createBooking);
 router.get("/traveler", authenticated, authorize("TRAVELER"), bookingController.getTravelerBookings);
 router.get("/tour-guide", authenticated, authorize("TOUR_GUIDE"), bookingController.getTourGuideBookings);
-router.put("/:id/confirm", authenticated, authorize("TOUR_GUIDE"), bookingController.confirmBooking);
-router.put("/:id/cancel", authenticated, bookingController.cancelBooking);
+router.post("/:id/confirm/tour-guide", authenticated, authorize("TOUR_GUIDE"), bookingController.confirmByTourGuide);
+router.post("/:id/confirm/traveler", authenticated, authorize("TRAVELER"), bookingController.confirmByTraveler);
+router.post("/:id/cancel", authenticated, bookingController.cancelBooking);
 
 export default router;

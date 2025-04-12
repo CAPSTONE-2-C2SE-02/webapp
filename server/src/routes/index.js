@@ -15,6 +15,9 @@ import profileRouter from "./profile.route.js";
 import notificationRouter from "./notification.route.js";
 import checkinRouter from "./checkin.route.js";
 import reviewsRouter from "./review.route.js";
+import rankingsRouter from "./ranking.route.js";
+import exportRouter from "./export.route.js";
+
 
 
 const router = express.Router();
@@ -34,5 +37,8 @@ router.use('/profiles', profileRouter);
 router.use('/notifications', notificationRouter);
 router.use('/checkin', checkinRouter);
 router.use('/reviews', reviewsRouter);
+router.use('/rankings', rankingsRouter);
+router.use('/chatbot', exportRouter);
+
 
 export default router;

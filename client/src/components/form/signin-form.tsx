@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "../ui/button";
-import LogoGG from "@/assets/google_icon.svg";
 import {
   Form,
   FormControl,
@@ -13,17 +12,17 @@ import {
 import { Input } from "../ui/input";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useLoginMutation } from "@/services/root-api";
-import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { useAppDispatch } from "@/hooks/redux";
 import { setCredentials } from "@/stores/slices/auth-slice";
 import { useEffect } from "react";
 import { loginSchema, LoginValues } from "@/lib/validations";
 import { toast } from "sonner";
 import { ErrorResponse } from "@/lib/types";
 import { PasswordInput } from "../ui/password-input";
+import GoogleLoginButton from "../user/google-login-button";
 
 const SigninForm = () => {
   const [login, { isLoading, isError, isSuccess, error, data }] = useLoginMutation();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -32,16 +31,13 @@ const SigninForm = () => {
   // check if user is logged in >> redirect to home page
   useEffect(() => {
     const registered = searchParams.get("registered");
-    if (isAuthenticated) {
-      navigate("/");
-    }
     if (registered) {
       toast.success("Account created successfully", {
         description: "You can now login to your account.",
       });
       setSearchParams({});
     }
-  }, [isAuthenticated, navigate, searchParams]);
+  }, [searchParams]);
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -52,7 +48,12 @@ const SigninForm = () => {
   });
 
   const onSubmit = async (values: LoginValues) => {
-    await login(values).unwrap();
+    try {
+      await login(values).unwrap();
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error((error as ErrorResponse).data?.error || "Error when logging in.");
+    }
   };
 
   useEffect(() => {
@@ -75,13 +76,11 @@ const SigninForm = () => {
         Let&apos;s explore this exciting platform together!
       </p>
 
-      <Button className="w-full" variant={"outline"} size={"lg"}>
-        <img src={LogoGG} alt="gg Logo" className="h-5" /> Using Google account
-      </Button>
+      <GoogleLoginButton />
 
       <div className="flex items-center my-4">
         <hr className="flex-grow border-gray-300" />
-        <span className="px-3 text-gray-400">OR</span>
+        <span className="px-3 text-gray-400 text-xs">OR</span>
         <hr className="flex-grow border-gray-300" />
       </div>
       <Form {...form}>
