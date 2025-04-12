@@ -74,6 +74,29 @@ export const createTourSchema = z.object({
 
 export type CreateTourValues = z.infer<typeof createTourSchema>;
 
+export const profileSchema = z.object({
+  firstName: requiredString,
+  lastName: requiredString,
+  email: requiredString.email("Please enter a valid email address."),
+  phone: z.string().regex(/^[0-9]{10,11}$/, "Phone number must be 10-11 digits.").optional().or(z.literal("")),
+  city: z.string().optional(),
+  dateOfBirth: z.date()
+    .refine((date) => isValid(date), { message: "Invalid birth date" })
+    .refine(
+      (date) => !isFuture(date),
+      { message: "Birth date cannot be in the future" }
+    )
+    .refine(
+      (date) => differenceInYears(new Date(), date) >= 13,
+      { message: "You must be at least 13 years old" }
+    ),
+  introduction: z.string().optional(),
+  avatar: z.union([z.string(), z.instanceof(File)]).optional(),
+  coverPhoto: z.union([z.string(), z.instanceof(File)]).optional(),
+});
+
+export type ProfileValues = z.infer<typeof profileSchema>;
+
 export const bookingFormSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Invalid email address"),
