@@ -13,7 +13,6 @@ import { EditProfileData } from "@/lib/types";
 import FollowButton from "@/components/user/follow-button";
 import { format } from "date-fns";
 
-
 const ProfileLayout = () => {
     const { isAuthenticated, userInfo: authUserInfo } = useAppSelector((state) => state.auth) as {
         isAuthenticated: boolean;
@@ -195,7 +194,7 @@ const ProfileLayout = () => {
                         email: user.email || "",
                         phone: user.phoneNumber || "",
                         city: user.address || "",
-                        dateOfBirth: user.dateOfBirth || "",
+                        dateOfBirth: new Date(user.dateOfBirth),
                         introduction: user.bio || "",
                         avatar: user.profilePicture || "",
                         coverPhoto: user.coverPhoto || "",
