@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { useAppSelector } from "@/hooks/redux";
+import ReviewTourModal from "../modals/review-tour-modal";
 
 export interface TourBookingInfoCardProps {
   booking: Booking;
@@ -27,6 +28,7 @@ const TourBookingInfoCard = ({
   const isCompleted = booking.status === "COMPLETED";
   const isCanceled = booking.status === "CANCELED";
   const [isShowCancelReasonOpen, setIsShowCancelReasonOpen] = useState(false);
+  const [reviewTourOpen, setReviewTourOpen] = useState(false)
   const userInfo = useAppSelector((state) => state.auth.userInfo);
   const role = userInfo?.role; 
   
@@ -99,10 +101,19 @@ const TourBookingInfoCard = ({
           )}
 
           {isCompleted && (
+            <>
+            {role === "TRAVELER" && (
             <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => onReview(booking._id)}>
               Review
             </Button>
+            )}
+            </>
           )}
+          <ReviewTourModal
+            booking={booking}
+            open={reviewTourOpen}
+            onOpenChange={setReviewTourOpen}
+          />
           {isCanceled && (
             <TooltipProvider>
               <Tooltip>

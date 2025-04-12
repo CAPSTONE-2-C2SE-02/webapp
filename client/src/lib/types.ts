@@ -96,6 +96,13 @@ export type Review = {
   createdAt: string;
 }
 
+interface ReviewResponse {
+  success: boolean;
+  result?: Review;
+  message?: string;
+  error?: string;
+}
+
 export type UserInfo = {
   _id: string;
   username: string;

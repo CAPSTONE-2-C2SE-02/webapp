@@ -1,4 +1,5 @@
 
+import ReviewTourModal from "@/components/modals/review-tour-modal";
 import TourCardSkeleton from "@/components/skeleton/tour-card-skeleton";
 import TourBookingInfoCard from "@/components/tour/tour-booking-info-card"
 import {
@@ -22,9 +23,10 @@ const HistoryBookingPage = () => {
     const userId = userInfo?._id;
     const role = userInfo?.role;
     //const queryClient = useQueryClient();
-  
     const [activeTab, setActiveTab] = useState("waitingForPayment");
-  
+    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
     const { data: bookings, isLoading, error } = useQuery<Booking[], Error>({
       queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
       queryFn: () =>
@@ -42,6 +44,11 @@ const HistoryBookingPage = () => {
     };
   
     const handleReview = async (bookingId: string) => {
+      const booking = bookings?.find((b) => b._id === bookingId);
+      if (booking) {
+        setSelectedBooking(booking);
+        setIsReviewModalOpen(true);
+      }
     };
   
     if (isLoading) {
@@ -94,7 +101,7 @@ const HistoryBookingPage = () => {
               value="waitingForTourCompletion"
               className="rounded-none py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none font-medium text-sm"
             >
-              waiting for tour completion
+              Waiting for tour completion
             </TabsTrigger>
             <TabsTrigger
               value="completed"
@@ -132,7 +139,6 @@ const HistoryBookingPage = () => {
           ))}
         </Tabs>
       </div>
-
       <div className="items-center w-full text-primary">
         <Pagination>
           <PaginationContent>
@@ -159,6 +165,13 @@ const HistoryBookingPage = () => {
           </PaginationContent>
         </Pagination>
       </div>
+      {selectedBooking && (
+        <ReviewTourModal
+          booking={selectedBooking}
+          open={isReviewModalOpen}
+          onOpenChange={setIsReviewModalOpen}
+        />
+      )}
     </div>
   )
 }
