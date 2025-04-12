@@ -7,7 +7,6 @@ const RankingSchema = new mongoose.Schema({
         unique: true,
         required: true
     },
-
     attendanceScore: {
         type: Number,
         default: 0
@@ -24,12 +23,10 @@ const RankingSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-
     totalScore: {
         type: Number,
         default: 0
     }
-
 }, {
     timestamps: true
 });

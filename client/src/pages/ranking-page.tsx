@@ -1,7 +1,10 @@
 import RankingItem from "@/components/user/ranking-item";
+import { useRankingTop } from "@/hooks/useRanking";
 import { Link } from "react-router"
 
 const RankingPage = () => {
+  const { data: tourGuides, isError, isSuccess } = useRankingTop(10);
+
   return (
     <div className="w-full max-w-lg md:max-w-4xl mx-auto my-10">
       <div className="space-y-6">
