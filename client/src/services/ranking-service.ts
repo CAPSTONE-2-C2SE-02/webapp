@@ -12,6 +12,7 @@ type Ranking = {
     _id: string;
     fullName: string;
     profilePicture: string;
+    username: string;
   }
 };
 
