@@ -194,7 +194,7 @@ export interface EditProfileData {
   email: string;
   phone: string;
   city: string;
-  dateOfBirth: string;
+  dateOfBirth: Date;
   introduction: string;
   avatar?: string | File;
   coverPhoto?: string | File;

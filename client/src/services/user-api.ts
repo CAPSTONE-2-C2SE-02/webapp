@@ -57,11 +57,7 @@ export const updateUserProfile = async ({
   data: FormData | Record<string, any>;
 }): Promise<UserInfo> => {
   try {
-    const response = await axiosInstance.put(API.PROFILE.UPDATE_INFO(userId), data,
-      {
-      });
-
-    console.log("Response from server:", response.status, response.data);
+    const response = await axiosInstance.put(API.PROFILE.UPDATE_INFO(userId), data);
 
     if (!response?.data) {
       throw new Error("No data returned from server");

@@ -11,10 +11,11 @@ import { EditProfileModal } from "@/components/modals/edit-profile-modal";
 import { useUserInfoQuery, useUpdateUserProfileMutation, handleSaveProfile } from "@/services/user-mutation";
 import { EditProfileData } from "@/lib/types";
 import FollowButton from "@/components/user/follow-button";
+import { format } from "date-fns";
 
 
 const ProfileLayout = () => {
-    const { isAuthenticated, userInfo: authUserInfo, token } = useAppSelector((state) => state.auth) as {
+    const { isAuthenticated, userInfo: authUserInfo } = useAppSelector((state) => state.auth) as {
         isAuthenticated: boolean;
         userInfo: { _id: string; username: string; email: string } | null;
         token: string | null;
@@ -26,8 +27,6 @@ const ProfileLayout = () => {
 
     const onSaveProfile = (profileData: EditProfileData) => {
         handleSaveProfile(profileData, {
-            isAuthenticated,
-            token,
             user,
             authUserInfo,
             updateProfileMutation,
@@ -48,7 +47,6 @@ const ProfileLayout = () => {
 
     const [firstName, lastName] = user.fullName?.split(" ") || ["", ""];
     const isFollowing = user?.followers.map(item => item._id)?.includes(authUserInfo?._id ?? "") as boolean;
-
 
     return (
         <div className="w-full flex flex-col gap-5">
@@ -96,21 +94,22 @@ const ProfileLayout = () => {
 
                 <div className="flex justify-end items-start px-6 py-10 bg-white">
                     <div className="flex-col justify-items-start content-center">
-                        <div className="flex items-center py-2">
-                            <Mail className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600">{user.email}</p>
+                        <div className="flex items-center py-2 gap-2">
+                            <Mail className="w-4 h-4 stroke-slate-600" />
+                            <p className="font-medium text-slate-600 text-sm leading-none">{user.email}</p>
                         </div>
-                        <div className="flex items-center py-2">
-                            <Phone className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm">{user.phoneNumber}</p>
+                        <div className="flex items-center py-2 gap-2">
+                            <Phone className="w-4 h-4 stroke-slate-600" />
+                            <p className="font-medium text-slate-600 text-sm leading-none">{user.phoneNumber}</p>
                         </div>
-                        <div className="flex items-center py-2">
-                            <MapPin className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm">From {user.address || "N/A"}</p>
+                        <div className="flex items-center py-2 gap-2">
+                            <Cake className="w-4 h-4 stroke-slate-600" />
+                            <p className="font-medium text-slate-600 text-sm leading-none">{format(user.dateOfBirth, "dd/MM/yyyy")}</p>
                         </div>
-                        <a href="#" className="mx-1 text-blue-900 font-medium underline py-2 text-sm">
-                            More
-                        </a>
+                        <div className="flex items-center py-2 gap-2">
+                            <MapPin className="w-4 h-4 stroke-slate-600" />
+                            <p className="font-medium text-slate-600 text-sm leading-none">From {user.address || "N/A"}</p>
+                        </div>
                     </div>
                     <div className="my-2 mx-14 h-36 flex flex-col justify-items-start gap-2">
                         <p className="font-medium text-slate-600 text-sm">Introduction</p>
