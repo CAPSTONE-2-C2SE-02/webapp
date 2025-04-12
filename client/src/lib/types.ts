@@ -96,6 +96,13 @@ export type Review = {
   createdAt: string;
 }
 
+interface ReviewResponse {
+  success: boolean;
+  result?: Review;
+  message?: string;
+  error?: string;
+}
+
 export type UserInfo = {
   _id: string;
   username: string;
@@ -216,4 +223,33 @@ export interface SetAvailabilityResponse {
   success: boolean;
   message: string;
   result: Calendar;
+}
+
+export interface Booking {
+  _id: string;
+  tourId: {
+    _id: string;
+    title: string;
+    departureLocation: string;
+    destination: string;
+    imageUrls: string[];
+    duration: string;
+    image?: string;
+  };
+  startDate: string;
+  endDate: string;
+  adults: number;
+  youths: number;
+  children: number;
+  totalAmount: number;
+  paymentStatus: "PENDING" | "TIMEOUT" |  "FAILED" | "PAID" | "REFUNDED";
+  status: "PENDING" | "PAID"| "FAILED" | "CANCELED"| "TIMEOUT" | "COMPLETED";
+}
+
+export interface TourBookingInfoCardProps {
+  booking: Booking;
+  onCancel: (bookingId: string) => void;
+  onPayment: (bookingId: string) => void;
+  onComplete: (bookingId: string) => void;
+  onReview: (bookingId: string) => void;
 }
