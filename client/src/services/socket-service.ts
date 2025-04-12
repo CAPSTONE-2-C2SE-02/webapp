@@ -1,6 +1,6 @@
 import { Socket, io } from "socket.io-client";
 
-const SERVER_URL = "http://localhost:5000";
+const SERVER_URL = "http://localhost:8080";
 
 class SocketService {
   private socket: Socket | null = null;
