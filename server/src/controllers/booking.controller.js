@@ -236,7 +236,7 @@ class BookingController {
     async cancelBooking(req, res) {
         try {
             const bookingId = req.params.id;
-            const travelerId = req.user.userId;
+            const userId = req.user.userId;
             const { reason } = req.body;
 
             const booking = await Booking.findById(bookingId);
@@ -244,8 +244,11 @@ class BookingController {
                 return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Booking not found" });
             }
 
-            if (booking.travelerId.toString() !== travelerId) {
-                return res.status(StatusCodes.FORBIDDEN).json({ success: false, error: "You are not the traveler of this booking" });
+            const isTraveler = booking.travelerId.toString() === userId;
+            const isTourGuide = booking.tourGuideId.toString() === userId;
+
+            if (!isTraveler && !isTourGuide) {
+                return res.status(StatusCodes.FORBIDDEN).json({ success: false, error: "You are not authorized to cancel this booking" });
             }
 
             if (booking.status === "CANCELED") {
@@ -260,23 +263,22 @@ class BookingController {
             booking.cancellationReason = reason;
             await booking.save();
 
-            const tour = await Tour.findById(booking.tourId);
-            if (tour) {
-                tour.totalBookings -= 1;
-                await tour.save();
-            }
-
             await releaseBookedDates(booking.tourGuideId, booking.startDate, booking.endDate);
 
-            const traveler = await User.findById(travelerId);
+            const sender = await User.findById(userId);
+            const receiverId = isTraveler ? booking.tourGuideId : booking.travelerId;
+            const message = isTraveler
+                ? `${sender.username} has canceled the booking with reason: ${reason}`
+                : `The tour guide ${sender.username} has canceled the booking with reason: ${reason}`;
+
             await notificationController.sendNotification({
                 body: {
                     type: "CANCEL",
-                    senderId: travelerId,
-                    receiverId: booking.tourGuideId,
+                    senderId: userId,
+                    receiverId,
                     relatedId: booking._id,
                     relatedModel: "Booking",
-                    message: `${traveler.username} has canceled the booking with reason ${reason}`,
+                    message,
                 },
             }, {
                 status: () => ({
