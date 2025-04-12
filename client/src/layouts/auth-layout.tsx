@@ -1,6 +1,13 @@
-import { Outlet } from "react-router";
+import { Outlet, Navigate } from "react-router";
 import Logo from "@/assets/Logo_TC.jpg"
+import { useAppSelector } from "@/hooks/redux";
 const AuthLayout = () => {
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+
+  if (isAuthenticated) {
+    return <Navigate to="/" />
+  }
+
   return (
     <div className="flex items-center justify-center w-full min-h-screen bg-primary p-2">
       <div className="flex items-center justify-center w-full min-h-[calc(100vh-16px)] bg-white rounded-lg z-30 overflow-hidden relative">
