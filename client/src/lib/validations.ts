@@ -11,22 +11,22 @@ export const loginSchema = z.object({
 export type LoginValues = z.infer<typeof loginSchema>;
 
 export const signUpschema = z.object({
-    email: z.string().email("Invalid email address"),
-    fullName: z.string().min(3, "Full Name must be at least 3 characters"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string(),
-    phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
-    dateOfBirth: z
-      .date({
-        required_error: "Please select a date of birth",
-      })
-      .refine((date) => !isAfter(date, new Date()), {
-        message: "Date of birth cannot be in the future",
-      })
-      .refine((date) => isAfter(new Date(), subYears(date, 13)), {
-        message: "You must be at least 13 years old",
-      }),
-    role: z.enum(["traveller", "tourguide"]),
+  email: z.string().email("Invalid email address"),
+  fullName: z.string().min(3, "Full Name must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
+  dateOfBirth: z
+    .date({
+      required_error: "Please select a date of birth",
+    })
+    .refine((date) => !isAfter(date, new Date()), {
+      message: "Date of birth cannot be in the future",
+    })
+    .refine((date) => isAfter(new Date(), subYears(date, 13)), {
+      message: "You must be at least 13 years old",
+    }),
+  role: z.enum(["traveller", "tourguide"]),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -73,6 +73,30 @@ export const createTourSchema = z.object({
 });
 
 export type CreateTourValues = z.infer<typeof createTourSchema>;
+
+export const profileSchema = z.object({
+  firstName: requiredString,
+  lastName: requiredString,
+  email: requiredString.email("Please enter a valid email address."),
+  phone: z.string().regex(/^[0-9]{10,11}$/, "Phone number must be 10-11 digits.").optional().or(z.literal("")),
+  city: z.string().optional(),
+  dateOfBirth: z
+    .string()
+    .optional()
+    .refine(
+      (val) => {
+        if (!val) return true;
+        const date = new Date(val);
+        return !isNaN(date.getTime()) && isAfter(new Date(), subYears(date, 13));
+      },
+      { message: "You must be at least 13 years old or invalid date format." }
+    ),
+  introduction: z.string().optional(),
+  avatar: z.union([z.string(), z.instanceof(File)]).optional(),
+  coverPhoto: z.union([z.string(), z.instanceof(File)]).optional(),
+});
+
+export type ProfileValues = z.infer<typeof profileSchema>;
 
 export const bookingFormSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
