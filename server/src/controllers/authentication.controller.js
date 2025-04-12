@@ -4,7 +4,7 @@ import Role from "../enums/role.enum.js";
 import InvalidatedToken from "../models/invalidated.token.model.js";
 import RoleModel from "../models/role.model.js";
 import User from "../models/user.model.js";
-import { comparePassword, hashPassword } from "../utils/password.util.js";
+import { comparePassword } from "../utils/password.util.js";
 import { generateToken, verifyToken } from "../utils/token.util.js";
 
 
@@ -118,36 +118,53 @@ class AuthenticationController {
             });
 
             const payload = ticket.getPayload();
-            const { email, sub } = payload;
+            if (!payload) {
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Invalid Google token" });
+            }
+            const { sub: googleId, email, name, picture } = payload;
 
-            let user = await User.findOne({ email: email });
+            let user = await User.findOne({ googleId });
             const travelerRole = await RoleModel.findOne({ name: Role.TRAVELER });
 
-            let userCreated;
-
             if (!user) {
-                const user = {
-                    username: email.split("@")[0],
-                    password: await hashPassword("123456"),
-                    role: travelerRole._id,
-                    fullName: "Google Account",
-                    email: email,
-                    phoneNumber: "1867891596",
-                    googleId: sub,
+                user = await User.findOne({ email });
+                if (!user) {
+                    user = new User({
+                        googleId,
+                        email,
+                        username: email.split("@")[0],
+                        fullName: name,
+                        role: travelerRole._id,
+                        profilePicture: picture,
+                    });
+                    await user.save();
+                } else {
+                    if (!user.profilePicture) {
+                        user.profilePicture = picture;
+                    }
+                    user.googleId = googleId;
+                    await user.save();
                 }
-                userCreated = await User.create(user);
             }
 
-            const token = await generateToken(userCreated);
+            const token = await generateToken(user);
+
+            const userResponse = {
+                _id: user._id,
+                username: user.username,
+                fullName: user.fullName,
+                profilePicture: user.profilePicture,
+                email: user.email
+            }
 
             return res.status(StatusCodes.OK).json({
                 success: true,
+                message: "Login successfully",
                 result: {
-                    data: userCreated,
-                    token: token
+                    data: userResponse,
+                    token: token,
                 }
             });
-
         } catch (error) {
             console.error("Google login error:", error);
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

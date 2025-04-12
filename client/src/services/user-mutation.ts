@@ -37,7 +37,7 @@ const prepareRequestData = (profileData: EditProfileData, currentUser: UserInfo 
         if (profileData.phone && profileData.phone !== currentUser?.phoneNumber) formData.append("phoneNumber", profileData.phone);
         if (profileData.city) formData.append("address", profileData.city);
         if (profileData.introduction) formData.append("bio", profileData.introduction);
-        if (profileData.dateOfBirth) formData.append("dateOfBirth", profileData.dateOfBirth);
+        if (profileData.dateOfBirth) formData.append("dateOfBirth", profileData.dateOfBirth.toISOString());
 
         if (profileData.avatar instanceof File && profileData.avatar.size > 0) {
             formData.append("profilePicture", profileData.avatar);
@@ -63,25 +63,15 @@ const prepareRequestData = (profileData: EditProfileData, currentUser: UserInfo 
 export const handleSaveProfile = (
     profileData: EditProfileData,
     {
-        isAuthenticated,
-        token,
         user,
         authUserInfo,
         updateProfileMutation,
     }: {
-        isAuthenticated: boolean;
-        token: string | null;
         user?: UserInfo;
         authUserInfo?: AuthUserInfo | null;
         updateProfileMutation: ReturnType<typeof useUpdateUserProfileMutation>;
     }
 ) => {
-    if (!isAuthenticated || !token) {
-        toast.error("You are not logged in. Please log in to update your profile.");
-        window.location.href = "/login";
-        return;
-    }
-
     const userId = user?._id || authUserInfo?._id;
     if (!userId) {
         toast.error("Unable to update profile: User ID not found.");
@@ -97,14 +87,14 @@ export const handleSaveProfile = (
     const requestData = prepareRequestData(profileData, user);
     console.log("Data sent:", requestData instanceof FormData ? [...requestData.entries()] : requestData);
 
-    updateProfileMutation.mutate({ userId, data: requestData, token });
+    updateProfileMutation.mutate({ userId, data: requestData });
 };
 
 export function useUpdateUserProfileMutation() {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
-    const mutation = useMutation<UserInfo, Error, { userId: string; data: FormData | Record<string, any>; token: string }>({
+    const mutation = useMutation<UserInfo, Error, { userId: string; data: FormData | Record<string, any>; }>({
         mutationFn: ({ userId, data }) => updateUserProfile({ userId, data }),
         onSuccess: (updatedUser) => {
             console.log("Updated user data:", updatedUser);

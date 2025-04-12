@@ -1,4 +1,4 @@
-import { ApiResponse, Calendar, SetAvailabilityResponse, UserInfo } from "@/lib/types";
+import { ApiResponse, Booking, Calendar, SetAvailabilityResponse, UserInfo } from "@/lib/types";
 import { rootApi } from "./root-api";
 import { API } from "@/config/constants";
 import axiosInstance from "@/config/api";
@@ -40,6 +40,22 @@ export const saveBusyDatesToServer = async (dates: Date[]): Promise<SetAvailabil
   }));
   const response = await axiosInstance.post(API.CALENDER.SCHEDULE, { dates: formatted });
   return response.data;
+};
+
+export const fetchTravelerBookings = async (): Promise<Booking[]> => {
+  const response = await axiosInstance.get(API.BOOKING.TRAVELER_BOOKING);
+  if (!response.data.success) {
+    throw new Error(response.data.error || "Failed to fetch traveler bookings");
+  }
+  return response.data.result;
+};
+
+export const fetchTourGuideBookings = async (): Promise<Booking[]> => {
+  const response = await axiosInstance.get(API.BOOKING.TOURGUIDE_BOOKING);
+  if (!response.data.success) {
+    throw new Error(response.data.error || "Failed to fetch tour guide bookings");
+  }
+  return response.data.result;
 };
 
 export const updateUserProfile = async ({

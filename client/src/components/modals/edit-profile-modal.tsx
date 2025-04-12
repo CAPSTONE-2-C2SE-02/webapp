@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -8,8 +8,13 @@ import { EditProfileData } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, ProfileValues } from "@/lib/validations";
-import { format, parse } from "date-fns";
+import { format, isAfter } from "date-fns";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { cn } from "@/lib/utils";
+import { Calendar } from "../ui/calendar";
+import { Textarea } from "../ui/textarea";
+
 interface EditProfileModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -38,8 +43,8 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
             phone: initialData?.phone || "",
             city: initialData?.city || "",
             dateOfBirth: initialData?.dateOfBirth
-                ? format(new Date(initialData.dateOfBirth), "dd/MM/yyyy")
-                : "",
+                ? new Date(initialData.dateOfBirth)
+                : new Date(),
             introduction: initialData?.introduction || "",
             avatar: initialData?.avatar || "https://via.placeholder.com/150",
             coverPhoto: initialData?.coverPhoto || "https://via.placeholder.com/300x100",
@@ -54,12 +59,12 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                 email: initialData.email || "",
                 phone: initialData.phone || "",
                 city: initialData.city || "",
-                dateOfBirth: initialData.dateOfBirth
-                    ? format(new Date(initialData.dateOfBirth), "dd/MM/yyyy")
-                    : "",
+                dateOfBirth: initialData?.dateOfBirth
+                    ? new Date(initialData.dateOfBirth)
+                    : new Date(),
                 introduction: initialData.introduction || "",
-                avatar: initialData.avatar || "https://via.placeholder.com/150",
-                coverPhoto: initialData.coverPhoto || "https://via.placeholder.com/300x100",
+                avatar: initialData.avatar || "https://placehold.co/150",
+                coverPhoto: initialData.coverPhoto || "https://placehold.co/800x400",
             });
 
             setAvatarPreview(
@@ -71,7 +76,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
             setCoverPhotoPreview(
                 initialData.coverPhoto && typeof initialData.coverPhoto === "string"
                     ? initialData.coverPhoto
-                    : "https://via.placeholder.com/300x100"
+                    : "https://placehold.co/800x400"
             );
         }
     }, [initialData, form]);
@@ -102,9 +107,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
     const onSubmit = (data: ProfileValues) => {
         const updatedProfileData: EditProfileData = {
             ...data,
-            dateOfBirth: data.dateOfBirth
-                ? format(parse(data.dateOfBirth, "dd/MM/yyyy", new Date()), "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-                : "",
+            dateOfBirth: data.dateOfBirth,
             avatar: avatarFile || data.avatar,
             coverPhoto: coverPhotoFile || data.coverPhoto,
             phone: data.phone || "",
@@ -123,8 +126,9 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                 <span id="edit-profile-description" className="sr-only">
                     A dialog to edit your profile information, including name, email, phone, city, birthday, and introduction.
                 </span>
-                <DialogHeader className="px-4 py-3 shrink-0">
+                <DialogHeader className="shrink-0">
                     <DialogTitle className="text-center text-lg font-semibold">Edit Profile</DialogTitle>
+                    <DialogDescription className="sr-only">Edit your profile</DialogDescription>
                 </DialogHeader>
 
                 <Form {...form}>
@@ -138,7 +142,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                     </Avatar>
                                     <label
                                         htmlFor="avatar-upload"
-                                        className="absolute bottom-0 right-0 bg-gray-200 rounded-full p-2 cursor-pointer"
+                                        className="absolute -bottom-2 right-0 bg-white/80 backdrop-blur-sm border border-border rounded-full p-2 cursor-pointer"
                                     >
                                         <CameraIcon className="h-5 w-5 text-gray-600" />
                                     </label>
@@ -150,7 +154,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                         onChange={handleAvatarChange}
                                     />
                                 </div>
-                                <span className="mt-2 text-sm text-gray-500">Avatar</span>
+                                <span className="mt-2 text-sm text-primary font-medium">Avatar</span>
                             </div>
 
                             <div className="relative">
@@ -161,7 +165,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                 />
                                 <label
                                     htmlFor="cover-photo-upload"
-                                    className="absolute bottom-2 right-2 bg-gray-200 rounded-full p-2 cursor-pointer"
+                                    className="absolute bottom-2 right-2 bg-white/80 backdrop-blur-sm border border-border rounded-full p-2 cursor-pointer"
                                 >
                                     <CameraIcon className="h-5 w-5 text-gray-600" />
                                 </label>
@@ -172,7 +176,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                     className="hidden"
                                     onChange={handleCoverPhotoChange}
                                 />
-                                <span className="block mt-2 text-sm text-gray-500">Cover Photo</span>
+                                <span className="block mt-2 text-sm text-primary font-medium">Cover Photo</span>
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -181,7 +185,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                     name="firstName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-sm font-medium text-gray-700">First Name</FormLabel>
+                                            <FormLabel className="text-sm font-medium text-primary">First Name</FormLabel>
                                             <FormControl>
                                                 <Input {...field} className="mt-1 border-gray-300 rounded-md" />
                                             </FormControl>
@@ -195,7 +199,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                     name="lastName"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-sm font-medium text-gray-700">Last Name</FormLabel>
+                                            <FormLabel className="text-sm font-medium text-primary">Last Name</FormLabel>
                                             <FormControl>
                                                 <Input {...field} className="mt-1 border-gray-300 rounded-md" />
                                             </FormControl>
@@ -211,7 +215,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-sm font-medium text-gray-700">Email</FormLabel>
+                                            <FormLabel className="text-sm font-medium text-primary">Email</FormLabel>
                                             <FormControl>
                                                 <Input {...field} className="mt-1 border-gray-300 rounded-md" />
                                             </FormControl>
@@ -225,7 +229,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                     name="phone"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-sm font-medium text-gray-700">Phone Number</FormLabel>
+                                            <FormLabel className="text-sm font-medium text-primary">Phone Number</FormLabel>
                                             <FormControl>
                                                 <Input {...field} className="mt-1 border-gray-300 rounded-md" />
                                             </FormControl>
@@ -241,7 +245,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                     name="city"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-sm font-medium text-gray-700">From City/Town</FormLabel>
+                                            <FormLabel className="text-sm font-medium text-primary">From City/Town</FormLabel>
                                             <FormControl>
                                                 <Input {...field} className="mt-1 border-gray-300 rounded-md" />
                                             </FormControl>
@@ -255,17 +259,35 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                     name="dateOfBirth"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-sm font-medium text-gray-700">Birthday</FormLabel>
-                                            <div className="relative">
+                                            <FormLabel className="text-sm font-medium text-primary">Birthday</FormLabel>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
                                                 <FormControl>
-                                                    <Input
-                                                        {...field}
-                                                        placeholder="dd/mm/yyyy"
-                                                        className="mt-1 border-gray-300 rounded-md"
-                                                    />
+                                                    <Button
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !field.value && "text-muted-foreground",
+                                                    )}
+                                                    >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    <span>{field.value ? format(field.value, "dd/MM/yyyy") : "Pick a date"}</span>
+                                                    </Button>
                                                 </FormControl>
-                                                <CalendarIcon className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
-                                            </div>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0">
+                                                    <Calendar
+                                                        mode="single"
+                                                        captionLayout="dropdown-buttons"
+                                                        selected={field.value}
+                                                        onSelect={field.onChange}
+                                                        disabled={(date) => isAfter(date, new Date())}
+                                                        initialFocus
+                                                        fromYear={1900}
+                                                        toYear={2050}
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -277,12 +299,12 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                 name="introduction"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel className="text-sm font-medium text-gray-700">Introduction</FormLabel>
+                                        <FormLabel className="text-sm font-medium text-primary">Introduction</FormLabel>
                                         <FormControl>
-                                            <textarea
+                                            <Textarea
                                                 {...field}
                                                 placeholder="Enter your introduction..."
-                                                className="mt-1 w-full h-20 border border-gray-300 rounded-md p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="mt-1 w-full h-20 rounded-md p-2 text-sm resize-none"
                                             />
                                         </FormControl>
                                         <FormMessage />
@@ -296,13 +318,13 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                 type="button"
                                 variant="outline"
                                 onClick={onClose}
-                                className="border-gray-300 text-gray-700 hover:bg-gray-100 rounded-full px-6 py-2"
+                                className="rounded-full px-6"
                             >
                                 Cancel
                             </Button>
                             <Button
                                 type="submit"
-                                className="bg-blue-600 text-white hover:bg-blue-700 rounded-full px-6 py-2"
+                                className="rounded-full px-6"
                             >
                                 Save
                             </Button>

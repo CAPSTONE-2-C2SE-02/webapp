@@ -53,6 +53,10 @@ const bookingSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
+    isReview: {
+        type: Boolean,
+        default: "false"
+    },
     timeoutAt: {
         type: Date,
         index: true,
