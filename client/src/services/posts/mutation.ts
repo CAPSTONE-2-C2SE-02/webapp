@@ -80,7 +80,8 @@ export function useDeletePostMutation() {
       if (location.pathname.endsWith(`/post/${deletedPost._id}`)) {
         navigate('/');
       }
-      
+
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
       console.error(error);

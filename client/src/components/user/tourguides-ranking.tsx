@@ -58,11 +58,9 @@ const TourguidesRanking = () => {
             const rankOrder = [2, 1, 3];
             return (
               <TopUserRanking 
-                key={item?._id} 
-                avatar={item?.tourGuideId?.profilePicture} 
-                fullName={item?.tourGuideId?.fullName}
+                key={item?._id}
+                tourGuide={item?.tourGuideId}
                 totalScore={item?.totalScore}
-                username="n2duc"
                 rank={rankOrder[index]}
                 styles={rankingStyles[index]}
               />

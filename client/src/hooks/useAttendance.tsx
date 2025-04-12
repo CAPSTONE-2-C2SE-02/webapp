@@ -10,6 +10,7 @@ export function useCheckin() {
     mutationFn: checkInDaily,
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ["attendance"] })
+      queryClient.invalidateQueries({ queryKey: ["rankings"] })
       toast.success(response.message || "Check In Successfully");
     },
     onError: (error) => {

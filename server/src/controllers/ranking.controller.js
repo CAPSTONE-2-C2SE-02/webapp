@@ -10,7 +10,7 @@ class RankingController {
             const rankings = await Ranking.find()
                 .sort({ totalScore: -1 })
                 .limit(limit)
-                .populate("tourGuideId", "fullName profilePicture");
+                .populate("tourGuideId", "fullName profilePicture username");
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -42,7 +42,7 @@ class RankingController {
             const rankings = await Ranking.find()
                 .sort({ [fieldName]: -1 })
                 .limit(limit)
-                .populate("tourGuideId", "fullName profilePicture");
+                .populate("tourGuideId", "fullName profilePicture username");
 
             return res.status(StatusCodes.OK).json({
                 success: true,
