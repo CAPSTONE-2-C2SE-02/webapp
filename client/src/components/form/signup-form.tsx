@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { CalendarIcon, UserPen, UserRound } from "lucide-react";
-import LogoGG from "@/assets/google_icon.svg";
 import { Link, useNavigate } from "react-router";
 import { signUpschema, SignUpValue } from "@/lib/validations";
 import { useRegisterTourGuideMutation, useRegisterTravelerMutation } from "@/services/root-api";
@@ -22,6 +21,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Calendar } from "../ui/calendar";
 import { cn } from "@/lib/utils";
 import { format, isAfter } from "date-fns";
+import GoogleLoginButton from "../user/google-login-button";
 
 const SignupForm = () => {
     const [role, setRole] = useState<"traveller" | "tourguide">("traveller");
@@ -70,15 +70,12 @@ const SignupForm = () => {
             </div>
 
             <div className="mt-5">
-                <Button className="w-full" variant={"outline"} size={"lg"}>
-                    <img src={LogoGG} alt="gg Logo" className="h-5" />
-                    <span className="text-sm font-medium">Using Google account</span>
-                </Button>
+                <GoogleLoginButton />
             </div>
 
             <div className="flex items-center my-4 justify-center">
                 <div className="w-1/3 border-t border-gray-300"></div>
-                <span className="mx-4 text-gray-500 text-sm">OR</span>
+                <span className="mx-4 text-gray-500 text-xs">OR</span>
                 <div className="w-1/3 border-t border-gray-300"></div>
             </div>
 

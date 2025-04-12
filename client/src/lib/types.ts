@@ -39,7 +39,7 @@ export type Comment = {
   likes: Pick<UserInfo, | "_id" | "username" | "fullName">[];
   createdAt: string;
   updatedAt: string;
-} 
+}
 
 export type TourAttachment = {
   _id: string;
@@ -163,20 +163,42 @@ type BaseNotification = {
 
 export type Notification =
   | (BaseNotification & {
-      type: "LIKE" | "COMMENT";
-      relatedModel: "Post";
-      relatedId: Post;
-    })
+    type: "LIKE" | "COMMENT";
+    relatedModel: "Post";
+    relatedId: Post;
+  })
   | (BaseNotification & {
-      type: "BOOKING";
-      relatedModel: "Tour";
-      relatedId: Tour;
-    })
+    type: "BOOKING";
+    relatedModel: "Tour";
+    relatedId: Tour;
+  })
   | (BaseNotification & {
-      type: "FOLLOW";
-      relatedModel: "User";
-      relatedId: UserInfo;
-    });
+    type: "FOLLOW";
+    relatedModel: "User";
+    relatedId: UserInfo;
+  });
+
+export type AuthUserInfo = {
+  _id: string;
+  username: string;
+  email: string;
+};
+
+export interface UserResponse {
+  result: UserInfo;
+}
+
+export interface EditProfileData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  city: string;
+  dateOfBirth: string;
+  introduction: string;
+  avatar?: string | File;
+  coverPhoto?: string | File;
+}
 
 export interface DateEntry {
   _id: string;
