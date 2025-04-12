@@ -1,56 +1,44 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import TopUserRanking from "./top-user-ranking";
 import { Link } from "react-router";
+import { useRankingTop } from "@/hooks/useRanking";
+import { toast } from "sonner";
 
-export type TourGuideRank = {
-  _id: string;
-  name: string;
-  postRank: number;
-  reviewRank: number;
-  bookingRank: number;
-  totalScore: number;
-  ranking: number;
-};
-
-const TOUR_GUIDE_DATA: TourGuideRank[] = [
+const rankingStyles = [
   {
-    _id: "1",
-    name: "John Smith",
-    postRank: 9,
-    reviewRank: 10,
-    bookingRank: 9,
-    totalScore: 98.5,
-    ranking: 1
+    avatar: "size-12",
+    color: "bg-cyan-600",
   },
   {
-    _id: "2",
-    name: "Emma Davis",
-    postRank: 8,
-    reviewRank: 9,
-    bookingRank: 9,
-    totalScore: 95.2,
-    ranking: 2
+    avatar: "size-14",
+    color: "bg-teal-500",
   },
   {
-    _id: "3",
-    name: "Liam Brown",
-    postRank: 8,
-    reviewRank: 8,
-    bookingRank: 9,
-    totalScore: 91.8,
-    ranking: 3
-  },
-];
+    avatar: "size-10",
+    color: "bg-primary",
+  }
+]
 
 const TourguidesRanking = () => {
+  const { data: topThreeRank, isError, isSuccess } = useRankingTop(3);
+
+  useEffect(() => {
+    if (isError) {
+      toast.error("Error went loading ranking");
+    }
+  }, [isError]);
+
   const reorderedTopGuides = useMemo(() => {
-    const topThree = TOUR_GUIDE_DATA.slice(0, 3);
-    return [
-      topThree[1], // 2nd place
-      topThree[0], // 1st place
-      topThree[2], // 3rd place
-    ]
-  }, []);
+    if (topThreeRank) {
+      return [
+        topThreeRank[1], // 2nd place
+        topThreeRank[0], // 1st place
+        topThreeRank[2], // 3rd place
+      ]
+    } else {
+      return [];
+    }
+  }, [topThreeRank]);
   
   return (
     <div className="relative">
@@ -64,10 +52,22 @@ const TourguidesRanking = () => {
           <p className="text-base w-full text-primary font-semibold text-center">Tour Guides</p>
         </div>
         <div className="flex items-end justify-center gap-6 px-8">
+          {isError && <p className="text-center bg-slate-200 py-2 rounded-md text-red-500 font-medium">Error Loading Ranking</p>}
           {/* Top 3 tourguide */}
-          {reorderedTopGuides.map((item) => (
-            <TopUserRanking tourGuide={item} key={item._id} />
-          ))}
+          {isSuccess && topThreeRank && reorderedTopGuides.map((item, index) => {
+            const rankOrder = [2, 1, 3];
+            return (
+              <TopUserRanking 
+                key={item?._id} 
+                avatar={item?.tourGuideId?.profilePicture} 
+                fullName={item?.tourGuideId?.fullName}
+                totalScore={item?.totalScore}
+                username="n2duc"
+                rank={rankOrder[index]}
+                styles={rankingStyles[index]}
+              />
+            )
+          })}
         </div>
       </div>
     </div>
