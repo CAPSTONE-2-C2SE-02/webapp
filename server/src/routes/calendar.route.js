@@ -205,5 +205,6 @@ router.get("/:id/booked-dates", calendarController.getBookedDates);
 router.put("/", authenticated, authorize("TOUR_GUIDE"), calendarController.updateCalendar);
 router.delete("/busy-dates", authenticated, authorize("TOUR_GUIDE"), calendarController.deleteBusyDate);
 router.delete("/:id", authenticated, authorize("TOUR_GUIDE"), calendarController.deleteCalendar);
+router.patch("/busy-date", authenticated, authorize("TOUR_GUIDE"), calendarController.deleteBusyDate);
 
 export default router;

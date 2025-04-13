@@ -24,7 +24,7 @@ class ProfileController {
             const existingProfile = await User.findOne({
                 $or: [{ email: request.email }, { phoneNumber: request.phoneNumber }]
             });
-            if (existingProfile) {
+            if (existingProfile && existingProfile.phoneNumber) {
                 const errors = [];
                 if (existingProfile.email === request.email) errors.push("Email already exists.");
                 if (existingProfile.phoneNumber === request.phoneNumber) errors.push("Phone number already exists.");

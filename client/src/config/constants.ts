@@ -5,11 +5,17 @@ export const API = {
   PROFILE: {
     FOLLOW: (userId: string) => `/profiles/follow/${userId}`,
     USER_INFO: (username: string) => `/users/profile/${username}`,
+    UPDATE_INFO: (userId: string) => `/profiles/${userId}`,
     FOLLOWERS: `/profiles/followers`,
     FOLLOWINGS: `/profiles/followings`,
   },
   CALENDER: {
     SCHEDULE: `/calendars`,
-    SCHEDULE_INFO: (userId: string) => `/calendars/${userId}`
+    SCHEDULE_INFO: (userId: string) => `/calendars/${userId}`,
+    DELETE_BUSY_DATE: `/calendars/busy-date`,
+  },
+  BOOKING: {
+    TRAVELER_BOOKING: `/bookings/traveler`,
+    TOURGUIDE_BOOKING: `/bookings/tour-guide`,
   }
 }

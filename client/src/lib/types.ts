@@ -39,7 +39,7 @@ export type Comment = {
   likes: Pick<UserInfo, | "_id" | "username" | "fullName">[];
   createdAt: string;
   updatedAt: string;
-} 
+}
 
 export type TourAttachment = {
   _id: string;
@@ -94,6 +94,13 @@ export type Review = {
   tourGuideReview: string;
   images?: string[];
   createdAt: string;
+}
+
+interface ReviewResponse {
+  success: boolean;
+  result?: Review;
+  message?: string;
+  error?: string;
 }
 
 export type UserInfo = {
@@ -163,25 +170,47 @@ type BaseNotification = {
 
 export type Notification =
   | (BaseNotification & {
-      type: "LIKE" | "COMMENT";
-      relatedModel: "Post";
-      relatedId: Post;
-    })
+    type: "LIKE" | "COMMENT";
+    relatedModel: "Post";
+    relatedId: Post;
+  })
   | (BaseNotification & {
-      type: "BOOKING";
-      relatedModel: "Tour";
-      relatedId: Tour;
-    })
+    type: "BOOKING";
+    relatedModel: "Tour";
+    relatedId: Tour;
+  })
   | (BaseNotification & {
-      type: "FOLLOW";
-      relatedModel: "User";
-      relatedId: UserInfo;
-    });
+    type: "FOLLOW";
+    relatedModel: "User";
+    relatedId: UserInfo;
+  });
+
+export type AuthUserInfo = {
+  _id: string;
+  username: string;
+  email: string;
+};
+
+export interface UserResponse {
+  result: UserInfo;
+}
+
+export interface EditProfileData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  city: string;
+  dateOfBirth: Date;
+  introduction: string;
+  avatar?: string | File;
+  coverPhoto?: string | File;
+}
 
 export interface DateEntry {
   _id: string;
   date: Date; // "YYYY-MM-DD"
-  status: 'UNAVAILABLE'; // As expected by the backend
+  status: 'UNAVAILABLE' | 'AVAILABLE'; // As expected by the backend
 }
 
 export interface Calendar {
@@ -194,4 +223,33 @@ export interface SetAvailabilityResponse {
   success: boolean;
   message: string;
   result: Calendar;
+}
+
+export interface Booking {
+  _id: string;
+  tourId: {
+    _id: string;
+    title: string;
+    departureLocation: string;
+    destination: string;
+    imageUrls: string[];
+    duration: string;
+    image?: string;
+  };
+  startDate: string;
+  endDate: string;
+  adults: number;
+  youths: number;
+  children: number;
+  totalAmount: number;
+  paymentStatus: "PENDING" | "TIMEOUT" |  "FAILED" | "PAID" | "REFUNDED";
+  status: "PENDING" | "PAID"| "FAILED" | "CANCELED"| "TIMEOUT" | "COMPLETED";
+}
+
+export interface TourBookingInfoCardProps {
+  booking: Booking;
+  onCancel: (bookingId: string) => void;
+  onPayment: (bookingId: string) => void;
+  onComplete: (bookingId: string) => void;
+  onReview: (bookingId: string) => void;
 }

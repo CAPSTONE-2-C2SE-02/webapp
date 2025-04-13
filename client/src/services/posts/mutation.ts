@@ -37,6 +37,7 @@ export function useCreatePostMutation() {
       );
 
       toast.success("Post deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["rankings"] })
     },
     onError: (error) => {
       console.error(error);
@@ -80,7 +81,8 @@ export function useDeletePostMutation() {
       if (location.pathname.endsWith(`/post/${deletedPost._id}`)) {
         navigate('/');
       }
-      
+
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
       console.error(error);
