@@ -56,12 +56,37 @@ class ReviewController {
 
             // Cập nhật điểm ranking
             const reviews = await Review.find({ tourGuideId: booking.tourGuideId });
-            const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-            const averageRating = parseFloat((totalRating / reviews.length).toFixed(2));
+
+            let weightedRatingSum = 0;
+            let totalReviews = reviews.length;
+
+            reviews.forEach((review) => {
+                let weight = 0;
+                switch (review.rating) {
+                    case 1:
+                        weight = 0.6;
+                        break;
+                    case 2:
+                        weight = 0.7;
+                        break;
+                    case 3:
+                        weight = 0.8;
+                        break;
+                    case 4:
+                        weight = 0.9;
+                        break;
+                    case 5:
+                        weight = 1;
+                        break;
+                    default:
+                        weight = 0;
+                }
+                weightedRatingSum += review.rating * weight;
+            });
 
             const ranking = await Ranking.findOneAndUpdate(
                 { tourGuideId: booking.tourGuideId },
-                { reviewScore: averageRating },
+                { reviewScore: weightedRatingSum },
                 { upsert: true, new: true }
             );
 

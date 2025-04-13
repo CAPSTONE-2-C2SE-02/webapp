@@ -208,7 +208,7 @@ class CalendarController {
         }
     };
 
-    // [DELETE] /api/v1/calendars/:id/busy-date
+    // [DELETE] /api/v1/calendars/busy-date
     async deleteBusyDate(req, res) {
         try {
             const tourGuideId = req.user.userId;

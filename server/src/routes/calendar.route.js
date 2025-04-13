@@ -203,7 +203,7 @@ router.get("/:id", calendarController.getCalendarByTourGuideId);
 router.get("/:id/busy-dates", calendarController.getBusyDates);
 router.get("/:id/booked-dates", calendarController.getBookedDates);
 router.put("/", authenticated, authorize("TOUR_GUIDE"), calendarController.updateCalendar);
+router.delete("/busy-dates", authenticated, authorize("TOUR_GUIDE"), calendarController.deleteBusyDate);
 router.delete("/:id", authenticated, authorize("TOUR_GUIDE"), calendarController.deleteCalendar);
-router.delete("/:id/busy-dates", authenticated, authorize("TOUR_GUIDE"), calendarController.deleteBusyDate);
 
 export default router;

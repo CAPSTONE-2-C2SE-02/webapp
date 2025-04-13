@@ -41,7 +41,7 @@ class CommentController {
             await newComment.save();
 
             // Send notification
-            if (user._id != post.createdBy) {
+            if (user._id.toString() != post.createdBy.toString()) {
                 await NotificationController.sendNotification({
                     body: {
                         type: "COMMENT",
