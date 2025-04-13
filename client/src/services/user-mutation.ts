@@ -22,13 +22,13 @@ const validateProfileData = (profileData: EditProfileData): string | null => {
         if (error instanceof z.ZodError) {
             return error.errors[0].message;
         }
-        return "Unknown validation error";
+        return "Unknown authentication error";
     }
 };
 
 const prepareRequestData = (profileData: EditProfileData, currentUser: UserInfo | undefined): FormData | Record<string, any> => {
     const fullName = `${profileData.firstName} ${profileData.lastName}`.trim();
-    const hasFiles = profileData.avatar instanceof File || profileData.coverPhoto instanceof File;
+    const hasFiles = (profileData.avatar instanceof File && profileData.avatar.size > 0) || (profileData.coverPhoto instanceof File && profileData.coverPhoto.size > 0);
 
     if (hasFiles) {
         const formData = new FormData();
@@ -37,9 +37,16 @@ const prepareRequestData = (profileData: EditProfileData, currentUser: UserInfo 
         if (profileData.phone && profileData.phone !== currentUser?.phoneNumber) formData.append("phoneNumber", profileData.phone);
         if (profileData.city) formData.append("address", profileData.city);
         if (profileData.introduction) formData.append("bio", profileData.introduction);
-        if (profileData.dateOfBirth) formData.append("dateOfBirth", profileData.dateOfBirth.toString());
-        if (profileData.avatar instanceof File) formData.append("profilePicture", profileData.avatar);
-        if (profileData.coverPhoto instanceof File) formData.append("coverPhoto", profileData.coverPhoto);
+        if (profileData.dateOfBirth) formData.append("dateOfBirth", profileData.dateOfBirth.toISOString());
+
+        if (profileData.avatar instanceof File && profileData.avatar.size > 0) {
+            formData.append("profilePicture", profileData.avatar);
+        }
+
+        if (profileData.coverPhoto instanceof File && profileData.coverPhoto.size > 0) {
+            formData.append("coverPhoto", profileData.coverPhoto);
+        }
+
         return formData;
     }
 
@@ -67,7 +74,7 @@ export const handleSaveProfile = (
 ) => {
     const userId = user?._id || authUserInfo?._id;
     if (!userId) {
-        toast.error("Cannot update profile: User ID not found.");
+        toast.error("Unable to update profile: User ID not found.");
         return;
     }
 
@@ -78,7 +85,7 @@ export const handleSaveProfile = (
     }
 
     const requestData = prepareRequestData(profileData, user);
-    console.log("Sending request data:", requestData instanceof FormData ? [...requestData] : requestData);
+    console.log("Data sent:", requestData instanceof FormData ? [...requestData.entries()] : requestData);
 
     updateProfileMutation.mutate({ userId, data: requestData });
 };
@@ -90,14 +97,14 @@ export function useUpdateUserProfileMutation() {
     const mutation = useMutation<UserInfo, Error, { userId: string; data: FormData | Record<string, any>; }>({
         mutationFn: ({ userId, data }) => updateUserProfile({ userId, data }),
         onSuccess: (updatedUser) => {
+            console.log("Updated user data:", updatedUser);
             queryClient.setQueryData(["user", updatedUser.username], updatedUser);
-            toast.success("Profile updated successfully");
+            toast.success("Profile update successful!");
             queryClient.invalidateQueries({ queryKey: ["user"] });
         },
         onError: (error: Error) => {
-            console.error("Error in mutation:", error.message, error.stack);
-            const errorMessage = error.message || "Failed to update profile. Please try again.";
-            toast.error(errorMessage);
+            console.error("Lỗi trong mutation:", error.message);
+            toast.error(error.message || "Unable to update profile. Please try again.");
             if (error.message.includes("401")) {
                 navigate("/login");
             }

@@ -5,16 +5,15 @@ import axiosInstance from "@/config/api";
 import axios from "axios";
 import { format } from "date-fns";
 
-
 export const userApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
     getUserInfoByUsername: builder.query<ApiResponse<UserInfo>, string>({
       query: (username) => ({
         url: `/users/profile/${username}`,
-        method: "GET"
-      })
-    })
-  })
+        method: "GET",
+      }),
+    }),
+  }),
 });
 
 export const { useGetUserInfoByUsernameQuery } = userApi;
@@ -29,11 +28,6 @@ export const getUserByUsername = async (username: string): Promise<UserInfo> => 
   return response.data.result;
 };
 
-// export const getBusyDates = async (userId: string) => {
-//   const response = await axiosInstance.get(API.CALENDER.SCHEDULE_INFO(userId))
-//   return response.data.result
-// }
-
 export const getBusyDates = async (userId: string): Promise<Calendar> => {
   const response = await axiosInstance.get(API.CALENDER.SCHEDULE_INFO(userId));
   return response.data.result;
@@ -41,8 +35,8 @@ export const getBusyDates = async (userId: string): Promise<Calendar> => {
 
 export const saveBusyDatesToServer = async (dates: Date[]): Promise<SetAvailabilityResponse> => {
   const formatted = dates.map((date) => ({
-    date: format(date, 'yyyy-MM-dd'), // Format as YYYY-MM-DD
-    status: 'UNAVAILABLE',
+    date: format(date, "yyyy-MM-dd"),
+    status: "UNAVAILABLE",
   }));
   const response = await axiosInstance.post(API.CALENDER.SCHEDULE, { dates: formatted });
   return response.data;
@@ -72,14 +66,57 @@ export const updateUserProfile = async ({
   data: FormData | Record<string, any>;
 }): Promise<UserInfo> => {
   try {
-    const response = await axiosInstance.put(API.PROFILE.UPDATE_INFO(userId), data);
+    if (data instanceof FormData) {
+      const profilePicture = data.get("profilePicture");
+      const coverPhoto = data.get("coverPhoto");
+      const validTypes = ["image/jpeg", "image/png"];
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (profilePicture instanceof File) {
+        if (!validTypes.includes(profilePicture.type)) {
+          throw new Error("Profile picture must be JPEG or PNG");
+        }
+        if (profilePicture.size > maxSize) {
+          throw new Error("Avatar must not exceed 5MB");
+        }
+      }
+
+      if (coverPhoto instanceof File) {
+        if (!validTypes.includes(coverPhoto.type)) {
+          throw new Error("Cover photo must be JPEG or PNG");
+        }
+        if (coverPhoto.size > maxSize) {
+          throw new Error("Cover photo must not exceed 5MB");
+        }
+      }
+
+      console.log("Send FormData:", [...data.entries()]);
+    } else {
+      console.log("Send JSON data:", data);
+    }
+
+    const response = await axiosInstance.put(API.PROFILE.UPDATE_INFO(userId), data, {
+      headers: data instanceof FormData ? { "Content-Type": "multipart/form-data" } : undefined,
+    });
+
+    console.log("Response from server:", response.data);
 
     if (!response?.data) {
-      throw new Error("No data returned from server");
+      throw new Error("No data received from server");
     }
 
     if (!response.data.result) {
-      throw new Error("Invalid response format: missing 'result' field");
+      throw new Error("Invalid response format: missing field 'result'");
+    }
+
+    if (data instanceof FormData) {
+      const result = response.data.result;
+      if (!result.profilePicture && data.get("profilePicture")) {
+        console.warn("Avatar not updated in response");
+      }
+      if (!result.coverPhoto && data.get("coverPhoto")) {
+        console.warn("Cover photo not updated in response");
+      }
     }
 
     return response.data.result;
@@ -88,14 +125,19 @@ export const updateUserProfile = async ({
       message: error.message,
       status: error.response?.status,
       data: error.response?.data,
-      config: error.config,
     });
-    const errorMessage =
-      error.response?.data?.error?.[0] ||
-      (error.response?.status === 400
-        ? "Bad request: Invalid data sent to server"
-        : error.message) ||
-      "Failed to update profile due to an unknown error";
+
+    let errorMessage = "Unable to update profile. Please try again later.";
+    if (error.response?.status === 500) {
+      errorMessage = "Server Error: Unable to process uploaded file. Please check the file format (JPEG/PNG) and try again.";
+    } else if (error.response?.data?.error) {
+      errorMessage = error.response.data.error;
+    } else if (error.response?.status === 400) {
+      errorMessage = "The submitted data is invalid. Please check again.";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+
     throw new Error(errorMessage);
   }
 };
