@@ -8,7 +8,7 @@ import { EditProfileData } from "@/lib/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, ProfileValues } from "@/lib/validations";
-import { format, isAfter } from "date-fns";
+import { format, isAfter, isValid } from "date-fns";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { cn } from "@/lib/utils";
@@ -44,7 +44,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
             city: initialData?.city || "",
             dateOfBirth: initialData?.dateOfBirth
                 ? new Date(initialData.dateOfBirth)
-                : new Date(),
+                : undefined,
             introduction: initialData?.introduction || "",
             avatar: initialData?.avatar || "https://via.placeholder.com/150",
             coverPhoto: initialData?.coverPhoto || "https://via.placeholder.com/300x100",
@@ -61,7 +61,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                 city: initialData.city || "",
                 dateOfBirth: initialData?.dateOfBirth
                     ? new Date(initialData.dateOfBirth)
-                    : new Date(),
+                    : undefined,
                 introduction: initialData.introduction || "",
                 avatar: initialData.avatar || "https://placehold.co/150",
                 coverPhoto: initialData.coverPhoto || "https://placehold.co/800x400",
@@ -264,14 +264,16 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                                                 <PopoverTrigger asChild>
                                                 <FormControl>
                                                     <Button
-                                                    variant="outline"
-                                                    className={cn(
-                                                        "w-full justify-start text-left font-normal",
-                                                        !field.value && "text-muted-foreground",
-                                                    )}
+                                                        variant="outline"
+                                                        className={cn(
+                                                            "w-full justify-start text-left font-normal",
+                                                            !field.value && "text-muted-foreground",
+                                                        )}
                                                     >
                                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    <span>{field.value ? format(field.value, "dd/MM/yyyy") : "Pick a date"}</span>
+                                                    <span>{field?.value && isValid(field.value)
+                                                        ? format(field.value, "dd/MM/yyyy")
+                                                        : "Pick a date"}</span>
                                                     </Button>
                                                 </FormControl>
                                                 </PopoverTrigger>

@@ -11,7 +11,8 @@ export const API = {
   },
   CALENDER: {
     SCHEDULE: `/calendars`,
-    SCHEDULE_INFO: (userId: string) => `/calendars/${userId}`
+    SCHEDULE_INFO: (userId: string) => `/calendars/${userId}`,
+    DELETE_BUSY_DATE: `/calendars/busy-date`,
   },
   BOOKING: {
     TRAVELER_BOOKING: `/bookings/traveler`,

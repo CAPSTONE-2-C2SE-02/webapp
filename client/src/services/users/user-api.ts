@@ -1,5 +1,5 @@
 import { ApiResponse, Booking, Calendar, SetAvailabilityResponse, UserInfo } from "@/lib/types";
-import { rootApi } from "./root-api";
+import { rootApi } from "../root-api";
 import { API } from "@/config/constants";
 import axiosInstance from "@/config/api";
 import axios from "axios";
@@ -39,6 +39,12 @@ export const saveBusyDatesToServer = async (dates: Date[]): Promise<SetAvailabil
     status: "UNAVAILABLE",
   }));
   const response = await axiosInstance.post(API.CALENDER.SCHEDULE, { dates: formatted });
+  return response.data;
+};
+
+export const deleteBusyDate = async (date: Date) => {
+  // const dateFormatted = format(date, "yyyy-MM-dd");
+  const response = await axiosInstance.patch(API.CALENDER.DELETE_BUSY_DATE, { date });
   return response.data;
 };
 

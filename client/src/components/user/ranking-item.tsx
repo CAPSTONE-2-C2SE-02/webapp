@@ -21,7 +21,7 @@ const RankingItem = ({ tourGuide, point, rank }: RankingItemProps) => {
       <div className="text-base space-x-4 text-primary group-hover:text-white transition-colors duration-200">
         <span className="font-black">{rank}</span>
         <span className="pl-3 border-l-4 border-emerald-400 font-black">
-          {tourGuide?.username}
+          {tourGuide?.fullName}
         </span>
         <span className="text-gray-400 text-sm group-hover:text-white transition-colors duration-200">
           Da Nang

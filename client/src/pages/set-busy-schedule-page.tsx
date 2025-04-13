@@ -4,13 +4,14 @@ import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Trash2, CalendarRange, ArrowLeft } from "lucide-react"
+import { Trash2, CalendarRange } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/hooks/redux"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { getBusyDates, saveBusyDatesToServer } from "@/services/user-api"
+import { getBusyDates, saveBusyDatesToServer } from "@/services/users/user-api"
 import BusyScheduleSkeleton from "@/components/skeleton/busy-schedule-skeleton"
 import { toast } from "sonner"
+import { useDeleteBusyDate } from "@/services/users/user-mutation"
 
 const normalizeDate = (date: Date): Date => {
   const normalized = new Date(date);
@@ -29,7 +30,14 @@ const SetBusySchedulePage = () => {
 
   const { data: busyDatesData, isLoading } = useQuery({
     queryKey: ["busyDates", tourGuideId],
-    queryFn: () => getBusyDates(tourGuideId as string)
+    queryFn: () => getBusyDates(tourGuideId as string),
+    select: (busyDates) => {
+      return {
+        _id: busyDates._id,
+        tourGuideId: busyDates.tourGuideId,
+        dates: busyDates.dates.filter((d) => d.status === "UNAVAILABLE"),
+      }
+    },
   });
 
   const { mutate: saveBusyDates } = useMutation({
@@ -39,7 +47,9 @@ const SetBusySchedulePage = () => {
       setSelectedDates([])
       toast.success("Busy schedule saved successfully!");
     },
-  })
+  });
+
+  const { mutate: deleteBusyDate, isPending } = useDeleteBusyDate(tourGuideId!);
 
   const handleSaveAndUpdateSchedule = () => {
     if (selectedDates.length === 0) return;
@@ -57,14 +67,14 @@ const SetBusySchedulePage = () => {
     saveBusyDates(updatedBusyDates); 
   };
 
-
   // Remove a specific busy date
-  const removeBusyDate = () => {
-    // setBusyDates(busyDates.filter((date) => !isSameDay(date, dateToRemove)))
-    // api xoa
+  const removeBusyDate = async (date: Date) => {
+    try {
+      deleteBusyDate(date);
+    } catch (error) {
+      console.error(error);
+    }
   }
-
-
 
   const clearSelection = () => {
     setSelectedDates([]);
@@ -87,19 +97,14 @@ const SetBusySchedulePage = () => {
     <div className="container mx-auto py-6">
       <Card className="w-full max-w-3xl mx-auto"> 
         <CardHeader>
-          <div className="flex gap-52 mb-3">
-              <button className="text-gray-500 hover:text-gray-700">
-                  <ArrowLeft size={20} />
-              </button>
-              <CardTitle className="text-2xl">Manage Your Busy Schedule</CardTitle>
-          </div>
-          <CardDescription>Select multiple dates when you're unavailable</CardDescription>
+          <CardTitle className="text-xl text-center text-primary">Manage Your Busy Schedule</CardTitle>
+          <CardDescription className="text-center">Select multiple dates when you're unavailable</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="select">Select Busy Dates</TabsTrigger>
-              <TabsTrigger value="view">View Schedule ({busyDatesData?.dates.length})</TabsTrigger>
+              <TabsTrigger value="view">View Schedule ({busyDatesData?.dates?.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="select">
@@ -172,12 +177,12 @@ const SetBusySchedulePage = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {busyDatesData?.dates.map((date) => (
-                      <div key={date._id} className="flex items-center justify-between p-3 border rounded-md">
+                      <div key={date._id} className="flex items-center justify-between px-3 py-2 border rounded-md">
                         <Badge variant="outline">{format(date.date, "EEEE, MMMM d, yyyy")}</Badge>
-                        <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4" />
+                        <Button variant="ghost" disabled={isPending} size="icon" onClick={() => removeBusyDate(date.date)}>
+                          <Trash2 className="h-4 w-4 text-red-400" />
                         </Button>
-                      </div>
+                      </div>    
                     ))}
                   </div>
                 </div>
@@ -190,7 +195,7 @@ const SetBusySchedulePage = () => {
           </Tabs>
         </CardContent>
         <CardFooter>
-          <Button variant={"outline"} onClick={handleSaveAndUpdateSchedule} disabled={selectedDates.length === 0 && busyDates.length ===0} className="w-full text-primary bg-blue-200 border-primary">
+          <Button variant={"outline"} onClick={handleSaveAndUpdateSchedule} disabled={selectedDates.length === 0 && busyDates.length ===0} className="w-full text-primary bg-blue-100 border-primary">
               <CalendarRange className="mr-2 w-4" />
               Save Busy Schedule {selectedDates.length} Date{selectedDates.length !== 1 ? "s" : ""} to Busy Schedule
           </Button>

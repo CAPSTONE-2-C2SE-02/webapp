@@ -8,7 +8,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState } from "react";
 import { EditProfileModal } from "@/components/modals/edit-profile-modal";
-import { useUserInfoQuery, useUpdateUserProfileMutation, handleSaveProfile } from "@/services/user-mutation";
+import { useUserInfoQuery, useUpdateUserProfileMutation, handleSaveProfile } from "@/services/users/user-mutation";
 import { EditProfileData } from "@/lib/types";
 import FollowButton from "@/components/user/follow-button";
 import { format } from "date-fns";
@@ -97,18 +97,24 @@ const ProfileLayout = () => {
                             <Mail className="w-4 h-4 stroke-slate-600" />
                             <p className="font-medium text-slate-600 text-sm leading-none">{user.email}</p>
                         </div>
-                        <div className="flex items-center py-2 gap-2">
-                            <Phone className="w-4 h-4 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm leading-none">{user.phoneNumber}</p>
-                        </div>
-                        <div className="flex items-center py-2 gap-2">
-                            <Cake className="w-4 h-4 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm leading-none">{format(user.dateOfBirth, "dd/MM/yyyy")}</p>
-                        </div>
-                        <div className="flex items-center py-2 gap-2">
-                            <MapPin className="w-4 h-4 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm leading-none">From {user.address || "N/A"}</p>
-                        </div>
+                        {user?.phoneNumber && (
+                            <div className="flex items-center py-2 gap-2">
+                                <Phone className="w-4 h-4 stroke-slate-600" />
+                                <p className="font-medium text-slate-600 text-sm leading-none">{user.phoneNumber}</p>
+                            </div>
+                        )}
+                        {user?.dateOfBirth && (
+                            <div className="flex items-center py-2 gap-2">
+                                <Cake className="w-4 h-4 stroke-slate-600" />
+                                <p className="font-medium text-slate-600 text-sm leading-none">{format(user?.dateOfBirth, "dd/MM/yyyy")}</p>
+                            </div>
+                        )}
+                        {user?.address && (
+                            <div className="flex items-center py-2 gap-2">
+                                <MapPin className="w-4 h-4 stroke-slate-600" />
+                                <p className="font-medium text-slate-600 text-sm leading-none">From {user.address || "N/A"}</p>
+                            </div>
+                        )}
                     </div>
                     <div className="my-2 mx-14 h-36 flex flex-col justify-items-start gap-2">
                         <p className="font-medium text-slate-600 text-sm">Introduction</p>

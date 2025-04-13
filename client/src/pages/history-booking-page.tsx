@@ -14,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/hooks/redux";
 import { Booking } from "@/lib/types";
-import { fetchTourGuideBookings, fetchTravelerBookings } from "@/services/user-api";
+import { fetchTourGuideBookings, fetchTravelerBookings } from "@/services/users/user-api";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
