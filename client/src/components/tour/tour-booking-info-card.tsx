@@ -100,12 +100,21 @@ const TourBookingInfoCard = ({
             </>
           )}
 
-          {isCompleted && (
+          {isCompleted && role === "TRAVELER" && (
             <>
-            {role === "TRAVELER" && (
+            {!booking.isReview ? (
             <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => onReview(booking._id)}>
               Review
             </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="text-xs h-8"
+                onClick={() => onReview(booking._id)}
+              >
+                Reviewed
+              </Button>
             )}
             </>
           )}

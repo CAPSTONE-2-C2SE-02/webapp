@@ -244,6 +244,7 @@ export interface Booking {
   totalAmount: number;
   paymentStatus: "PENDING" | "TIMEOUT" |  "FAILED" | "PAID" | "REFUNDED";
   status: "PENDING" | "PAID"| "FAILED" | "CANCELED"| "TIMEOUT" | "COMPLETED";
+  isReview: Boolean;
 }
 
 export interface TourBookingInfoCardProps {

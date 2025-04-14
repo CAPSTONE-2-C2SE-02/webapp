@@ -164,6 +164,7 @@ const ProfileLayout = () => {
                         >
                             Photos
                         </NavLink>
+                        {user.role === "TOUR_GUIDE" && (
                         <NavLink
                             to={`/${username}/tours`}
                             className={({ isActive }) =>
@@ -175,6 +176,8 @@ const ProfileLayout = () => {
                         >
                             Tours
                         </NavLink>
+                        )}
+                        {user.role === "TOUR_GUIDE" && (
                         <NavLink
                             to={`/${username}/reviews`}
                             className={({ isActive }) =>
@@ -186,6 +189,7 @@ const ProfileLayout = () => {
                         >
                             Reviews
                         </NavLink>
+                        )}
                     </div>
                 </div>
             </div>
