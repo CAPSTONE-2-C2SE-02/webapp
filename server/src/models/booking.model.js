@@ -61,6 +61,31 @@ const bookingSchema = new mongoose.Schema({
         type: Date,
         index: true,
     },
+    fullName: {
+        type: String,
+    },
+    country: {
+        type: String,
+    },
+    phoneNumber: {
+        type: String,
+    },
+    email: {
+        type: String,
+    },
+    address: {
+        type: String,
+    },
+    city: {
+        type: String,
+    },
+    note: {
+        type: String,
+    },
+    isPayLater: {
+        type: Boolean,
+        default: false,
+    },
 },
     { timestamps: true, versionKey: false }
 )

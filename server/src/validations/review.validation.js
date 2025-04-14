@@ -1,7 +1,11 @@
 import * as Yup from 'yup';
 
 const reviewSchema = Yup.object().shape({
-    rating: Yup.number()
+    ratingForTour: Yup.number()
+        .min(1, 'Rating must be at least 1')
+        .max(5, 'Rating must be at most 5')
+        .required('Rating is required'),
+    ratingForTourGuide: Yup.number()
         .min(1, 'Rating must be at least 1')
         .max(5, 'Rating must be at most 5')
         .required('Rating is required'),
