@@ -12,5 +12,6 @@ export default function useGetBusyDates(tourGuideId: string) {
         dates: busyDates.dates.filter((d) => d.status === "UNAVAILABLE"),
       }
     },
+    enabled: !!tourGuideId,
   });
 }

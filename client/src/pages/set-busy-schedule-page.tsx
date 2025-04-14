@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge"
 import { Trash2, CalendarRange } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/hooks/redux"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { getBusyDates, saveBusyDatesToServer } from "@/services/users/user-api"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { saveBusyDatesToServer } from "@/services/users/user-api"
 import BusyScheduleSkeleton from "@/components/skeleton/busy-schedule-skeleton"
 import { toast } from "sonner"
 import { useDeleteBusyDate } from "@/services/users/user-mutation"
+import useGetBusyDates from "@/hooks/useGetBusyDates"
 
 const normalizeDate = (date: Date): Date => {
   const normalized = new Date(date);
@@ -28,17 +29,7 @@ const SetBusySchedulePage = () => {
   const [busyDates, setBusyDates] = useState<Date[]>([])
   const [activeTab, setActiveTab] = useState("select")
 
-  const { data: busyDatesData, isLoading } = useQuery({
-    queryKey: ["busyDates", tourGuideId],
-    queryFn: () => getBusyDates(tourGuideId as string),
-    select: (busyDates) => {
-      return {
-        _id: busyDates._id,
-        tourGuideId: busyDates.tourGuideId,
-        dates: busyDates.dates.filter((d) => d.status === "UNAVAILABLE"),
-      }
-    },
-  });
+  const { data: busyDatesData, isLoading } = useGetBusyDates(tourGuideId as string);
 
   const { mutate: saveBusyDates } = useMutation({
     mutationFn: saveBusyDatesToServer, 

@@ -22,14 +22,14 @@ const FollowerCard = ({ user }: FollowerCardProps) => {
         <div className='flex w-full items-center gap-4'>
           <div className="flex-shrink-0">
             <Avatar className="size-10 border border-border">
-              <AvatarImage />
+              <AvatarImage src={user?.profilePicture} />
               <AvatarFallback>{user.fullName.charAt(0)}</AvatarFallback>
             </Avatar>
           </div>
           <div className="flex-1 ">
             <Link
                 to={`/${user?.username}`}
-                className="hover:underline text-sm font-medium"
+                className="hover:underline text-sm font-medium line-clamp-1"
               >
                 {user?.fullName}
             </Link>

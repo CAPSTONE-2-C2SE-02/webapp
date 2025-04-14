@@ -4,6 +4,7 @@ import { API } from "@/config/constants";
 import axiosInstance from "@/config/api";
 import axios from "axios";
 import { format } from "date-fns";
+import publicApi from "@/config/public.api";
 
 export const userApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -156,4 +157,17 @@ export const fetchUserInfoByUsername = async (username: string): Promise<UserInf
 export const fetchMyInfo = async (): Promise<UserInfo> => {
   const response = await axiosInstance.get("/profiles/myInfo");
   return response.data.result;
+};
+
+export const getAllPhotosByUsername = async (
+  username: string
+): Promise<
+  ApiResponse<{
+    profilePicture: string;
+    coverPhoto: string;
+    postImages: string[];
+  }>
+> => {
+  const response = await publicApi.get(API.PROFILE.PHOTOS(username));
+  return response.data;
 };

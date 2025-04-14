@@ -1,5 +1,3 @@
-
-// import SearchInput from "@/components/layout/search-input";
 import {
     Pagination,
     PaginationContent,
@@ -17,7 +15,6 @@ import {
 } from "@/components/ui/tabs"
 import SearchNav from "@/components/layout/search-nav"
 import FollowCard from "@/components/user/follower-card"
-import { useAppSelector } from "@/hooks/redux"
 import { useOutletContext } from "react-router"
 import { Follow } from "@/lib/types"
 

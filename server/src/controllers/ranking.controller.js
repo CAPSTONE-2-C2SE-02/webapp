@@ -1,4 +1,5 @@
 import Ranking from "../models/ranking.model.js";
+import Role from "../models/role.model.js";
 import { StatusCodes } from "http-status-codes";
 
 class RankingController {
@@ -10,11 +11,19 @@ class RankingController {
             const rankings = await Ranking.find()
                 .sort({ totalScore: -1 })
                 .limit(limit)
-                .populate("tourGuideId", "fullName profilePicture username");
+                .populate({
+                    path: "tourGuideId",
+                    select: "fullName profilePicture username role",
+                    match: {
+                        role: await Role.findOne({ name: "TOUR_GUIDE" }).select("_id"),
+                    },
+                }).lean();
+
+            const filteredRankings = rankings.filter((ranking) => ranking.tourGuideId);
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                result: rankings
+                result: filteredRankings
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -42,11 +51,19 @@ class RankingController {
             const rankings = await Ranking.find()
                 .sort({ [fieldName]: -1 })
                 .limit(limit)
-                .populate("tourGuideId", "fullName profilePicture username");
+                .populate({
+                    path: "tourGuideId",
+                    select: "fullName profilePicture username role",
+                    match: {
+                        role: await Role.findOne({ name: "TOUR_GUIDE" }).select("_id"),
+                    },
+                }).lean();
+
+            const filteredRankings = rankings.filter((ranking) => ranking.tourGuideId);
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                result: rankings
+                result: filteredRankings
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
