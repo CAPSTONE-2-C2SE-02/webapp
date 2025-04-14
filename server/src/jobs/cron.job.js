@@ -9,19 +9,30 @@ const checkExpiredBookings = async () => {
 
         const now = new Date();
 
+        // Quét các booking thanh toán ngay (isPayLater: false)
         const expiredBookings = await Booking.find({
+            isPayLater: false,
             paymentStatus: "PENDING",
             timeoutAt: { $lte: now },
         });
 
-        if (expiredBookings.length === 0) {
+        // Quét các booking thanh toán sau (isPayLater: true) nhưng chưa thanh toán trước 24h so với startDate
+        const payLaterExpiredBookings = await Booking.find({
+            isPayLater: true,
+            paymentStatus: "PENDING",
+            startDate: { $lte: new Date(now.getTime() + 24 * 60 * 60 * 1000) },
+        });
+
+        const allExpiredBookings = [...expiredBookings, ...payLaterExpiredBookings];
+
+        if (allExpiredBookings.length === 0) {
             console.log("✅ No expired bookings found.");
             return;
         }
 
-        console.log(`⚠️ Found ${expiredBookings.length} expired bookings. Canceling...`);
+        console.log(`⚠️ Found ${allExpiredBookings.length} expired bookings. Canceling...`);
 
-        for (const booking of expiredBookings) {
+        for (const booking of allExpiredBookings) {
             booking.status = "CANCELED";
             booking.paymentStatus = "TIMEOUT";
             await booking.save();

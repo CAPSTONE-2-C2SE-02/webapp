@@ -13,7 +13,9 @@ class BookingController {
 
     // [POST] /api/v1/bookings/
     async createBooking(req, res) {
-        const { tourId, startDate, endDate, adults = 0, youths = 0, children = 0 } = req.body;
+        const { tourId, startDate, endDate, adults = 0, youths = 0, children = 0, fullName, country, phoneNumber,
+            email, address, city, note, isPayLater = false
+        } = req.body;
         const travelerId = req.user.userId;
         const slots = adults + youths + children;
 
@@ -46,14 +48,13 @@ class BookingController {
             // Set ngày bận cho tour guide
             await setBookedDates(tour.author, startDate, endDate);
 
-
             // Tạo booking
             const tourGuide = await User.findById(tour.author);
             const totalAmount = (adults * tour.priceForAdult) +
                 (youths * tour.priceForYoung) +
                 (children * tour.priceForChildren);
             const depositAmount = totalAmount * 0.3;
-            const timeoutAt = addMinutes(new Date(), 3);
+            const timeoutAt = isPayLater ? null : addMinutes(new Date(), 3);
 
             const newBooking = await Booking.create({
                 travelerId,
@@ -67,6 +68,14 @@ class BookingController {
                 totalAmount,
                 depositAmount,
                 timeoutAt,
+                isPayLater,
+                fullName,
+                address,
+                city,
+                country,
+                email,
+                phoneNumber,
+                note,
                 paymentStatus: "PENDING"
             });
 
@@ -289,6 +298,36 @@ class BookingController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: "Booking canceled successfully",
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/bookings/pay-later
+    async getTravelerPayLaterBookings(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found",
+                });
+            }
+
+            const bookings = await Booking.find({ travelerId: userId, isPayLater: true })
+                .populate("travelerId", "fullName email phoneNumber")
+                .populate("tourId", "title departureLocation destination duration imageUrls")
+                .populate("tourGuideId", "fullName email phoneNumber");
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: bookings,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
