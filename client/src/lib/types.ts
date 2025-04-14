@@ -61,7 +61,7 @@ export type Tour = {
   priceForYoung: number;
   priceForChildren: number;
   maxParticipants: number;
-  duration: string;
+  duration: number;
   schedule:
   {
     title: string;
@@ -94,13 +94,6 @@ export type Review = {
   tourGuideReview: string;
   images?: string[];
   createdAt: string;
-}
-
-interface ReviewResponse {
-  success: boolean;
-  result?: Review;
-  message?: string;
-  error?: string;
 }
 
 export type UserInfo = {

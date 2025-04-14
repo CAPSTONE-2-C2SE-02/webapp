@@ -15,6 +15,7 @@ import RankingPage from "@/pages/ranking-page";
 import NotFoundPage from "@/pages/not-found-page";
 import TourBookingPage from "@/pages/tour-booking-page";
 import HistoryBookingPage from "@/pages/history-booking-page";
+import HashtagPage from "@/pages/hashtag-page";
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -42,7 +43,7 @@ const routes = createBrowserRouter([
       
       // Post routes
       { path: "/:username/post/:postId", element: <PostPage /> },
-      { path: "/posts", element: <div>HashTag Post Page</div> },
+      { path: "/hashtag/:tag", element: <HashtagPage /> },
 
       // Tour Routes
       { path: "/tours", element: <ToursPage /> },
@@ -68,7 +69,7 @@ const routes = createBrowserRouter([
           { index: true, element: <SetBusySchedulePage /> }
         ]
       },
-      //History Booking
+      // History Booking
       { path: "/history-booking", element: <HistoryBookingPage /> },
       // Ranking Route
       { path: "/ranking", element: <RankingPage /> },

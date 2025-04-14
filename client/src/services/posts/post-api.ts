@@ -2,6 +2,7 @@ import { ApiResponse, Post, PostsNewFeed, UserInfo } from "@/lib/types";
 import axios from "axios";
 import axiosInstance from "@/config/api";
 import { API } from "@/config/constants";
+import publicApi from "@/config/public.api";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -36,5 +37,10 @@ export const deletePost = async (postId: string): Promise<Post> => {
 
 export const likePost = async (postId: string): Promise<ApiResponse<Pick<UserInfo, | "_id" | "username" | "fullName">[]>> => {
   const response = await axiosInstance.post(API.POST.LIKE, { postId });
+  return response.data;
+};
+
+export const getPostsByHashtag = async (hashtag: string): Promise<ApiResponse<Post[]>> => {
+  const response = await publicApi.get(API.POST.SEARCH(hashtag));
   return response.data;
 };

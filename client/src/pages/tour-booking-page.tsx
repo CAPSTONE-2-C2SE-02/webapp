@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import MetaData from "@/components/utils/meta-data";
+import ScrollToTopOnMount from "@/components/utils/scroll-to-top-mount";
 import useAuthInfo from "@/hooks/useAuth";
 import { Tour } from "@/lib/types";
 import { bookingFormSchema, BookingFormValues } from "@/lib/validations";
@@ -74,6 +75,7 @@ const TourBookingPage = () => {
   return (
     <>
       <MetaData title="Tour Booking" />
+      <ScrollToTopOnMount />
       <div className="max-w-xs sm:max-w-sm md:max-w-[1080px] mx-auto my-6 bg-white rounded-lg shadow-sm p-6">
         <div className="flex items-center mb-6">
           <Button size={"icon"} variant="outline" onClick={() => navigate(-1)}>

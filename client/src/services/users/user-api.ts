@@ -75,12 +75,12 @@ export const updateUserProfile = async ({
     if (data instanceof FormData) {
       const profilePicture = data.get("profilePicture");
       const coverPhoto = data.get("coverPhoto");
-      const validTypes = ["image/jpeg", "image/png"];
+      const validTypes = ["image/jpeg", "image/png", "image/jpg"];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
       if (profilePicture instanceof File) {
         if (!validTypes.includes(profilePicture.type)) {
-          throw new Error("Profile picture must be JPEG or PNG");
+          throw new Error("Profile picture must be JPEG, JPG or PNG");
         }
         if (profilePicture.size > maxSize) {
           throw new Error("Avatar must not exceed 5MB");
@@ -89,7 +89,7 @@ export const updateUserProfile = async ({
 
       if (coverPhoto instanceof File) {
         if (!validTypes.includes(coverPhoto.type)) {
-          throw new Error("Cover photo must be JPEG or PNG");
+          throw new Error("Cover photo must be JPEG, JPG or PNG");
         }
         if (coverPhoto.size > maxSize) {
           throw new Error("Cover photo must not exceed 5MB");

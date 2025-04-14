@@ -1,6 +1,7 @@
 export const API = {
   POST: {
-    LIKE: '/posts/like'
+    LIKE: '/posts/like',
+    SEARCH: (tag: string) => `/posts/search?q=${tag}`
   },
   PROFILE: {
     FOLLOW: (userId: string) => `/profiles/follow/${userId}`,
