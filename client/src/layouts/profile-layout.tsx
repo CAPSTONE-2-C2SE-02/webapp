@@ -49,7 +49,7 @@ const ProfileLayout = () => {
 
     return (
         <div className="w-full flex flex-col gap-5">
-            <div className="relative w-full mt-8 px-2 pt-2 rounded-2xl bg-white">
+            <div className="relative w-full mt-5 px-2 pt-2 rounded-2xl bg-white">
                 {/* cover picture */}
                 <div className="h-[300px] w-full rounded-xl overflow-hidden">
                     {user?.coverPhoto ? (
@@ -164,35 +164,36 @@ const ProfileLayout = () => {
                         >
                             Photos
                         </NavLink>
-                        {user.role === "TOUR_GUIDE" && (
-                        <NavLink
-                            to={`/${username}/tours`}
-                            className={({ isActive }) =>
-                                cn(
-                                    "bg-white px-4 py-2 font-medium text-sm",
-                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
-                                )
-                            }
-                        >
-                            Tours
-                        </NavLink>
-                        )}
-                        {user.role === "TOUR_GUIDE" && (
-                        <NavLink
-                            to={`/${username}/reviews`}
-                            className={({ isActive }) =>
-                                cn(
-                                    "bg-white px-4 py-2 font-medium text-sm",
-                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
-                                )
-                            }
-                        >
-                            Reviews
-                        </NavLink>
+                        {user?.role === "TOUR_GUIDE" && (
+                            <>
+                                <NavLink
+                                    to={`/${username}/tours`}
+                                    className={({ isActive }) =>
+                                        cn(
+                                            "bg-white px-4 py-2 font-medium text-sm",
+                                            isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                        )
+                                    }
+                                >
+                                    Tours
+                                </NavLink>
+                                <NavLink
+                                    to={`/${username}/reviews`}
+                                    className={({ isActive }) =>
+                                        cn(
+                                            "bg-white px-4 py-2 font-medium text-sm",
+                                            isActive ? "border-b-2 border-primary" : "text-muted-foreground"
+                                        )
+                                    }
+                                >
+                                    Reviews
+                                </NavLink>
+                            </>
                         )}
                     </div>
                 </div>
             </div>
+
             {user && (
                 <EditProfileModal
                     isOpen={isEditModalOpen}
@@ -211,7 +212,8 @@ const ProfileLayout = () => {
                     }}
                 />
             )}
-            <Outlet />
+
+            <Outlet context={{ userId: user?._id, role: user?.role, followers: user?.followers, followings: user?.followings }} />
         </div>
     );
 };

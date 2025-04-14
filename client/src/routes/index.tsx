@@ -4,10 +4,6 @@ import ProtectedRoute from "./protected-route";
 import MainLayout from "@/layouts/main-layout";
 import AuthLayout from "@/layouts/auth-layout";
 import ProfileLayout from "@/layouts/profile-layout";
-import UserProfilePage from "@/pages/userprofile-page";
-import UserProfileFollowPage from "@/pages/userprofile-follower-page";
-import UserProfileToursPage from "@/pages/userprofile-tours-page";
-import UserProfileReviewPage from "@/pages/userprofile-review-page";
 import CreateTourPage from "@/pages/createtour-page";
 import SetBusySchedulePage from "@/pages/set-busy-schedule-page";
 import LoadingPage from "@/components/layout/loading-page";
@@ -15,6 +11,12 @@ import RankingPage from "@/pages/ranking-page";
 import NotFoundPage from "@/pages/not-found-page";
 import TourBookingPage from "@/pages/tour-booking-page";
 import HistoryBookingPage from "@/pages/history-booking-page";
+import HashtagPage from "@/pages/hashtag-page";
+import UserProfilePage from "@/pages/user-profile/userprofile-page";
+import UserProfileToursPage from "@/pages/user-profile/userprofile-tours-page";
+import UserProfileReviewPage from "@/pages/user-profile/userprofile-review-page";
+import UserProfilePhotosPage from "@/pages/user-profile/userprofile-photos-page";
+import UserProfileFollowPage from "@/pages/user-profile/userprofile-follower-page";
 const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
 const HomePage = lazy(() => import("@/pages/home-page"));
@@ -34,7 +36,7 @@ const routes = createBrowserRouter([
         children: [
           { index: true, element: <UserProfilePage />},
           { path: "follow", element: <UserProfileFollowPage /> },
-          { path: "photos", element: <div>Photos Page</div> },
+          { path: "photos", element: <UserProfilePhotosPage /> },
           { path: "tours", element: <UserProfileToursPage /> },
           { path: "reviews", element: <UserProfileReviewPage /> },
         ]
@@ -42,7 +44,7 @@ const routes = createBrowserRouter([
       
       // Post routes
       { path: "/:username/post/:postId", element: <PostPage /> },
-      { path: "/posts", element: <div>HashTag Post Page</div> },
+      { path: "/hashtag/:tag", element: <HashtagPage /> },
 
       // Tour Routes
       { path: "/tours", element: <ToursPage /> },
@@ -68,7 +70,7 @@ const routes = createBrowserRouter([
           { index: true, element: <SetBusySchedulePage /> }
         ]
       },
-      //History Booking
+      // History Booking
       { path: "/history-booking", element: <HistoryBookingPage /> },
       // Ranking Route
       { path: "/ranking", element: <RankingPage /> },

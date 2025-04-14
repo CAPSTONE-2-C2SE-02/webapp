@@ -62,7 +62,7 @@ class ProfileController {
                     dateOfBirth: request.dateOfBirth || user.dateOfBirth,
                 },
                 { new: true }
-            );
+            ).select("-password");
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -378,9 +378,9 @@ class ProfileController {
     // [GET] /api/v1/profiles/photos
     async getProfilePhotos(req, res) {
         try {
-            const userId = req.user.userId;
+            const username = req.params.username;
 
-            const user = await User.findById(userId).select("profilePicture coverPhoto");
+            const user = await User.findOne({ username }).select("profilePicture coverPhoto");
             if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -388,7 +388,7 @@ class ProfileController {
                 });
             }
 
-            const posts = await Post.find({ createdBy: userId }).select("imageUrls");
+            const posts = await Post.find({ createdBy: user._id }).select("imageUrls");
             const postImages = posts.reduce((acc, post) => {
                 return acc.concat(post.imageUrls);
             }, []);

@@ -332,7 +332,7 @@ router.put(
 router.delete("/:id", authenticated, checkOwnerUserId, profileController.deleteProfile);
 router.post("/active", authenticated, authorize("ADMIN"), profileController.activeProfile);
 router.get("/myInfo", authenticated, profileController.myInfo);
-router.get("/photos", authenticated, profileController.getProfilePhotos);
+router.get("/photos/:username", profileController.getProfilePhotos);
 router.get("/search", profileController.searchProfiles);
 router.get("/following", authenticated, profileController.getFollowings);
 router.get("/followers", authenticated, profileController.getFollowers);

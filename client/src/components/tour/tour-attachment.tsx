@@ -17,7 +17,7 @@ const TourAttachment = ({ tour, onRemove }: TourAttachmentProps) => {
   };
 
   return (
-    <Link to={`/tours/tourId?fromPost=true`} className="group relative">
+    <Link to={`/tours/${tour._id}?fromPost=true`} className="group relative">
       <div className="w-full p-2 rounded-xl border border-slate-200 bg-slate-50 flex items-center gap-6 mt-2 group-hover:shadow-sm">
         <div className="w-60 h-32 rounded-xl overflow-hidden">
           <img

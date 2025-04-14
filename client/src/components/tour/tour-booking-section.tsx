@@ -6,39 +6,39 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
-import { cn } from "@/lib/utils";
+import { checkAvailabilitySchedule, cn } from "@/lib/utils";
 import { AlertCircle, CalendarIcon, Minus, Plus } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { Separator } from "../ui/separator";
-import { format, isSameDay } from "date-fns";
+import { addDays, format, isSameDay } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Tour } from "@/lib/types";
 import { useAppSelector } from "@/hooks/redux";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
+import useGetBusyDates from "@/hooks/useGetBusyDates";
 
 interface TourBookingSectionProps {
   tourData: Tour;
 }
 
 const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
-  const navigate = useNavigate();
-
   const [busyDates, setBusyDates] = useState<Date[]>([]);
   const [dateAvailability, setDateAvailability] = useState<{
     available: boolean
     conflictingDates?: Date[]
   }>({ available: true });
   
+  // get busy date
+  const { data: datesBusy } = useGetBusyDates(tourData.author._id);
+
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
 
   const form = useForm<BookingValues>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      dateRange: {
-        from: undefined,
-        to: undefined,
-      },
+      dateRange: { from: undefined, to: undefined },
       adults: 0,
       youths: 0,
       children: 0,
@@ -47,67 +47,68 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
 
   useEffect(() => {
     // Update busy dates for the selected tour
-    if (!tourData?.author?.busyDates) return;
-    const busyDates = tourData.author.busyDates.map((date) => new Date(date));
+    if (!datesBusy?.dates) return;
+    const busyDates = datesBusy?.dates.map((date) => new Date(date.date));
     setBusyDates(busyDates);
     setDateAvailability({ available: true });
-  }, [tourData?.author?.busyDates]);
+  }, [datesBusy?.dates]);
 
-  const adults = form.watch("adults");
-  const youths = form.watch("youths");
-  const children = form.watch("children");
-  const dateRange = form.watch("dateRange")
+  const { watch, setError, clearErrors } = form;
+  const adults = watch("adults");
+  const youths = watch("youths");
+  const children = watch("children");
+  const dateRange = watch("dateRange");
 
-  const totalPrice = useMemo(() => {
-    return (adults * tourData.priceForAdult) +
-      (youths * tourData.priceForYoung) +
-      (children * tourData.priceForChildren);
-  }, [adults, youths, children, tourData]);
+  const totalParticipants = useMemo(() => adults + youths + children, [adults, youths, children]);
+
+  const totalPrice = useMemo(
+    () =>
+      adults * tourData.priceForAdult +
+      youths * tourData.priceForYoung +
+      children * tourData.priceForChildren,
+    [adults, youths, children, tourData]
+  );
 
   const onSubmit = (values: BookingValues) => {
     if (!isAuthenticated) {
       toast.error("Please login to continue booking", {
         action: {
-          label: "Undo",
-          onClick: () => console.log("Undo"),
+          label: "Login",
+          onClick: () => navigate("/login", { state: { from: `/tours/${tourData._id}` } }),
         },
       });
       return;
     }
-    console.log({ ...values, tourId: tourData._id });
     navigate(`/tours/${tourData._id}/book`, {
       state: { ...values, tour: tourData, total: totalPrice },
     });
   }
-
-  const checkAvailabilitySchedule = (dateRange: { from: Date; to: Date }): { available: boolean; conflictingDates: Date[] } => {
-    const conflict = busyDates.filter((busy) => {
-      const date = new Date(busy);
-      return date >= dateRange.from && date <= dateRange.to;
-    })
-
-    return {
-      available: conflict.length === 0,
-      conflictingDates: conflict,
-    }
-  }
   
   useEffect(() => {
     if (dateRange?.from && dateRange?.to) {
-      const availability = checkAvailabilitySchedule(dateRange);
+      const availability = checkAvailabilitySchedule(dateRange, busyDates);
       setDateAvailability(availability);
 
       if (!availability.available) {
-        form.setError("dateRange", {
+        setError("dateRange", {
           type: "manual",
           message: "Selected dates conflict with guide's schedule"
         });
       } else {
-        form.clearErrors("dateRange");
+        clearErrors("dateRange");
       }
     }
+
+    if (totalParticipants > tourData.maxParticipants) {
+      setError("root.maxParticipants", {
+        type: "manual",
+        message: `Total participants (${totalParticipants}) exceed the maximum allowed (${tourData.maxParticipants}).`,
+      });
+    } else {
+      clearErrors("root.maxParticipants");
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateRange, form]);
+  }, [dateRange, setError, clearErrors, totalParticipants, tourData.maxParticipants]);
 
   return (
     <div className="lg:col-span-1">
@@ -118,11 +119,6 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              {/* <div className="flex items-center gap-2 text-xl font-semibold">
-                <DollarSign className="h-5 w-5 text-primary" />
-                <span>{price}</span>
-                /person
-              </div> */}
               <FormField 
                 control={form.control}
                 name="dateRange"
@@ -159,7 +155,12 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                           initialFocus
                           mode="range"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(range) => {
+                            field.onChange({
+                              from: range?.from,
+                              to: range?.from ? addDays(range.from, tourData.duration - 1) : undefined
+                            })
+                          }}
                           numberOfMonths={2}
                           disabled={(date) => {
                             if (date < new Date()) return true;
@@ -306,6 +307,18 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                     </FormItem>
                     )}
                   />
+
+                  {totalParticipants > tourData.maxParticipants && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Participant Limit Exceeded</AlertTitle>
+                      <AlertDescription>
+                        The total number of participants ({totalParticipants}) exceeds the maximum
+                        allowed for this tour ({tourData.maxParticipants}). Please reduce the number of
+                        participants.
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
               </div>
 
@@ -322,7 +335,12 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                 type="submit"
                 className="w-full bg-primary"
                 size="lg"
-                disabled={!form.formState.isValid || adults + youths + children === 0 || !dateAvailability.available}
+                disabled={
+                  !form.formState.isValid || 
+                  adults + youths + children === 0 || 
+                  !dateAvailability.available ||
+                  totalParticipants > tourData.maxParticipants
+                }
               >
                 Booking Now
               </Button>

@@ -5,8 +5,7 @@ import { tourData } from '@/lib/mock-data'
 const UserProfileReviewPage = () => {
   return (
     <div className='bg-white px-5 rounded-xl'>
-    <TourReviewsSection reviews={tourData.reviews}/>
-    
+      <TourReviewsSection reviews={tourData.reviews}/>
     </div>
   )
 }
