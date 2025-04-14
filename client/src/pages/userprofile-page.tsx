@@ -58,6 +58,7 @@ const UserProfilePage = () => {
   return (
     <div className="my-1 w-full flex items-start gap-5">
       {/* left content */}
+      {userInfo?.role === "TOUR_GUIDE" && (
       <div className="flex flex-col gap-1 max-w-[320px] sticky top-24 left-0">
         <div className="flex justify-between">
           <p className="font-medium pt-2">Schedule</p>
@@ -102,6 +103,7 @@ const UserProfilePage = () => {
                 </div>
           </div>
       </div>
+      )}
       {/* main content */}
       <div className="flex-1">
         {isAuthenticated && userInfo?.username === username && (

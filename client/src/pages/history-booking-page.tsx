@@ -169,7 +169,10 @@ const HistoryBookingPage = () => {
         <ReviewTourModal
           booking={selectedBooking}
           open={isReviewModalOpen}
-          onOpenChange={setIsReviewModalOpen}
+          onOpenChange={(open) => {
+            setIsReviewModalOpen(open);
+            if (!open) setSelectedBooking(null);
+          }}
         />
       )}
     </div>
