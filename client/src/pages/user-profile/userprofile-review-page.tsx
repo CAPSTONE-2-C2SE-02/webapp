@@ -1,11 +1,13 @@
 import TourReviewsSection from '@/components/tour/tour-review-section'
-import { tourData } from '@/lib/mock-data'
-
+import { useAppSelector } from '@/hooks/redux';
 
 const UserProfileReviewPage = () => {
+  const userInfo = useAppSelector((state) => state.auth.userInfo);
+  const tourGuideId = userInfo?._id as string;
   return (
     <div className='bg-white px-5 rounded-xl'>
-      <TourReviewsSection reviews={tourData.reviews}/>
+      <h2 className="text-2xl font-bold m-4 text-teal-800">Reviews</h2>
+      <TourReviewsSection tourGuideId = {tourGuideId} />
     </div>
   )
 }

@@ -45,7 +45,7 @@ const TourBookingInfoCard = ({
       <div className="flex-1 p-4 flex flex-col justify-between gap-3">
         <div>
           <h2 className="font-medium text-sm">{booking.tourId.title}</h2>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-primary font-semibold mt-1">
             {format(new Date(booking.startDate), "dd/MM/yyyy")} -{" "}
             {format(new Date(booking.endDate), "dd/MM/yyyy")}
           </p>
@@ -103,7 +103,10 @@ const TourBookingInfoCard = ({
           {isCompleted && role === "TRAVELER" && (
             <>
             {!booking.isReview ? (
-            <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => onReview(booking._id)}>
+            <Button 
+                variant="outline" 
+                size="sm" className="text-xs h-8" 
+                onClick={() => onReview(booking._id)}>
               Review
             </Button>
             ) : (
@@ -111,18 +114,12 @@ const TourBookingInfoCard = ({
                 variant="secondary"
                 size="sm"
                 className="text-xs h-8"
-                onClick={() => onReview(booking._id)}
-              >
+                onClick={() => onReview(booking._id)}>
                 Reviewed
               </Button>
             )}
             </>
           )}
-          <ReviewTourModal
-            booking={booking}
-            open={reviewTourOpen}
-            onOpenChange={setReviewTourOpen}
-          />
           {isCanceled && (
             <TooltipProvider>
               <Tooltip>
