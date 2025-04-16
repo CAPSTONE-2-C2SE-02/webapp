@@ -9,9 +9,9 @@ export const createReview = async (data: CreateReviewValues & { bookingId: strin
   formData.append("bookingId", data.bookingId);
   formData.append("ratingForTour", data.ratingForTour.toString());
   formData.append("ratingForTourGuide", data.ratingForTourGuide.toString());
-  formData.append("reviewTour", data.tourReview);
-  formData.append("reviewTourGuide", data.guideReview);
-  data.images.forEach((file) => {
+  formData.append("reviewTour", data.reviewTour);
+  formData.append("reviewTourGuide", data.reviewTourGuide);
+  data.imageUrls.forEach((file) => {
     formData.append("images", file);
   });
 
@@ -33,21 +33,7 @@ export const createReview = async (data: CreateReviewValues & { bookingId: strin
     if (!response?.data?.result) {
       throw new Error("Invalid response structure");
     }
-    const apiReview = response.data.result;
-    
-    const review : Review = {
-      _id: apiReview._id,
-      bookingId: apiReview.bookingId,
-      ratingForTour: apiReview.rating || 5, 
-      ratingForTourguide: apiReview.ratingForTourguide || 5, 
-      tourReview: apiReview.reviewTour || "", 
-      tourGuideReview: apiReview.reviewTourGuide || "", 
-      images: apiReview.imageUrl || [], 
-      user: apiReview.user, 
-      createdAt: apiReview.createdAt, 
-    };
-
-    return review;
+    return response.data.result as Review;
   } catch (error) {
     if (error instanceof AxiosError) {
       if (error.response?.status === 404) {

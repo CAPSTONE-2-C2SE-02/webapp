@@ -1,9 +1,7 @@
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Review } from "@/lib/types";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Coffee } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchReviewByTourGuideId } from "@/services/tours/review-api";
 import { format } from "date-fns";
@@ -19,18 +17,6 @@ export default function TourReviewsSection({ tourGuideId }: ReviewsSectionProps)
   });
   return (
     <div className="mt-4">
-      <div className="flex items-center gap-4 mb-4">
-        <div className="flex-1 border border-gray-200 rounded-lg p-4 bg-white text-center">
-          <Star className="text-yellow-400 mx-auto mb-2" fill="#FFC400" size={32} />
-          <p className="text-sm text-gray-500 uppercase">Overall Rating</p>
-          <p className="text-lg font-semibold">4.8</p>
-        </div>
-        <div className="flex-1 border border-gray-200 rounded-lg p-4 bg-white text-center">
-          <Coffee className="text-teal-500 mx-auto mb-2" size={32} />
-          <p className="text-sm text-gray-500 uppercase">Total Reviews</p>
-          <p className="text-lg font-semibold">23</p>
-        </div>
-      </div>
       <div className="space-y-6">
         {reviews && reviews.length > 0 ? (
           reviews.map((review, index) => (
@@ -54,19 +40,19 @@ export default function TourReviewsSection({ tourGuideId }: ReviewsSectionProps)
             </div>
             <div className="text-gray-600">
               <Badge className="inline-block px-3 py-1 border bg-white text-primary border-gray-300 rounded-full text-xs truncate min-w-fit">Tour</Badge>
-              <p className="text-gray-600">{review.tourReview || "No tour review provided"}</p>
+              <p className="text-gray-600">{review.reviewTour || "No tour review provided"}</p>
             </div>
             <div className="text-gray-600">
               <Badge className="inline-block px-3 py-1 border bg-white text-primary border-gray-300 rounded-full text-xs truncate min-w-fit">Tour Guide</Badge>
-              <p>{review.tourGuideReview || "No tour guide review provided"}</p>
+              <p>{review.reviewTourGuide || "No tour guide review provided"}</p>
             </div>
             <div className="flex">
-              {review.images && review.images.length > 0 && (
+              {review.imageUrls && review.imageUrls.length > 0 && (
                 <div className="flex gap-2 mt-2">
-                  {review.images.map((image, i) => (
+                  {review.imageUrls.map((imageUrl, i) => (
                     <img
                       key={i}
-                      src={image}
+                      src={imageUrl}
                       alt={`Review Image ${i}`}
                       className="w-24 h-24 object-cover rounded-lg"
                     />

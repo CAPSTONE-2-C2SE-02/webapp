@@ -94,9 +94,9 @@ export type Review = {
   bookingId: Booking;
   ratingForTour: number;
   ratingForTourguide: number;
-  tourReview: string;
-  tourGuideReview: string;
-  images?: string[];
+  reviewTour: string;
+  reviewTourGuide: string;
+  imageUrls?: File[];
   createdAt: string;
   tourId?: Tour;
   travelerId?: UserInfo;
@@ -118,6 +118,7 @@ export type UserInfo = {
   followings: Follow[];
   createdAt: string;
   updatedAt: string;
+  rating: number;
 }
 
 export type Follow = {

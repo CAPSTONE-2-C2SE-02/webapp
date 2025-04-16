@@ -36,9 +36,9 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
     defaultValues: {
       ratingForTour: 5,
       ratingForTourGuide: 5,
-      tourReview: "",
-      guideReview: "",
-      images: [],
+      reviewTour: "",
+      reviewTourGuide: "",
+      imageUrls: [],
     },
   });
 
@@ -48,17 +48,17 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
       form.reset({
         ratingForTour: reviewData.ratingForTour,
         ratingForTourGuide: reviewData.ratingForTourguide,
-        tourReview: reviewData.tourReview,
-        guideReview: reviewData.tourGuideReview,
-        images: [],
+        reviewTour: reviewData.reviewTour,
+        reviewTourGuide: reviewData.reviewTourGuide,
+        imageUrls: [],
       });
     } else {
       form.reset({
         ratingForTour: 5,
         ratingForTourGuide: 5,
-        tourReview: "",
-        guideReview: "",
-        images: [],
+        reviewTour: "",
+        reviewTourGuide: "",
+        imageUrls: [],
       });
     }
   }, [reviewData, form]);
@@ -93,7 +93,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
 
   const handleClose = (open: boolean) => {
     if (!open) {
-      const images = form.getValues("images") || [];
+      const images = form.getValues("imageUrls") || [];
       images.forEach((image) => {
         const url = URL.createObjectURL(image);
         URL.revokeObjectURL(url);
@@ -179,7 +179,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
 
             <FormField
               control={form.control}
-              name="tourReview"
+              name="reviewTour"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-medium">Tour Review</FormLabel>
@@ -226,7 +226,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
 
             <FormField
               control={form.control}
-              name="guideReview"
+              name="reviewTourGuide"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-medium">Tour Guide Review</FormLabel>
@@ -245,7 +245,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
 
             <FormField
               control={form.control}
-              name="images"
+              name="imageUrls"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-medium">
