@@ -1,10 +1,10 @@
 import React from 'react'
 import Profile from '@/components/form/profile-form'
 
-const ProfileImages = () => {
+const UserProfileImages = () => {
     return (
         <Profile />
     )
 }
 
-export default ProfileImages
+export default UserProfileImages

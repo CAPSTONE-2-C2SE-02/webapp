@@ -1,6 +1,4 @@
-// src/components/profile/profile-image.tsx
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import {
     Pagination,
     PaginationContent,
@@ -31,22 +29,20 @@ export function ProfileImages({
             <div className="flex space-x-4 border-b border-gray-200 justify-start">
                 <button
                     onClick={() => setActiveTab("images")}
-                    className={`pb-2 font-medium text-sm ${activeTab === "images"
-                        ? "text-gray-700 border-b-2 border-blue-600"
-                        : "text-gray-500"
+                    className={`pb-2 font-medium text-sm ${activeTab === "images" ? "text-gray-700 border-b-2 border-blue-600" : "text-gray-500"
                         }`}
                 >
                     IMAGES
                 </button>
-                <button
-                    onClick={() => setActiveTab("videos")}
-                    className={`pb-2 font-medium text-sm ${activeTab === "videos"
-                        ? "text-gray-700 border-b-2 border-blue-600"
-                        : "text-gray-500"
-                        }`}
-                >
-                    VIDEOS
-                </button>
+                {/* Optional: Add videos tab if supported later */}
+                {/* <button
+          onClick={() => setActiveTab("videos")}
+          className={`pb-2 font-medium text-sm ${
+            activeTab === "videos" ? "text-gray-700 border-b-2 border-blue-600" : "text-gray-500"
+          }`}
+        >
+          VIDEOS
+        </button> */}
             </div>
 
             {/* Content Area */}
@@ -55,11 +51,15 @@ export function ProfileImages({
                     images.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full min-h-[400px]">
                             {images.map((image, index) => (
-                                <div key={index} className="aspect-square">
+                                <div key={`${image}-${index}`} className="aspect-square">
                                     <img
                                         src={image}
                                         alt={`Profile Image ${index + 1}`}
                                         className="w-full h-full object-cover rounded-lg"
+                                        onError={(e) => {
+                                            console.warn(`Failed to load image: ${image}`);
+                                            e.currentTarget.src = "/placeholder-image.jpg"; // Optional fallback
+                                        }}
                                     />
                                 </div>
                             ))}
@@ -76,7 +76,7 @@ export function ProfileImages({
                 )}
             </div>
 
-            {/* Pagination sử dụng shadcn */}
+            {/* Pagination */}
             {activeTab === "images" && images.length > 0 && (
                 <div className="mt-6 flex justify-center">
                     <Pagination>
@@ -84,35 +84,27 @@ export function ProfileImages({
                             <PaginationItem>
                                 <PaginationPrevious
                                     onClick={() => onPageChange(currentPage - 1)}
-                                    className={
-                                        currentPage === 1
-                                            ? "pointer-events-none opacity-50"
-                                            : "cursor-pointer"
-                                    }
+                                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                                 />
                             </PaginationItem>
 
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                                (page) => (
-                                    <PaginationItem key={page}>
-                                        <PaginationLink
-                                            onClick={() => onPageChange(page)}
-                                            isActive={currentPage === page}
-                                            className="cursor-pointer"
-                                        >
-                                            {page}
-                                        </PaginationLink>
-                                    </PaginationItem>
-                                )
-                            )}
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                <PaginationItem key={page}>
+                                    <PaginationLink
+                                        onClick={() => onPageChange(page)}
+                                        isActive={currentPage === page}
+                                        className="cursor-pointer"
+                                    >
+                                        {page}
+                                    </PaginationLink>
+                                </PaginationItem>
+                            ))}
 
                             <PaginationItem>
                                 <PaginationNext
                                     onClick={() => onPageChange(currentPage + 1)}
                                     className={
-                                        currentPage === totalPages
-                                            ? "pointer-events-none opacity-50"
-                                            : "cursor-pointer"
+                                        currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"
                                     }
                                 />
                             </PaginationItem>

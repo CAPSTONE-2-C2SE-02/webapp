@@ -1,0 +1,7 @@
+﻿_id,title,introduction,author,destination,departureLocation,schedule,priceForAdult,priceForYoung,priceForChildren,maxParticipants,totalBookings,duration,imageUrls,include,notInclude,status,deleted,createdAt,updatedAt,__v
+67e4f204023a510e9e2a9a6b,Tour Cầu Rồng Phun Lửa & Chợ Đêm Helio,"Hòa mình vào không khí sôi động khi Cầu Rồng phun lửa, dạo phố đi bộ Bạch Đằng, thưởng thức ẩm thực tại chợ đêm Helio.",67e4f221cc6f68665f4a36c7,Đà Nẵng,Đà Nẵng,[object Object],50,45,35,20,167,1,https://res.cloudinary.com/dkkpbvqin/image/upload/v1743899176/ae7nfdeit9uolqtslfdp.jpg,"""Hướng dẫn viên địa phương"",
+""Đón/trả khách tại khách sạn trung tâm"",
+""Vé xem show Cầu Rồng phun lửa"",
+""Phiếu giảm giá chợ đêm Helio""","""Chi phí ăn uống"",
+""Chi phí cá nhân"",
+""Bảo hiểm du lịch""",ACTIVE,FALSE,2025-04-06T00:26:17.440Z,2025-04-06T00:26:17.440Z,0

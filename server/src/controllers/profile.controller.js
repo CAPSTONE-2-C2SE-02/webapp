@@ -1,37 +1,11 @@
+import axios from "axios";
 import { StatusCodes } from "http-status-codes";
-import Profile from "../models/profile.model.js";
+import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
 import { uploadSingleImage } from "../utils/uploadImage.util.js";
+import notificationController from "./notification.controller.js";
 
 class ProfileController {
-
-    // [GET] /api/v1/profiles?page=&limit=
-    async getAllProfiles(req, res) {
-        try {
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit) || 10;
-            const skip = (page - 1) * limit;
-
-            const profiles = await Profile.find().skip(skip).limit(limit);
-
-            const totalProfiles = await Profile.countDocuments();
-            return res.status(StatusCodes.OK).json({
-                success: true,
-                result: {
-                    totalProfiles: totalProfiles,
-                    totalPage: Math.ceil(totalProfiles / limit),
-                    currentPage: page,
-                    limit: limit,
-                    data: profiles
-                },
-            });
-        } catch (error) {
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                error: error
-            });
-        }
-    };
 
     // [PUT] /api/v1/profiles/:id
     async updateProfile(req, res) {
@@ -39,40 +13,53 @@ class ProfileController {
             const id = req.params.id;
             const request = req.body;
 
-            const profile = await Profile.findOne({ _id: id });
+            const user = await User.findOne({ _id: id });
 
-            if (!profile)
+            if (!user)
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
                     message: "Profile not found.",
                 });
 
-            if (request.email != profile.email || request.phoneNumber != profile.phoneNumber) {
-                const existingProfile = await Profile.findOne({
-                    $or: [{ email: request.email }, { phoneNumber: request.phoneNumber }],
-                    _id: { $ne: id }
-                });
+            const existingProfile = await User.findOne({
+                $or: [{ email: request.email }, { phoneNumber: request.phoneNumber }]
+            });
+            if (existingProfile) {
+                const errors = [];
+                if (existingProfile.email === request.email) errors.push("Email already exists.");
+                if (existingProfile.phoneNumber === request.phoneNumber) errors.push("Phone number already exists.");
 
-                if (existingProfile) {
-                    const errors = [];
-                    if (existingProfile.email === request.email) errors.push("Email already exists.");
-                    if (existingProfile.phoneNumber === request.phoneNumber) errors.push("Phone number already exists.");
-
-                    return res.status(StatusCodes.BAD_REQUEST).json({ success: false, errors });
-                }
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: errors });
             }
 
-            const image = req.files ? await uploadSingleImage(req.files) : profile.profilePicture;
+            // Upload profile picture
+            const profilePicture = req.files?.profilePicture
+                ? await uploadSingleImage(req.files.profilePicture)
+                : user.profilePicture;
 
-            const updatedProfile = await Profile.findByIdAndUpdate(
+            // Upload cover photo
+            const coverPhoto = req.files?.coverPhoto
+                ? await uploadSingleImage(req.files.coverPhoto)
+                : user.coverPhoto;
+
+            const today = new Date();
+            const minAgeDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+            if (request.dateOfBirth < minAgeDate) {
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: "You must be at least 13 years old." });
+            }
+
+            const updatedProfile = await User.findByIdAndUpdate(
                 id,
                 {
-                    fullName: request.fullName || profile.fullName,
-                    email: request.email || profile.email,
-                    phoneNumber: request.phoneNumber || profile.phoneNumber,
-                    address: request.address || profile.address,
-                    bio: request.bio || profile.bio,
-                    profilePicture: image,
+                    fullName: request.fullName || user.fullName,
+                    username: request.username || user.username,
+                    email: request.email || user.email,
+                    phoneNumber: request.phoneNumber || user.phoneNumber,
+                    address: request.address || user.address,
+                    bio: request.bio || user.bio,
+                    profilePicture: profilePicture,
+                    coverPhoto: coverPhoto,
+                    dateOfBirth: request.dateOfBirth || user.dateOfBirth,
                 },
                 { new: true }
             );
@@ -80,12 +67,12 @@ class ProfileController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: "Profile updated successfully.",
-                result: profile,
+                result: updatedProfile,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: error
+                error: error.message
             });
         }
     };
@@ -94,7 +81,7 @@ class ProfileController {
     async deleteProfile(req, res) {
         try {
             const id = req.params.id;
-            const profile = await Profile.findOne({ _id: id });
+            const profile = await User.findOne({ _id: id });
 
             if (!profile)
                 return res.status(StatusCodes.NOT_FOUND).json({
@@ -102,8 +89,7 @@ class ProfileController {
                     error: "Profile not found.",
                 });
 
-            await Profile.delete({ _id: profile._id });
-            await User.delete({ _id: profile.userId })
+            await User.delete({ _id: profile._id });
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -112,16 +98,16 @@ class ProfileController {
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                error: error
+                error: error.message
             });
         }
     };
 
-    // [POST] /api/v1/profiles/active/:id
+    // [PUT] /api/v1/profiles/active/:id
     async activeProfile(req, res) {
         try {
             const { id } = req.body;
-            const profile = await Profile.findOne({ _id: id });
+            const profile = await User.findOne({ _id: id });
 
             if (profile.active) {
                 profile.active = false;
@@ -129,7 +115,14 @@ class ProfileController {
                 profile.active = true;
             }
 
-            await profile.save();
+            await User.findByIdAndUpdate(
+                id,
+                {
+                    $set: {
+                        active: profile.active
+                    }
+                }
+            )
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -139,7 +132,7 @@ class ProfileController {
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                error: error
+                error: error.message
             });
         }
     };
@@ -148,7 +141,7 @@ class ProfileController {
     async getProfileById(req, res) {
         try {
             const id = req.params.id;
-            const profile = await Profile.findOne({ _id: id });
+            const profile = await User.findOne({ _id: id }).select("-password");
 
             if (!profile)
                 return res.status(StatusCodes.NOT_FOUND).json({
@@ -163,15 +156,15 @@ class ProfileController {
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                error: error
+                error: error.message
             });
         }
     };
 
-    // [GET] /api/v1/profiles/:id
+    // [GET] /api/v1/profiles/my-info
     async myInfo(req, res) {
         try {
-            const profile = await Profile.findOne({ userId: req.user.userId });
+            const profile = await User.findOne({ _id: req.user.userId }).select("-password");
 
             if (!profile)
                 return res.status(StatusCodes.NOT_FOUND).json({
@@ -186,14 +179,14 @@ class ProfileController {
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                error: error
+                error: error.message
             });
         }
     };
 
     // [GET] /api/v1/profiles/search?name=
 
-    // db.profiles.createIndex({ fullName: "text" }) để tìm kiếm
+    // db.users.createIndex({ fullName: "text" }) để tìm kiếm
     async searchProfiles(req, res) {
         try {
             const searchQuery = req.query.name?.trim();
@@ -205,16 +198,31 @@ class ProfileController {
             }
 
             const formattedQuery = searchQuery.replace(/[^a-zA-Z0-9 ]/g, " ");
-            let profiles = await Profile.find(
-                { $text: { $search: formattedQuery } },
-                { score: { $meta: "textScore" } }
-            ).sort({ score: { $meta: "textScore" } });
 
+            let profiles = [];
+
+            profiles = await User.find(
+                { $text: { $search: searchQuery } },
+                { score: { $meta: "textScore" } }
+            ).select("-password")
+                .sort({ score: { $meta: "textScore" } })
+            // .populate("followers", "_id username fullName profilePicture")
+            // .populate("following", "_id username fullName profilePicture")
 
             if (profiles.length === 0) {
-                const regexPattern = searchQuery.split("").join(".*");
-                profiles = await Profile.find({
-                    fullName: { $regex: regexPattern, $options: "i" },
+                profiles = await User.find({
+                    $or: [
+                        { fullName: { $regex: formattedQuery, $options: "i" } },
+                    ],
+                }).select("-password")
+                // .populate("followers", "_id username fullName profilePicture")
+                // .populate("following", "_id username fullName profilePicture")
+            }
+
+            if (profiles.length === 0) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "No profile found matching the search query",
                 });
             }
 
@@ -230,6 +238,178 @@ class ProfileController {
             });
         }
     };
+
+    // [POST] /api/v1/profiles/follow/:id
+    async followUser(req, res) {
+        try {
+            const currentUserId = req.user.userId;
+            const targetUserId = req.params.id;
+
+            if (currentUserId === targetUserId) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "You cannot follow yourself.",
+                });
+            }
+
+            const targetUser = await User.findById(targetUserId);
+            if (!targetUser) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            const currentUser = await User.findById(currentUserId);
+
+            if (targetUser.followers.includes(currentUserId)) {
+                // Unfollow
+                targetUser.followers = targetUser.followers.filter((id) => id.toString() !== currentUserId);
+                currentUser.followings = currentUser.followings.filter((id) => id.toString() !== targetUserId);
+
+                await targetUser.save();
+                await currentUser.save();
+
+                return res.status(StatusCodes.OK).json({
+                    success: true,
+                    message: "Unfollowed the user successfully.",
+                });
+            } else {
+                // Follow
+                targetUser.followers.push(currentUserId);
+                currentUser.followings.push(targetUserId);
+
+                await targetUser.save();
+                await currentUser.save();
+
+                // Send notification
+                await notificationController.sendNotification({
+                    body: {
+                        type: "FOLLOW",
+                        senderId: currentUserId,
+                        receiverId: targetUserId,
+                        relatedId: currentUserId,
+                        relatedModel: "User",
+                        message: `Người dùng ${currentUserId} đã follow bạn`
+                    },
+                }, {
+                    status: () => ({
+                        json: () => { },
+                    }),
+                });
+
+                return res.status(StatusCodes.OK).json({
+                    success: true,
+                    message: "Followed the user successfully.",
+                });
+            }
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/profiles/followers
+    async getFollowers(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await User.findById(userId).populate({
+                path: "followers",
+                select: "_id username fullName profilePicture role followers",
+                populate: {
+                    path: "role", // Populate the role field
+                    select: "name", // Select only the name of the role
+                },
+            });
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: user.followers,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/profiles/following
+    async getFollowings(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await User.findById(userId).populate({
+                path: "followings",
+                select: "_id username fullName profilePicture role followers",
+                populate: {
+                    path: "role", // Populate the role field
+                    select: "name", // Select only the name of the role
+                },
+            });
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: user.followings,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/profiles/photos
+    async getProfilePhotos(req, res) {
+        try {
+            const userId = req.user.userId;
+
+            const user = await User.findById(userId).select("profilePicture coverPhoto");
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found.",
+                });
+            }
+
+            const posts = await Post.find({ createdBy: userId }).select("imageUrls");
+            const postImages = posts.reduce((acc, post) => {
+                return acc.concat(post.imageUrls);
+            }, []);
+
+            const allPhotos = {
+                profilePicture: user.profilePicture,
+                coverPhoto: user.coverPhoto,
+                postImages,
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: allPhotos,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
 };
 
 export default new ProfileController;

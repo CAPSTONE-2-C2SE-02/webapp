@@ -1,4 +1,4 @@
-import { Link } from "react-router"; // Sử dụng react-router-dom thay vì react-router nếu bạn dùng react-router-dom
+import { Link } from "react-router";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
 
@@ -17,7 +17,7 @@ export function Breadcrumb({ items }: BreadcrumbProps) {
                                 {item.label}
                             </Link>
                         ) : (
-                            <span className="text-gray-900 font-medium">{item.label}</span>
+                            <span className="text-primary font-medium">{item.label}</span>
                         )}
                         {index < items.length - 1 && (
                             <span className="mx-2 text-gray-500">

@@ -12,7 +12,7 @@ export const generateToken = async (user) => {
         process.env.SECRET_KEY,
         {
             algorithm: 'HS512',
-            expiresIn: "1h",
+            expiresIn: "24h",
         }
     );
     return token;
@@ -28,15 +28,6 @@ export const verifyToken = async (token) => {
             return decoded;
         }
         return null;
-    } catch (error) {
-        return null;
-    }
-};
-
-export const decodeToken = async (token) => {
-    try {
-        const decoded = jwt.verify(token, process.env.SECRET_KEY);
-        return decoded;
     } catch (error) {
         return null;
     }

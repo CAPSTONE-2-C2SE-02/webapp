@@ -1,10 +1,12 @@
 import { Link, NavLink } from "react-router";
 import tripConnectLogo from "@/assets/tripconnect.svg";
 import SearchInput from "./search-input";
-import { Home, Plane, HandHeart, MessageCircle, Bell, Bookmark } from "lucide-react";
+import { Home, Plane, HandHeart, MessageCircle, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import UserNav from "./user-nav";
+import { useAppSelector } from "@/hooks/redux";
+import NotificationSheet from "../notification/notification-sheet";
 
 const NAV_ITEMS = [
   {
@@ -30,16 +32,17 @@ const NAV_ITEMS = [
 ]
 
 const Header = () => {
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
   return (
     <header className="border-b sticky top-0 right-0 left-0 bg-white z-50">
       <div className="container mx-auto flex items-center justify-between px-8 py-4">
-        <div className="flex items-center gap-5">
-          <Link to="/">
-            <img src={tripConnectLogo} className="size-10" />
+        <div className="flex items-center gap-5 flex-1">
+          <Link to="/" className="size-10">
+            <img src={tripConnectLogo} className="w-full h-full object-cover" />
           </Link>
           <SearchInput />
         </div>
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center justify-center gap-4 flex-1">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.placeholder}
@@ -64,14 +67,29 @@ const Header = () => {
         </nav>
 
         {/* header personal action */}
-        <div className="flex items-center gap-5">
-          <Button variant="secondary" className="rounded-xl size-10">
-            <Bell className="size-5" />
-          </Button>
-          <Button variant="secondary" className="rounded-xl size-10">
-            <Bookmark className="size-5" />
-          </Button>
-          <UserNav />
+        <div className="flex items-center gap-5 flex-1 justify-end">
+          {isAuthenticated ? (
+            <>
+              <NotificationSheet />
+              <Button variant="outline" className="rounded-xl size-10">
+                <Bookmark className="size-5" />
+              </Button>
+              <UserNav />
+            </>
+          ) : (
+            <div className="space-x-2">
+              <Link to="/login">
+                <Button variant="default" className="rounded-xl">
+                  Login
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button variant="outline" className="rounded-xl">
+                  New Account
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>

@@ -2,10 +2,9 @@ import { OAuth2Client } from "google-auth-library";
 import { StatusCodes } from "http-status-codes";
 import Role from "../enums/role.enum.js";
 import InvalidatedToken from "../models/invalidated.token.model.js";
-import Profile from "../models/profile.model.js";
 import RoleModel from "../models/role.model.js";
 import User from "../models/user.model.js";
-import { comparePassword, hashPassword } from "../utils/password.util.js";
+import { comparePassword } from "../utils/password.util.js";
 import { generateToken, verifyToken } from "../utils/token.util.js";
 
 
@@ -18,28 +17,33 @@ class AuthenticationController {
         try {
             const { email, password } = req.body;
 
-            const username = email.split("@")[0];
-
-            const user = await User.findOne({ username: username });
+            const user = await User.findOne({ email })
+                .populate("role", "name");
 
             if (!user)
-                return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: "Username does not exist." });
+                return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, error: "Account does not exist." });
 
             const isPasswordValid = await comparePassword(password, user.password);
 
             if (!isPasswordValid)
-                return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, message: "Wrong password." });
+                return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, error: "Wrong password." });
 
             const token = await generateToken(user);
-            const userObject = user.toObject();
-            delete userObject.password;
+
+            const userResponse = {
+                _id: user._id,
+                username: user.username,
+                fullName: user.fullName,
+                profilePicture: user.profilePicture,
+                email: user.email
+            }
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                message: "Authentication successful.",
+                message: "Login successfully.",
                 result: {
                     token: token,
-                    data: userObject
+                    data: userResponse
                 },
             });
 
@@ -47,7 +51,7 @@ class AuthenticationController {
             console.error(error);
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: "Internal server error.",
+                error: error.message,
             });
         }
     }
@@ -75,7 +79,7 @@ class AuthenticationController {
             console.error(error);
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: "Internal server error.",
+                error: error.message,
             });
         }
     }
@@ -98,7 +102,7 @@ class AuthenticationController {
             console.error(error);
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                message: "Internal server error.",
+                error: error.message,
             });
         }
     }
@@ -114,43 +118,58 @@ class AuthenticationController {
             });
 
             const payload = ticket.getPayload();
-            const { email, sub } = payload;
+            if (!payload) {
+                return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "Invalid Google token" });
+            }
+            const { sub: googleId, email, name, picture } = payload;
 
-            let profile = await Profile.findOne({ email: email });
+            let user = await User.findOne({ googleId });
             const travelerRole = await RoleModel.findOne({ name: Role.TRAVELER });
 
-            let userCreated;
-
-            if (!profile) {
-                const user = {
-                    username: email.split("@")[0],
-                    password: await hashPassword("123456"),
-                    role: travelerRole._id,
+            if (!user) {
+                user = await User.findOne({ email });
+                if (!user) {
+                    user = new User({
+                        googleId,
+                        email,
+                        username: email.split("@")[0],
+                        fullName: name,
+                        role: travelerRole._id,
+                        profilePicture: picture,
+                    });
+                    await user.save();
+                } else {
+                    if (!user.profilePicture) {
+                        user.profilePicture = picture;
+                    }
+                    user.googleId = googleId;
+                    await user.save();
                 }
-                userCreated = await User.create(user);
-                profile = new Profile({
-                    fullName: "Google account",
-                    email: email,
-                    phoneNumber: "1867891596",
-                    userId: userCreated._id,
-                    googleId: sub,
-                });
-
-                await profile.save();
             }
 
-            const token = await generateToken(userCreated);
+            const token = await generateToken(user);
+
+            const userResponse = {
+                _id: user._id,
+                username: user.username,
+                fullName: user.fullName,
+                profilePicture: user.profilePicture,
+                email: user.email
+            }
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                result: token
+                message: "Login successfully",
+                result: {
+                    data: userResponse,
+                    token: token,
+                }
             });
-
         } catch (error) {
             console.error("Google login error:", error);
             res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
-                error: "Internal Server Error"
+                error: error.message
             });
         }
     }

@@ -1,18 +1,17 @@
 import mongoose from "mongoose";
 import mongooseDelete from "mongoose-delete";
-import Visibility from "../enums/visibility.enum.js";
 import StatusTour from "../enums/statusTour.enum.js";
 
 const tourSchema = new mongoose.Schema({
-    nameOfTour: {
+    title: {
         type: String
     },
     introduction: {
         type: String
     },
-    tourGuideId: {
+    author: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Profile"
+        ref: "User"
     },
     destination: {
         type: String
@@ -39,27 +38,22 @@ const tourSchema = new mongoose.Schema({
     maxParticipants: {
         type: Number
     },
-    bookedParticipants: {
+    totalBookings: {
         type: Number,
         default: 0
     },
     duration: {
         type: Number
     },
-    images: {
+    imageUrls: {
         type: [String],
         default: []
     },
     include: {
-        type: String,
+        type: [String],
     },
     notInclude: {
-        type: String,
-    },
-    visibility: {
-        type: String,
-        enum: Object.values(Visibility),
-        default: "PUBLIC"
+        type: [String],
     },
     status: {
         type: String,
@@ -67,7 +61,7 @@ const tourSchema = new mongoose.Schema({
         default: "ACTIVE"
     },
 },
-    { timestamps: true }
+    { timestamps: true, versionKey: false }
 );
 
 tourSchema.plugin(mongooseDelete, { deletedAt: true, overrideMethods: true });

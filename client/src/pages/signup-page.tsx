@@ -2,7 +2,7 @@ import SignupForm from "@/components/form/signup-form"
 
 const SignupPage = () => {
     return (
-        <div>
+        <div className="w-[680px]">
             <SignupForm />
         </div>
     )

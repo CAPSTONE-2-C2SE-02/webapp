@@ -1,11 +1,13 @@
-import { ArrowLeft, MapPin, Search, X } from "lucide-react";
+import { ArrowLeft, Loader2, MapPin, Search, X } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { useMemo, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
-import { tours } from "@/lib/mock-data";
+// import { tours } from "@/lib/mock-data";
 import { Tour } from "@/lib/types";
 import useDebounce from "@/hooks/useDebounce";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAllPostTourGuide } from "@/services/tours/tour-api";
 
 interface TourAttachmentSelectorProps {
   isShow: boolean;
@@ -14,6 +16,10 @@ interface TourAttachmentSelectorProps {
 }
 
 const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSelectorProps) => {
+  const { data: tours, isLoading, isError, error } = useQuery({
+    queryKey: ["tours", "tours-author"],
+    queryFn: fetchAllPostTourGuide,
+  });
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // debounced search
@@ -24,10 +30,10 @@ const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSele
     return tours.filter(
       (tour) =>
         tour.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        tour.location.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        tour.description.toLowerCase().includes(debouncedSearch.toLowerCase())
+        tour?.destination.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        tour?.introduction.toLowerCase().includes(debouncedSearch.toLowerCase())
     )
-  }, [debouncedSearch, isShow]);
+  }, [debouncedSearch, isShow, tours]);
 
   const handleSelectTour = (tour: Tour) => {
     onBack();
@@ -61,12 +67,23 @@ const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSele
       
       {/* tours list */}
       <ScrollArea className="flex-1 max-h-[calc(100vh-220px)] h-full">
+        {isLoading && (
+          <div className="border-b py-3 px-3 cursor-pointer flex items-center justify-center">
+            <Loader2 className="animate-spin size-4" />
+          </div>
+        )}
+        {isError && (
+          <div className="border-b py-3 px-3 cursor-pointer flex items-center justify-center text-red-400">
+            <span>An error occurred while loading tours.</span>
+            <span>{error.message}</span>
+          </div>
+        )}
         {filteredTours.map((tour) => (
           <div key={tour._id} className="border-b py-3 px-3 cursor-pointer" onClick={() => handleSelectTour(tour)}>
             <h3 className="font-semibold text-primary">{tour.title}</h3>
             <div className="flex items-center text-gray-500 text-sm mt-1">
               <MapPin className="h-4 w-4 mr-1" />
-              {tour.location}
+              {tour.destination}
             </div>
           </div>
         ))}

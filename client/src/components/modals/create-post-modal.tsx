@@ -1,4 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Hash, Image, Loader2, MapPin, Smile, X } from "lucide-react";
+import { Description } from "@radix-ui/react-dialog";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
@@ -10,13 +12,16 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import { TagsInput } from "../ui/tags-input";
-import { Hash, Image, MapPin, Smile, X } from "lucide-react";
-import { Tour } from "@/lib/types";
+import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import TourAttachment from "../tour/tour-attachment";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { cn } from "@/lib/utils";
 import TourAttachmentSelector from "../tour/tour-attachment-selector";
-import { Description } from "@radix-ui/react-dialog";
+import { Tour } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useCreatePostMutation } from "@/services/posts/mutation";
+import useAuthInfo from "@/hooks/useAuth";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { EmojiPicker, EmojiPickerContent, EmojiPickerSearch } from "../ui/emoji-picker";
 
 interface CreateNewPostModalProps {
   isOpen: boolean;
@@ -27,32 +32,40 @@ const CreateNewPostModal = ({
   isOpen,
   onOpenChange,
 }: CreateNewPostModalProps) => {
+  const auth = useAuthInfo();  
+  const createPostMutation = useCreatePostMutation();
+
   const [isShowTagInput, setIsShowTagInput] = useState(false);
-  const [isEmptyContent, setIsEmptyContent] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
   const [showTourSelector, setShowTourSelector] = useState(false);
+  const [isOpenEmoji, setIsOpenEmoji] = useState(false);
 
   const [tags, setTags] = useState<string[]>([]);
   const [content, setContent] = useState<string>("");
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [images, setImages] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // reset all form fields when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setIsShowTagInput(false);
+      setShowTourSelector(false);
+      setTags([]);
+      setContent("");
+      setSelectedTour(null);
+      setImages([]);
+      if (contentRef.current) contentRef.current.innerHTML = "";
+    }
+  }, [isOpen]);
 
   // set content from div textbox
-  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const isEmpty = e.currentTarget.textContent?.trim() === '';
-    setIsEmptyContent(isEmpty);
-
-    if (e.currentTarget) {
-      const processedContent = e.currentTarget.innerHTML
-        .replace(/<div>/g, '\n')
-        .replace(/<\/div>/g, '')
-        .replace(/<br>/g, '\n')
-        .trim();
-      
-      setContent(processedContent);
+  const handleInput = () => {
+    if (contentRef.current) {
+      const text = contentRef.current.innerText.trim();
+      setContent(text);
     }
-  };
+  }
 
   // handle tasks related to images 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,23 +81,45 @@ const CreateNewPostModal = ({
 
   // create new post
   const handleSubmit = async () => {
-    setIsLoading(true);
-    const formData = new FormData();
+    try {
+      const formData = new FormData();
+  
+      // Append text data
+      if (content) {
+        content.split('\n').forEach((line) => {
+          formData.append('content', line);
+        });
+      }
+      tags.forEach((tag) => {
+        formData.append('hashtag', tag);
+      });
+      if (selectedTour) {
+        formData.append('tourAttachment', selectedTour._id);
+      }
 
-    // Append text data
-    formData.append('content', content);
-    formData.append('tags', JSON.stringify(tags));
-    // if (selectedTour) {
-    //   formData.append('tourId', selectedTour.id);
-    // }
+      // Append images
+      images.forEach((image) => {
+        formData.append('images', image);
+      });
 
-    // Append images
-    images.forEach((image) => {
-      formData.append(`images`, image);
-    });
+      // const response = await createPost(formData).unwrap();
+      createPostMutation.mutate(
+        formData,
+        {
+          onSuccess: () => {
+            onOpenChange(false);
+          },
+          onError: () => {
+            return;
+          }
+        }
+      )
 
-    console.log(images, tags, content.split("\n"));
-    setIsLoading(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.data?.error || "Error when creating post");
+    }
   };
 
   return (
@@ -106,30 +141,32 @@ const CreateNewPostModal = ({
             <div className="flex items-start gap-3">
               <div className="size-9 rounded-full overflow-hidden flex-shrink">
                 <img
-                  src="https://ui-avatars.com/api/?size=128&background=random"
+                  src={auth?.profilePicture || "https://ui-avatars.com/api/?size=128&background=random"}
                   alt="avatar"
                   className="w-full h-full object-cover"
                 />
               </div>
               <div className="w-full flex-1 space-y-4">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-base font-semibold text-primary">Ngoc Anh</span>
-                  <Badge className="text-xs rounded-full">@ngocanh08</Badge>
+                  <span className="text-base font-semibold text-primary">{auth?.fullName}</span>
+                  <Badge className="text-xs rounded-full">@{auth?.username}</Badge>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-3 overflow-x-auto overflow-y-auto max-h-[calc(100vh-400px)]">
                   <div className="relative">
-                    {isEmptyContent && (
+                    {content.length == 0 && (
                       <span className="absolute top-0 left-0 text-gray-400 pointer-events-none text-sm">
                         What's on your mind?
                       </span>
                     )}
                     <div
                       aria-placeholder="What's on your mind?"
+                      ref={contentRef}
                       tabIndex={0}
                       role="textbox"
                       contentEditable="true"
+                      spellCheck="false"
                       onInput={handleInput}
-                      className="w-full select-text break-words rounded focus:outline-none min-h-[1rem] text-sm whitespace-pre-wrap overflow-x-auto overflow-y-auto"
+                      className="w-full select-text break-words rounded focus:outline-none min-h-[1rem] text-sm whitespace-pre-wrap"
                     />
                   </div>
                   {isShowTagInput && (
@@ -141,27 +178,29 @@ const CreateNewPostModal = ({
                     />
                   )}
                   {images.length > 0 && (
-                    <ScrollArea className="w-[582px] overflow-hidden">
-                      <div className="flex w-max gap-2 pb-2 rounded-lg">
+                    <Carousel className="w-full">
+                      <CarouselContent className="flex">
                         {images.map((image, index) => (
-                          <div key={index} className="relative min-w-[200px] h-[200px] rounded-lg overflow-hidden">
-                            <img 
-                              className="w-full h-full object-cover" 
-                              src={URL.createObjectURL(image)} 
-                              alt={`Upload ${index + 1}`} 
-                            />
+                          <CarouselItem key={index} className="relative min-w-[200px] h-[200px] basis-auto select-none first:pl-4 pl-2">
+                            <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
+                              <img 
+                                className="w-full h-full object-cover" 
+                                src={URL.createObjectURL(image)} 
+                                alt={`Upload ${index + 1}`} 
+                              />
+                            </div>
                             <button 
                               className="absolute top-2 right-2 bg-black/30 rounded-full p-1"
                               onClick={() => handleRemoveImage(index)}
                             >
                               <X className="h-4 w-4 text-white" />
                             </button>
-                          </div>
+                          </CarouselItem>
                         ))}
-                      </div>
-                      <ScrollBar orientation="horizontal" />
-                    </ScrollArea>
+                      </CarouselContent>
+                    </Carousel>
                   )}
+
                   {/* Hidden file input */}
                   <input
                     type="file"
@@ -182,12 +221,33 @@ const CreateNewPostModal = ({
                   <Button size={"icon"} variant={"ghost"} onClick={() => setIsShowTagInput(prev => !prev)}>
                     <Hash className="size-5" />
                   </Button>
-                  <Button size={"icon"} variant={"ghost"} onClick={() => setShowTourSelector(true)}>
-                    <MapPin className="size-5" />
-                  </Button>
-                  <Button size={"icon"} variant={"ghost"}>
-                    <Smile className="size-5" />
-                  </Button>
+                  {auth?.role === "TOUR_GUIDE" && (
+                    <Button size={"icon"} variant={"ghost"} onClick={() => setShowTourSelector(true)}>
+                      <MapPin className="size-5" />
+                    </Button>
+                  )}
+                  <Popover open={isOpenEmoji} onOpenChange={setIsOpenEmoji}>
+                    <PopoverTrigger asChild>
+                      <Button size={"icon"} variant={"ghost"}>
+                        <Smile className="size-5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-auto" asChild>
+                      <EmojiPicker
+                        className="h-[326px] rounded-lg border shadow-md"
+                        onEmojiSelect={({ emoji }) => {
+                          if (contentRef.current) {
+                            contentRef.current.innerText += emoji;
+                          }
+                          handleInput();
+                          setIsOpenEmoji(false);
+                        }}                
+                      >
+                        <EmojiPickerSearch />
+                        <EmojiPickerContent />
+                      </EmojiPicker>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </div>
@@ -198,7 +258,10 @@ const CreateNewPostModal = ({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button onClick={handleSubmit} disabled={isLoading}>Post</Button>
+              <Button onClick={handleSubmit} disabled={createPostMutation.isPending}>
+                {createPostMutation.isPending && <Loader2 className="size-4 animate-spin" />}
+                Post
+              </Button>
             </DialogFooter>
           </div>
 

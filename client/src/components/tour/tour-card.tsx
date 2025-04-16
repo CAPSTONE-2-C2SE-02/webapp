@@ -16,7 +16,7 @@ const TourCard = ({ tour, type }: TourCardProps) => {
           {/* image */}
           <div className="w-full h-[200px] rounded-lg overflow-hidden relative transition-all duration-300 group-hover:h-[calc(200px-36px)]">
             <img
-              src={tour.photo[0]}
+              src={tour.imageUrls[0]}
               alt={tour.title}
               className="w-full h-full object-cover"
             />
@@ -27,17 +27,23 @@ const TourCard = ({ tour, type }: TourCardProps) => {
 
           {/* content */}
           <div className="p-2 flex flex-col items-center gap-5 flex-1 transition-opacity duration-300 group-hover:opacity-100 relative">
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <h4 className="text-sm font-semibold line-clamp-1">
                 {tour.title}
               </h4>
-              <p className="line-clamp-2 text-xs">{tour.description}</p>
+              <p className="line-clamp-2 text-xs">{tour.introduction}</p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-0.5 font-semibold text-[hsla(174,100%,33%,1)]">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span className="text-xs">{tour.location}</span>
+                  <span className="text-xs">{tour.destination}</span>
                 </div>
-                <span className="text-xs text-gray-600">{tour.duration}</span>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <UsersRound className="h-[18px] w-[18px] text-primary" />
+                    <span className="text-xs font-medium">{tour.maxParticipants}</span>
+                  </div>
+                  <span className="text-xs text-gray-600">{tour.duration}</span>
+                </div>
               </div>
             </div>
 
@@ -47,7 +53,7 @@ const TourCard = ({ tour, type }: TourCardProps) => {
                 <span className="text-sm font-medium">{tour.rating} Good</span>
               </div>
               <span className="text-primary text-base font-semibold">
-                ${tour.price}
+                ${tour.priceForAdult}
               </span>
             </div>
               <Button className="absolute bottom-0 w-full justify-between rounded-full opacity-0 translate-y-3 invisible transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible" asChild>
@@ -60,9 +66,9 @@ const TourCard = ({ tour, type }: TourCardProps) => {
       ) : (
         <div className="p-2 flex gap-2 shadow bg-white rounded-2xl group transition-all duration-300 hover:shadow-md border border-zinc-50">
           {/* image */}
-          <div className="w-60 h-full overflow-hidden relative rounded-lg">
+          <div className="w-60 h-40 overflow-hidden relative rounded-lg">
             <img
-              src={tour.photo[0]}
+              src={tour.imageUrls[0]}
               alt={tour.title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
@@ -76,32 +82,33 @@ const TourCard = ({ tour, type }: TourCardProps) => {
               <h4 className="text-base font-semibold line-clamp-1">
                 {tour.title}
               </h4>
-              <p className="line-clamp-2 text-xs">{tour.description}</p>
+              <p className="line-clamp-2 text-xs">{tour.introduction}</p>
               <div className="flex items-center gap-0.5 font-semibold text-[hsla(174,100%,33%,1)]">
                 <MapPin className="h-4 w-4 mr-1" />
-                <span className="text-xs">{tour.location}</span>
+                <span className="text-xs">{tour.destination}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-7">
-              <div className="flex items-center gap-2">
-                <Clock className="h-[18px] w-[18px] text-primary" />
-                <span className="text-xs font-medium">{tour.duration}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <UsersRound className="h-[18px] w-[18px] text-primary" />
-                <span className="text-xs font-medium">23</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CircleDollarSign className="h-[18px] w-[18px] text-primary" />
-                <span className="text-xs font-medium">{tour.price}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-end w-full">
-              <div className="flex items-center py-1.5 px-3 bg-slate-50 rounded-full">
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                <span className="text-sm font-medium">{tour.rating} Good</span>
+            <div className="flex justify-between items-center w-full">
+              <div className="flex items-center gap-8">
+                <div className="flex items-center py-1.5 px-3 bg-slate-50 rounded-full">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                  <span className="text-sm font-medium">{tour.rating} Good</span>
+                </div>
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-[18px] w-[18px] text-primary" />
+                    <span className="text-xs font-medium">{tour.duration}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <UsersRound className="h-[18px] w-[18px] text-primary" />
+                    <span className="text-xs font-medium">{tour.maxParticipants}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CircleDollarSign className="h-[18px] w-[18px] text-primary" />
+                    <span className="text-xs font-medium">{tour.priceForAdult}</span>
+                  </div>
+                </div>
               </div>
               <Button className="rounded-2xl" asChild>
                 <Link to={`/tours/${tour._id}`}>

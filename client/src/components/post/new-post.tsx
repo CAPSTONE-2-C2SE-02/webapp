@@ -3,8 +3,10 @@ import { Button } from "../ui/button";
 import { Camera, Image, Paperclip, MapPin, Smile } from "lucide-react";
 import { useState } from "react";
 import CreateNewPostModal from "../modals/create-post-modal";
+import useAuthInfo from "@/hooks/useAuth";
 
 const NewPost = () => {
+  const auth = useAuthInfo();
   const [isCreatePostModelOpen, setIsCreatePostModelOpen] = useState(false);
 
   const showCreatePost = () => {
@@ -18,7 +20,7 @@ const NewPost = () => {
           <Link to={"/users/username"}>
             <div className="size-9 rounded-full border border-slate-100 overflow-hidden">
               <img
-                src="https://ui-avatars.com/api/?size=128&background=random"
+                src={auth?.profilePicture}
                 alt="avatar"
                 className="w-full h-full object-cover"
               />

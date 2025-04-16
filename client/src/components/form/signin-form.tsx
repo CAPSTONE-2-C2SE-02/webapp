@@ -1,8 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "../ui/button";
-import LogoGG from "@/assets/google_icon.svg";
-
 import {
   Form,
   FormControl,
@@ -12,26 +10,34 @@ import {
   FormMessage,
 } from "../ui/form";
 import { Input } from "../ui/input";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { useLoginMutation } from "@/services/root-api";
-import { useAppDispatch, useAppSelector } from "@/hooks/redux";
+import { useAppDispatch } from "@/hooks/redux";
 import { setCredentials } from "@/stores/slices/auth-slice";
 import { useEffect } from "react";
-import { loginSchema, LoginValues } from "@/lib/validation";
+import { loginSchema, LoginValues } from "@/lib/validations";
+import { toast } from "sonner";
+import { ErrorResponse } from "@/lib/types";
+import { PasswordInput } from "../ui/password-input";
+import GoogleLoginButton from "../user/google-login-button";
 
 const SigninForm = () => {
-  const [login, { isLoading }] = useLoginMutation();
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const [login, { isLoading, isError, isSuccess, error, data }] = useLoginMutation();
 
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // check if user is logged in >> redirect to home page
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/");
+    const registered = searchParams.get("registered");
+    if (registered) {
+      toast.success("Account created successfully", {
+        description: "You can now login to your account.",
+      });
+      setSearchParams({});
     }
-  }, [isAuthenticated, navigate]);
+  }, [searchParams]);
 
   const form = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
@@ -43,31 +49,38 @@ const SigninForm = () => {
 
   const onSubmit = async (values: LoginValues) => {
     try {
-      const result = await login(values).unwrap();
-
-      if (result.success && result.token) {
-        dispatch(setCredentials({ userInfo: null, token: result.token }));
-        navigate("/");
-      }
+      await login(values).unwrap();
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Login error:", error);
+      toast.error((error as ErrorResponse).data?.error || "Error when logging in.");
     }
   };
+
+  useEffect(() => {
+    if (isError) {
+      toast.error((error as ErrorResponse).data?.error || "Error when creating account.");
+    }
+    if (isSuccess) {
+      if (data.success && data.result?.token) {
+        dispatch(setCredentials({ token: data?.result?.token }));
+        toast.success(data?.message);
+        navigate("/");
+      }
+    }
+  }, [isError, error, isSuccess, data, dispatch, navigate]);
 
   return (
     <>
       <h2 className="text-2xl font-semibold text-center mt-10">Welcome Back</h2>
-      <p className="text-center text-gray-500">
+      <p className="text-center text-gray-500 mb-5">
         Let&apos;s explore this exciting platform together!
       </p>
 
-      <button className="w-full mt-4 flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-md">
-        <img src={LogoGG} alt="gg Logo" className="h-5" /> Using Google account
-      </button>
+      <GoogleLoginButton />
 
       <div className="flex items-center my-4">
         <hr className="flex-grow border-gray-300" />
-        <span className="px-3 text-gray-400">OR</span>
+        <span className="px-3 text-gray-400 text-xs">OR</span>
         <hr className="flex-grow border-gray-300" />
       </div>
       <Form {...form}>
@@ -96,7 +109,7 @@ const SigninForm = () => {
               <FormItem className="mt-4">
                 <FormLabel className="text-gray-600">Password</FormLabel>
                 <FormControl>
-                  <Input placeholder="********" type="password" {...field} />
+                  <PasswordInput placeholder="********" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -104,16 +117,16 @@ const SigninForm = () => {
           />
           <Button
             type="submit"
-            className="w-full bg-blue-950 mt-4"
+            className="w-full mt-4"
             disabled={isLoading}
           >
             Login
           </Button>
         </form>
       </Form>
-      <p className="text-center mt-4">
+      <p className="text-center mt-4 text-sm text-gray-500">
         Don't have an account?{" "}
-        <Link to="/register" className="text-blue-600">
+        <Link to="/register" className="text-[hsl(174,100%,33%)] font-medium">
           Sign Up
         </Link>
       </p>

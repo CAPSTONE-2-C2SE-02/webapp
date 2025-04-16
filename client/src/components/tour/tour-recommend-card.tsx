@@ -6,7 +6,7 @@ const TourRecommendCard = ({ tour }: { tour: Tour }) => {
   return (
     <div className="bg-white relative rounded-[20px] rounded-tr-[30px] p-2 border-border">
       <img
-        src={tour.photo[0]}
+        src={tour.imageUrls[0]}
         alt="tour image"
         className="rounded-xl h-[120px] w-full object-cover"
       />
@@ -17,7 +17,7 @@ const TourRecommendCard = ({ tour }: { tour: Tour }) => {
           </div>
           <div className="flex items-center gap-1">
             <MapPin className="size-4 text-primary" />
-            <span className="text-xs">{tour.location}</span>
+            <span className="text-xs">{tour.destination}</span>
           </div>
         </div>
         <div className="flex items-center gap-1 bg-primary w-fit text-white font-semibold px-2 py-1 rounded-full">

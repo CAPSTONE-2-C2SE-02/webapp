@@ -1,8 +1,10 @@
+import dayjs from "dayjs";
 import { StatusCodes } from "http-status-codes";
-import Role from "../enums/role.enum.js";
-import Visibility from "../enums/visibility.enum.js";
+import notificationController from "../controllers/notification.controller.js";
+import Notification from "../models/notification.model.js";
 import Post from "../models/post.model.js";
-import Profile from "../models/profile.model.js";
+import Ranking from "../models/ranking.model.js";
+import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
 
 class PostController {
@@ -10,34 +12,67 @@ class PostController {
     // [POST] /api/v1/posts
     async createPost(req, res) {
         try {
-            const profile = await Profile.findOne({ userId: req.user.userId });
-            if (!profile) {
+            const user = await User.findOne({ _id: req.user.userId });
+            if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    error: "Profile not found",
+                    error: "User not found",
                 });
             }
             const request = req.body;
 
-            const mediaUrls = req.files ? await uploadImages(req.files) : [];
+            const imageUrls = req.files ? await uploadImages(req.files) : [];
 
             const newPost = {
-                createdBy: profile._id,
-                hashtag: request.hashtag,
-                taggedUser: request.taggedUser,
-                content: request.content,
-                location: request.location,
-                mediaUrls: mediaUrls,
-                visibility: request.visibility,
-                activeComment: request.activeComment,
-                tourId: request.tourId
+                createdBy: user._id,
+                ...request,
+                imageUrls,
             }
 
-            await Post.create(newPost);
+            const createdPost = await Post.create(newPost);
 
-            return res.status(StatusCodes.OK).json({
+            // Cập nhật điểm ranking
+            const todayStart = dayjs().startOf('day').toDate();
+            const todayEnd = dayjs().endOf('day').toDate();
+
+            const postTodayCount = await Post.countDocuments({
+                createdBy: user._id,
+                createdAt: { $gte: todayStart, $lte: todayEnd }
+            });
+
+            if (postTodayCount <= 5) {
+                await Ranking.findOneAndUpdate(
+                    { tourGuideId: user._id },
+                    { $inc: { postScore: 1 } },
+                    { upsert: true }
+                );
+            }
+
+            const ranking = await Ranking.findOne({ tourGuideId: user._id });
+
+            if (ranking) {
+                const {
+                    attendanceScore = 0,
+                    completionScore = 0,
+                    postScore = 0,
+                    reviewScore = 0
+                } = ranking;
+
+                ranking.totalScore = attendanceScore + completionScore + postScore + reviewScore;
+                await ranking.save();
+            }
+
+            const post = await Post.findById(createdPost._id)
+                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("likes", "_id username fullName")
+                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .sort({ "createdAt": -1 })
+                .exec();
+
+            return res.status(StatusCodes.CREATED).json({
                 success: true,
-                message: "Post create successfully"
+                message: "Post create successfully",
+                result: post,
             })
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -50,17 +85,16 @@ class PostController {
     // [GET] /api/v1/posts
     async getAllPosts(req, res) {
         try {
-            const role = req.user?.role || false;
-            let filter = { visibility: Visibility.PUBLIC };
-            if (role == Role.ADMIN) {
-                filter = {};
-            }
-
             const page = parseInt(req.query.page) || 1;
             const limit = parseInt(req.query.limit) || 10;
             const skip = (page - 1) * limit;
 
-            const posts = (await Post.find(filter).skip(skip).limit(limit));
+            const posts = await Post.find().skip(skip).limit(limit)
+                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("likes", "_id username fullName")
+                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .sort({ "createdAt": -1 })
+                .exec();
 
             const totalPosts = await Post.countDocuments();
             return res.status(StatusCodes.OK).json({
@@ -69,6 +103,7 @@ class PostController {
                     totalPosts: totalPosts,
                     totalPage: Math.ceil(totalPosts / limit),
                     currentPage: page,
+                    nextPage: page + 1,
                     limit: limit,
                     data: posts
                 },
@@ -84,14 +119,13 @@ class PostController {
     // [GET] /api/v1/posts/:id
     async getPostById(req, res) {
         try {
-            const role = req.user?.role || false;
-            const id = req.params.id;
-            const filter = { _id: id };
-            if (role !== Role.ADMIN) {
-                filter.visibility = Visibility.PUBLIC;
-            }
+            const { id } = req.params;
+            const post = await Post.findOne({ _id: id })
+                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("likes", "_id username fullName")
+                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .exec();
 
-            const post = await Post.findOne(filter);
 
             if (!post) {
                 return res.status(StatusCodes.NOT_FOUND).json({
@@ -127,23 +161,17 @@ class PostController {
 
             const requestData = req.body;
 
-            let mediaUrls = post.mediaUrls;
+            let imageUrls = post.imageUrls;
             if (req.files && req.files.length > 0) {
-                mediaUrls = await uploadImages(req.files);
+                imageUrls = await uploadImages(req.files);
             }
 
             const updatedPost = await Post.findByIdAndUpdate(
                 id,
                 {
                     $set: {
-                        hashtag: requestData.hashtag || post.hashtag,
-                        taggedUser: requestData.taggedUser || post.taggedUser,
-                        content: requestData.content || post.content,
-                        location: requestData.location || post.location,
-                        visibility: requestData.visibility || post.visibility,
-                        activeComment: requestData.activeComment || post.activeComment,
-                        mediaUrls: mediaUrls,
-                        tourId: requestData.tourId
+                        ...requestData,
+                        imageUrls: imageUrls,
                     },
                 },
                 { new: true }
@@ -176,11 +204,15 @@ class PostController {
                 })
             }
 
-            await Post.delete({ _id: id });
+            const postDeleted = await Post.findOneAndDelete({ _id: id });
+
+            // Xóa tất cả thông báo liên quan đến bài viết
+            await Notification.deleteMany({ relatedId: id, relatedModel: "Post" });
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                message: "Post has been deleted",
+                message: "Post delete successfully",
+                result: postDeleted,
             })
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -190,21 +222,31 @@ class PostController {
         }
     }
 
-    // [POST] /api/v1/post/like
+    // [POST] /api/v1/posts/like
     async likePost(req, res) {
         try {
             const { postId } = req.body;
+            const userId = req.user.userId;
 
-            const profile = await Profile.findOne({ userId: req.user.userId });
-            if (!profile) {
-                return res.status(StatusCodes.NOT_FOUND).json({
+            // validate post id input
+            if (!postId) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    error: "Profile not found",
+                    error: "Post ID is required",
                 });
             }
 
-            const post = await Post.findOne({ _id: postId });
+            // check if user exists
+            const user = await User.findOne({ _id: userId });
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found",
+                });
+            }
 
+            // check if post exists
+            const post = await Post.findOne({ _id: postId });
             if (!post) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -212,20 +254,39 @@ class PostController {
                 });
             }
 
-            const index = post.likedBy.indexOf(profile._id);
+            const isLiked = post.likes.includes(userId);
+            const updateOperator = isLiked ? '$pull' : '$addToSet';
 
-            if (index === -1) {
-                post.likedBy.push(profile._id);
-            } else {
-                post.likedBy.splice(index, 1);
+            const updatedPost = await Post.findByIdAndUpdate(
+                postId,
+                { [updateOperator]: { likes: userId } },
+                { new: true }
+            ).populate("likes", "_id username fullName");
+
+            if (!isLiked) {
+                // Send notification
+                if (user._id != post.createdBy) {
+                    await notificationController.sendNotification({
+                        body: {
+                            type: "LIKE",
+                            senderId: user._id,
+                            receiverId: post.createdBy,
+                            relatedId: post._id,
+                            relatedModel: "Post",
+                            message: `User ${user.username} liked your post`,
+                        },
+                    }, {
+                        status: () => ({
+                            json: () => { },
+                        }),
+                    });
+                }
             }
-
-            await post.save();
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                message: index === -1 ? "Post liked" : "Post unliked",
-                result: post.likedBy,
+                message: isLiked ? "Post unliked" : "Post liked",
+                result: updatedPost.likes,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -235,11 +296,11 @@ class PostController {
         }
     }
 
-    // [PUT] /api/v1/post/privacy/:id
+    // [PUT] /api/v1/posts/privacy/:id
     async setPrivacy(req, res) {
         try {
             const { id } = req.params;
-            const { visibility, activeComment } = req.body;
+            const { activeComment } = req.body;
 
             const post = await Post.findOne({ _id: id });
 
@@ -254,7 +315,6 @@ class PostController {
                 id,
                 {
                     $set: {
-                        visibility: visibility || post.visibility,
                         activeComment: activeComment || post.activeComment
                     }
                 }
@@ -274,18 +334,20 @@ class PostController {
         }
     }
 
-    // [GET] /api/v1/post/my-posts
+    // [GET] /api/v1/posts/my-posts
     async getAllMyPosts(req, res) {
         try {
-            const profile = await Profile.findOne({ userId: req.user.userId });
-            if (!profile) {
+            const user = await User.findOne({ _id: req.user.userId });
+            if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    error: "Profile not found",
+                    error: "User not found",
                 });
             }
 
-            const posts = await Post.find({ createdBy: profile._id });
+            const posts = await Post.find({ createdBy: user._id })
+                .populate("likes", "_id username fullName")
+                .populate("tourAttachment", "_id title destination introduction imageUrls")
             if (!posts) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -318,21 +380,18 @@ class PostController {
                 });
             }
 
-            const profile = await Profile.findOne({ userId: req.user.userId });
-            if (!profile) {
+            const user = await User.findOne({ _id: req.user.userId });
+            if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
-                    error: "Profile not found",
+                    error: "User not found",
                 });
             }
 
             const newPost = await Post.create({
-                createdBy: profile._id,
-                content: "",
+                createdBy: user._id,
                 caption: caption || "",
-                mediaUrls: [],
                 sharedFrom: postId,
-                visibility: visibility || Visibility.PUBLIC,
             });
 
             return res.status(StatusCodes.CREATED).json({
@@ -345,6 +404,152 @@ class PostController {
                 success: false,
                 error: error.message
             })
+        }
+    }
+
+    // [GET] /api/v1/posts/search?q=
+
+    // db.posts.createIndex({ hashtag: "text", content: "text" })
+    async searchPost(req, res) {
+        try {
+            const searchQuery = req.query.q?.trim();
+
+            if (!searchQuery) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Search query is required",
+                });
+            }
+
+            const formattedQuery = searchQuery.replace(/[^a-zA-Z0-9 ]/g, " ");
+
+            let posts = [];
+
+            posts = await Post.find(
+                { $text: { $search: searchQuery } },
+                { score: { $meta: "textScore" } }
+            )
+                .sort({ score: { $meta: "textScore" } })
+                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("likes", "_id username fullName")
+                .populate("tourAttachment", "_id title destination introduction imageUrls");
+
+            if (posts.length === 0) {
+                posts = await Post.find({
+                    $or: [
+                        { content: { $regex: formattedQuery, $options: "i" } },
+                        { hashtag: { $regex: formattedQuery, $options: "i" } },
+                    ],
+                })
+                    .populate("createdBy", "_id username fullName profilePicture")
+                    .populate("likes", "_id username fullName")
+                    .populate("tourAttachment", "_id title destination introduction imageUrls");
+            }
+
+            if (posts.length === 0) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "No posts found matching the search query",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: posts,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/posts/profile/:username
+    async getAllPostsByUsername(req, res) {
+        try {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const skip = (page - 1) * limit;
+
+            const username = req.params.username;
+
+            const user = await User.findOne({ username });
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found",
+                });
+            }
+
+            const posts = await Post.find({ createdBy: user._id }).skip(skip).limit(limit)
+                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("likes", "_id username fullName")
+                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .sort({ "createdAt": -1 })
+
+            if (!posts) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Post not found"
+                })
+            }
+
+            const totalPosts = await Post.find({ createdBy: user._id }).countDocuments();
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: {
+                    totalPosts: totalPosts,
+                    totalPage: Math.ceil(totalPosts / limit),
+                    currentPage: page,
+                    nextPage: page + 1,
+                    limit: limit,
+                    data: posts
+                }
+            })
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message
+            })
+        }
+    }
+
+    // [GET] /api/v1/post/hashtag
+    async getPostsByHashtag(req, res) {
+        try {
+            const { hashtag } = req.body;
+
+            if (!hashtag) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Hashtag is required and must be a string.",
+                });
+            }
+
+            const posts = await Post.find({ hashtag: hashtag })
+                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("likes", "_id username fullName")
+                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .sort({ createdAt: -1 });
+
+            if (posts.length === 0) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "No posts found with the given hashtag.",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: posts,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
         }
     }
 }

@@ -1,101 +1,165 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NavLink, Outlet } from "react-router";
-import { UserRound } from "lucide-react"
-import { Star } from "lucide-react"
-import { UserRoundCheck } from "lucide-react"
-import { Mail } from "lucide-react";
-import { Phone } from "lucide-react";
-import { MapPin } from "lucide-react";
+import { NavLink, Outlet, useParams } from "react-router";
+import { Cake, MessageSquare, UserRound, Star, UserRoundCheck, Mail, Phone, MapPin, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/hooks/redux";
+// import { getUserByUsername } from "@/services/user-api";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useState } from "react";
+import { EditProfileModal } from "@/components/modals/edit-profile-modal";
+import { useUserInfoQuery, useUpdateUserProfileMutation, handleSaveProfile } from "@/services/user-mutation";
+import { EditProfileData } from "@/lib/types";
+import FollowButton from "@/components/user/follow-button";
+import { format } from "date-fns";
+
 const ProfileLayout = () => {
+    const { isAuthenticated, userInfo: authUserInfo } = useAppSelector((state) => state.auth) as {
+        isAuthenticated: boolean;
+        userInfo: { _id: string; username: string; email: string } | null;
+        token: string | null;
+    };
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const { username } = useParams<{ username: string }>();
+    const { data: user, isLoading } = useUserInfoQuery(username as string);
+    const updateProfileMutation = useUpdateUserProfileMutation();
+
+    const onSaveProfile = (profileData: EditProfileData) => {
+        handleSaveProfile(profileData, {
+            user,
+            authUserInfo,
+            updateProfileMutation,
+        });
+    };
+
+    if (isLoading) {
+        return (
+            <div className="w-full">
+                <Skeleton className="w-full" />
+            </div>
+        );
+    }
+
+    if (!user) {
+        return <div>User not found</div>;
+    }
+
+    const [firstName, lastName] = user.fullName?.split(" ") || ["", ""];
+    const isFollowing = user?.followers.map(item => item._id)?.includes(authUserInfo?._id ?? "") as boolean;
+
     return (
         <div className="w-full flex flex-col gap-5">
-            <div className="relative w-full py-8">
-                <img src="https://placehold.co/1920x400" className="rounded-t-2xl" />
+            <div className="relative w-full mt-8 px-2 pt-2 rounded-2xl bg-white">
+                {/* cover picture */}
+                <div className="h-[300px] w-full rounded-xl overflow-hidden">
+                    {user?.coverPhoto ? (
+                        <img src={user?.coverPhoto} className=" w-full h-full object-cover" />
+                    ) : (
+                        <div className="bg-gray-200 w-full h-full"></div>
+                    )}
+                </div>
+                {isAuthenticated && user && authUserInfo?.username !== username && (
+                    <div className="absolute space-x-1 right-7 top-[44%]">
+                        <FollowButton currentUserId={authUserInfo?._id || ""} targetUserId={user?._id} initialIsFollowing={isFollowing} />
+                        <Button size={"sm"}>
+                            <MessageSquare /> Message
+                        </Button>
+                    </div>
+                )}
+                {/* <img src="https://placehold.co/1920x400" className="rounded-t-2xl" /> */}
                 <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] [16px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
-                        <AvatarImage />
-                        <AvatarFallback>Ngoc Anh</AvatarFallback>
+                        <AvatarImage src={user.profilePicture} />
+                        <AvatarFallback>{user.fullName?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-col justify-items-center">
-                        <p className="font-bold text-2xl my-1 justify-center truncate max-w-44 pt-2">Ngọc Ánh</p>
-                        <div className="flex items-center py-2">
-                            <Star className="w-4 h-4 mx-1 stroke-amber-400" />
-                            <p className="font-medium text-black text-sm"> 4.8 Excellent</p>
-                        </div>
-                        <div className="flex items-center py-2">
+                        <p className="font-bold text-2xl my-1 justify-center truncate max-w-44 pt-2 text-center">{user.fullName}</p>
+                        {user.role === "TOUR_GUIDE" && (
+                            <div className="flex items-center justify-center py-2">
+                                <Star className="w-4 h-4 mx-1 stroke-amber-400" />
+                                <p className="font-medium text-black text-sm">4.8 Excellent</p>
+                            </div>
+                        )}
+                        <div className="flex items-center justify-center py-2">
                             <UserRound className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm"> 812 Follower</p>
+                            <p className="font-medium text-slate-600 text-sm">{user.followers.length} Follower</p>
                         </div>
-                        <div className="flex items-center py-2">
+                        <div className="flex items-center justify-center py-2">
                             <UserRoundCheck className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm"> 812 Following</p>
+                            <p className="font-medium text-slate-600 text-sm">{user.followings.length} Following</p>
                         </div>
                     </div>
                 </div>
-                <div className="flex justify-end items-start px-6 py-10 bg-white ">
+
+                <div className="flex justify-end items-start px-6 py-10 bg-white">
                     <div className="flex-col justify-items-start content-center">
-                        <div className="flex items-center py-2 ">
-                            <Mail className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600"> ptnanh125@gmail.com</p>
+                        <div className="flex items-center py-2 gap-2">
+                            <Mail className="w-4 h-4 stroke-slate-600" />
+                            <p className="font-medium text-slate-600 text-sm leading-none">{user.email}</p>
                         </div>
-                        <div className="flex items-center py-2">
-                            <Phone className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm"> 0935112120</p>
+                        <div className="flex items-center py-2 gap-2">
+                            <Phone className="w-4 h-4 stroke-slate-600" />
+                            <p className="font-medium text-slate-600 text-sm leading-none">{user.phoneNumber}</p>
                         </div>
-                        <div className="flex items-center py-2">
-                            <MapPin className="w-4 h-4 mx-1 stroke-slate-600 " />
-                            <p className="font-medium text-slate-600 text-sm"> From Dong Ha</p>
+                        <div className="flex items-center py-2 gap-2">
+                            <Cake className="w-4 h-4 stroke-slate-600" />
+                            <p className="font-medium text-slate-600 text-sm leading-none">{format(user.dateOfBirth, "dd/MM/yyyy")}</p>
                         </div>
-                        <a href="" className="mx-1 text-blue-900 font-medium underline py-2 text-sm">More</a>
+                        <div className="flex items-center py-2 gap-2">
+                            <MapPin className="w-4 h-4 stroke-slate-600" />
+                            <p className="font-medium text-slate-600 text-sm leading-none">From {user.address || "N/A"}</p>
+                        </div>
                     </div>
                     <div className="my-2 mx-14 h-36 flex flex-col justify-items-start gap-2">
                         <p className="font-medium text-slate-600 text-sm">Introduction</p>
-                        <textarea name="intro" value="asdasdasd" id="" disabled className="w-[630px] h-[94px] p-2 bg-blue-200 rounded-b-xl rounded-r-xl"></textarea>
-                        <Button variant={"outline"} className="bg-blue-950 text-white !h-[34px] w-fit ml-auto">
-                            <Edit /> Edit Profile
-                        </Button>
+                        <textarea
+                            name="bio"
+                            value={user.bio || "No introduction available"}
+                            disabled
+                            className="w-[630px] h-[94px] text-sm resize-none py-2 px-3 bg-slate-200 rounded-b-xl rounded-r-xl"
+                        />
+                        {isAuthenticated && authUserInfo?.username === username && (
+                            <Button
+                                className="text-white !h-[34px] w-fit ml-auto"
+                                onClick={() => setIsEditModalOpen(true)}
+                                disabled={updateProfileMutation.isPending}
+                            >
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit Profile
+                            </Button>
+                        )}
                     </div>
                 </div>
-                <div className="flex justify-between border-t px-8 py-1 border-slate-200  rounded-b-2xl bg-white">
+
+                <div className="flex justify-between border-t px-8 py-1 border-slate-200 rounded-b-2xl bg-white">
                     <div className="flex items-center">
                         <NavLink
-                            to={`/users/userId`}
+                            to={`/${username}`}
+                            end
                             className={({ isActive }) =>
-                                cn(
-                                    "bg-white px-4 py-2 font-medium text-sm",
-                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
-                                )
+                                cn("bg-white px-4 py-2 font-medium text-sm", isActive ? "border-b-2 border-primary" : "text-muted-foreground")
                             }
                         >
                             Posts
                         </NavLink>
                         <NavLink
-                            to={`/users/userId/follow`}
+                            to={`/${username}/follow`}
                             className={({ isActive }) =>
-                                cn(
-                                    "bg-white px-4 py-2 font-medium text-sm",
-                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
-                                )
+                                cn("bg-white px-4 py-2 font-medium text-sm", isActive ? "border-b-2 border-primary" : "text-muted-foreground")
                             }
                         >
                             Follow
                         </NavLink>
                         <NavLink
-                            to={`/users/userId/images`}
+                            to={`/${username}/photos`}
                             className={({ isActive }) =>
-                                cn(
-                                    "bg-white px-4 py-2 font-medium text-sm",
-                                    isActive ? "border-b-2 border-primary" : "text-muted-foreground"
-                                )
+                                cn("bg-white px-4 py-2 font-medium text-sm", isActive ? "border-b-2 border-primary" : "text-muted-foreground")
                             }
                         >
-                            Images
+                            Photos
                         </NavLink>
                         <NavLink
-                            to={`/users/userId/tours`}
+                            to={`/${username}/tours`}
                             className={({ isActive }) =>
                                 cn(
                                     "bg-white px-4 py-2 font-medium text-sm",
@@ -106,7 +170,7 @@ const ProfileLayout = () => {
                             Tours
                         </NavLink>
                         <NavLink
-                            to={`/users/userId/reviews`}
+                            to={`/${username}/reviews`}
                             className={({ isActive }) =>
                                 cn(
                                     "bg-white px-4 py-2 font-medium text-sm",
@@ -119,10 +183,27 @@ const ProfileLayout = () => {
                     </div>
                 </div>
             </div>
+            {user && (
+                <EditProfileModal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                    onSave={onSaveProfile}
+                    initialData={{
+                        firstName: firstName || "",
+                        lastName: lastName || "",
+                        email: user.email || "",
+                        phone: user.phoneNumber || "",
+                        city: user.address || "",
+                        dateOfBirth: new Date(user.dateOfBirth),
+                        introduction: user.bio || "",
+                        avatar: user.profilePicture || "",
+                        coverPhoto: user.coverPhoto || "",
+                    }}
+                />
+            )}
             <Outlet />
         </div>
+    );
+};
 
-    )
-}
-
-export default ProfileLayout
+export default ProfileLayout;

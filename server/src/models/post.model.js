@@ -1,45 +1,34 @@
 import mongoose from "mongoose";
 import mongooseDelete from "mongoose-delete";
-import Visibility from "../enums/visibility.enum.js";
 
 const postSchema = new mongoose.Schema({
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Profile',
+        ref: 'User',
     },
     hashtag: {
         type: [String],
         default: [],
     },
-    taggedUser: {
-        type: [mongoose.Schema.Types.ObjectId],
-        ref: 'Profile',
-        default: []
-    },
     content: {
-        type: String,
+        type: [String],
     },
     location: {
         type: String
     },
-    mediaUrls: {
+    imageUrls: {
         type: [String],
         default: []
     },
-    visibility: {
-        type: String,
-        enum: Object.values(Visibility),
-        default: Visibility.PUBLIC
-    },
-    likedBy: {
+    likes: {
         type: [mongoose.Schema.Types.ObjectId],
-        ref: "Profile"
+        ref: "User"
     },
     activeComment: {
         type: Boolean,
         default: true,
     },
-    tourId: {
+    tourAttachment: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Tour",
         default: null
