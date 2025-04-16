@@ -22,7 +22,11 @@ export const authSlice = createSlice({
       state.isAuthenticated = true;
     },
     setAuthUser: (state, action: PayloadAction<UserInfo>) => {
-      state.userInfo = action.payload;
+      if (state.userInfo) {
+        state.userInfo = { ...state.userInfo, ...action.payload }
+      } else {
+        state.userInfo = action.payload;
+      }
     },
     logOut: (state) => {
       state.userInfo = null;

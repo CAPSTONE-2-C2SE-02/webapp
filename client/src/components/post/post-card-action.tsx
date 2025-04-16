@@ -36,10 +36,12 @@ const PostCardAction = ({ id, author }: PostCardActionProps) => {
             <Share2 className="size-4 text-muted-foreground" />
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="justify-between font-medium">
-            Report
-            <Flag className="size-4 text-muted-foreground font-medium" />
-          </DropdownMenuItem>
+          {isAuthenticated && userInfo?.username !== author.username && (
+            <DropdownMenuItem className="justify-between font-medium">
+              Report
+              <Flag className="size-4 text-muted-foreground font-medium" />
+            </DropdownMenuItem>
+          )}
           {isAuthenticated && userInfo?.username === author.username && (
             <DropdownMenuItem 
               className="justify-between font-medium"
