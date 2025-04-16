@@ -86,14 +86,20 @@ export type TourList = {
   data: Tour[];
 }
 
+
+
 export type Review = {
   _id: string;
   user: string;
-  rating: number;
-  tourReview: string;
-  tourGuideReview: string;
-  images?: string[];
+  bookingId: Booking;
+  ratingForTour: number;
+  ratingForTourguide: number;
+  reviewTour: string;
+  reviewTourGuide: string;
+  imageUrls?: File[];
   createdAt: string;
+  tourId?: Tour;
+  travelerId?: UserInfo;
 }
 
 export type UserInfo = {
@@ -112,6 +118,7 @@ export type UserInfo = {
   followings: Follow[];
   createdAt: string;
   updatedAt: string;
+  rating: number;
 }
 
 export type Follow = {
