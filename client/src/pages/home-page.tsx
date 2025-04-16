@@ -7,6 +7,7 @@ import ToursRecommend from "@/components/tour/tours-recommend";
 import AttendanceWidget from "@/components/user/attendance-widget";
 import TourguidesRanking from "@/components/user/tourguides-ranking";
 import UserHomeInfo from "@/components/user/user-home-info";
+import ScrollToTopOnMount from "@/components/utils/scroll-to-top-mount";
 import { useAppSelector } from "@/hooks/redux";
 import { fetchNewsFeed } from "@/services/posts/post-api";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ const HomePage = () => {
 
   return (
     <div className="mt-5 w-full flex items-start gap-5">
+      <ScrollToTopOnMount />
       {/* left content */}
       <div className="flex flex-col gap-5 max-w-[280px] w-full sticky top-[93px] left-0 max-h-[calc(100vh-93px)] overflow-y-auto overflow-x-hidden no-scrollbar">
         {/* user info */}

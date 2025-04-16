@@ -8,12 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import MetaData from "@/components/utils/meta-data";
 import ScrollToTopOnMount from "@/components/utils/scroll-to-top-mount";
 import useAuthInfo from "@/hooks/useAuth";
+import useBookingPayment from "@/hooks/useBookingPayment";
 import { Tour } from "@/lib/types";
 import { bookingFormSchema, BookingFormValues } from "@/lib/validations";
+import { useGetPaymentBooking } from "@/services/bookings/booking-mutation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format, isValid } from "date-fns";
-import { ArrowLeft } from "lucide-react";
-import { useEffect } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router"
 
@@ -35,15 +37,19 @@ const TourBookingPage = () => {
   const navigate = useNavigate();
   const auth = useAuthInfo();
 
+  const [bookingId, setBookingId] = useState("");
+
   const state = location.state as LocationState;
 
-  console.log(state.tour);
-  
-  useEffect(() => {
-    if (!state || !state.tour || !state.dateRange) {
-      navigate("/tours", { replace: true });
-    }
-  }, [state, navigate]);
+  const { handlePaymentNow, isCreatingBooking, isCreatingPayment } = useBookingPayment();
+  const {
+    data: paymentURL,
+    isPending: isGetPaymentUrl
+  } = useGetPaymentBooking(bookingId);
+
+  // will using paymentURL and redirect to it
+  console.log(bookingId);
+  console.log(paymentURL);
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
@@ -63,14 +69,31 @@ const TourBookingPage = () => {
     const bookingData = {
       ...data,
       tourId: state.tour._id,
-      dateRange: state.dateRange,
+      startDate: state.dateRange.from,
+      endDate: state.dateRange.to,
       adults: state.adults,
       youths: state.youths,
       children: state.children,
       total: state.total,
+      isPayLater: data.type === "reserve"
     };
     console.log(bookingData);
+    handlePaymentNow(bookingData, (bookId) => {
+      setBookingId(bookId);
+    });
   };
+
+  useEffect(() => {
+    if (!state || !state.tour || !state.dateRange) {
+      navigate("/tours", { replace: true });
+    }
+  }, [state, navigate]);
+
+  useEffect(() => {
+    if (paymentURL?.success && paymentURL.result) {
+      window.location.href = paymentURL.result.paymentUrl;
+    }
+  }, [navigate, paymentURL?.result, paymentURL?.success]);
 
   return (
     <>
@@ -235,8 +258,14 @@ const TourBookingPage = () => {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full">
-                Pay Now
+              <Button type="submit" className="w-full" disabled={isCreatingBooking || isCreatingPayment || isGetPaymentUrl}>
+                {isCreatingBooking && isCreatingPayment && isGetPaymentUrl ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" /> Paying...
+                  </>
+                ) : (
+                  <>Pay now</>
+                )}
               </Button>
             </form>
           </Form>
@@ -281,7 +310,7 @@ const TourBookingPage = () => {
               </div>
               <div className="flex justify-between text-sm font-medium py-3 px-4 bg-white rounded-md border border-border">
                 <span>Total</span>
-                <span className="text-teal-500 font-bold">
+                <span className="text-primary font-bold">
                   ${state?.total}
                 </span>
               </div>

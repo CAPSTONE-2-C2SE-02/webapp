@@ -2,7 +2,7 @@ import { MapPin, Clock, Users, Star, ImagePlus, X, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Booking } from "@/lib/types";
+import { Booking, Review } from "@/lib/types";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
@@ -19,29 +19,51 @@ import { createReviewSchema, CreateReviewValues } from "@/lib/validations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createReview } from "@/services/tours/review-api";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 interface ReviewTourProps {
   booking: Booking;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  reviewData?: Review | null; // Add reviewData prop
+  isEditable: boolean; 
 }
 
-const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
+const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }: ReviewTourProps) => {
   const queryClient = useQueryClient();
-  const isEditable = !booking.isReview;
   const form = useForm<CreateReviewValues>({
     resolver: zodResolver(createReviewSchema),
     defaultValues: {
-      rating: 4,
-      tourReview: "",
-      guideReview: "",
-      images: [],
+      ratingForTour: 5,
+      ratingForTourGuide: 5,
+      reviewTour: "",
+      reviewTourGuide: "",
+      imageUrls: [],
     },
   });
 
-  
+  useEffect(() => {
+    console.log("Review Data in Modal:", reviewData);
+    if (reviewData) {
+      form.reset({
+        ratingForTour: reviewData.ratingForTour,
+        ratingForTourGuide: reviewData.ratingForTourguide,
+        reviewTour: reviewData.reviewTour,
+        reviewTourGuide: reviewData.reviewTourGuide,
+        imageUrls: [],
+      });
+    } else {
+      form.reset({
+        ratingForTour: 5,
+        ratingForTourGuide: 5,
+        reviewTour: "",
+        reviewTourGuide: "",
+        imageUrls: [],
+      });
+    }
+  }, [reviewData, form]);
 
-  const { mutate: createReviewMutation, isPending: isLoading } = useMutation({
+  const { mutate: createReviewMutation} = useMutation({
     mutationFn: createReview,
     onSuccess: (data) => {
       if (data.success) {
@@ -71,7 +93,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
 
   const handleClose = (open: boolean) => {
     if (!open) {
-      const images = form.getValues("images") || [];
+      const images = form.getValues("imageUrls") || [];
       images.forEach((image) => {
         const url = URL.createObjectURL(image);
         URL.revokeObjectURL(url);
@@ -129,10 +151,10 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
-              name="rating"
+              name="ratingForTour"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-medium">Rating</FormLabel>
+                  <FormLabel className="font-medium">Rating for Tour</FormLabel>
                   <FormControl>
                     <div className="flex">
                       {[1, 2, 3, 4, 5].map((star) => (
@@ -140,6 +162,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
                           key={star}
                           type="button"
                           onClick={() => field.onChange(star)}
+                          disabled={!isEditable}
                           className="text-2xl text-yellow-400 focus:outline-none"
                         >
                           <Star
@@ -156,7 +179,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
 
             <FormField
               control={form.control}
-              name="tourReview"
+              name="reviewTour"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-medium">Tour Review</FormLabel>
@@ -175,7 +198,35 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
 
             <FormField
               control={form.control}
-              name="guideReview"
+              name="ratingForTourGuide"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-medium">Rating for Tour Guide</FormLabel>
+                  <FormControl>
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => field.onChange(star)}
+                          disabled={!isEditable}
+                          className="text-2xl text-yellow-400 focus:outline-none"
+                        >
+                          <Star
+                            className={`h-6 w-6 ${star <= field.value ? "fill-yellow-400" : ""}`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="reviewTourGuide"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-medium">Tour Guide Review</FormLabel>
@@ -194,7 +245,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
 
             <FormField
               control={form.control}
-              name="images"
+              name="imageUrls"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-medium">
@@ -211,6 +262,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
                           type="file"
                           className="hidden"
                           accept="image/*"
+                          disabled={!isEditable}
                           multiple
                           onChange={(e) => {
                             const files = Array.from(e.target.files || []);
@@ -233,20 +285,22 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
                             {field.value.map((image, index) => (
                               <CarouselItem key={index} className="basis-auto">
                                 <div className="relative w-[120px] h-[120px] overflow-hidden rounded-md border">
-                                  <Button
-                                    type="button"
-                                    variant="destructive"
-                                    size="icon"
-                                    className="absolute right-1 top-1 h-6 w-6"
-                                    onClick={() => {
-                                      const updatedImages = field.value.filter(
-                                        (_, i) => i !== index
-                                      );
-                                      field.onChange(updatedImages);
-                                    }}
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </Button>
+                                  {isEditable && (
+                                    <Button
+                                      type="button"
+                                      variant="destructive"
+                                      size="icon"
+                                      className="absolute right-1 top-1 h-6 w-6"
+                                      onClick={() => {
+                                        const updatedImages = field.value.filter(
+                                          (_, i) => i !== index
+                                        );
+                                        field.onChange(updatedImages);
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  )}
                                   <img
                                     src={URL.createObjectURL(image)}
                                     alt={`Uploaded image ${index + 1}`}
@@ -267,12 +321,12 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
 
             <div className="flex justify-end mt-4">
               {isEditable ? (
-                <Button onSubmit={form.handleSubmit(onSubmit)} className="bg-blue-600 hover:bg-blue-700">
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
                   Send
                 </Button>
               ) : (
                 <Button variant="destructive" onClick={handleDelete}>
-                Delete
+                  Delete
                 </Button>
               )}
             </div>

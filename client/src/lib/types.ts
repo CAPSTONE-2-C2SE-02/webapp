@@ -86,14 +86,20 @@ export type TourList = {
   data: Tour[];
 }
 
+
+
 export type Review = {
   _id: string;
   user: string;
-  rating: number;
-  tourReview: string;
-  tourGuideReview: string;
-  images?: string[];
+  bookingId: Booking;
+  ratingForTour: number;
+  ratingForTourguide: number;
+  reviewTour: string;
+  reviewTourGuide: string;
+  imageUrls?: File[];
   createdAt: string;
+  tourId?: Tour;
+  travelerId?: UserInfo;
 }
 
 export type UserInfo = {
@@ -112,6 +118,7 @@ export type UserInfo = {
   followings: Follow[];
   createdAt: string;
   updatedAt: string;
+  rating: number;
 }
 
 export type Follow = {
@@ -229,6 +236,7 @@ export interface Booking {
     duration: string;
     image?: string;
   };
+  travelerId: string;
   startDate: string;
   endDate: string;
   adults: number;
@@ -237,7 +245,7 @@ export interface Booking {
   totalAmount: number;
   paymentStatus: "PENDING" | "TIMEOUT" |  "FAILED" | "PAID" | "REFUNDED";
   status: "PENDING" | "PAID"| "FAILED" | "CANCELED"| "TIMEOUT" | "COMPLETED";
-  isReview: Boolean;
+  isReview: boolean;
 }
 
 export interface TourBookingInfoCardProps {
@@ -246,4 +254,18 @@ export interface TourBookingInfoCardProps {
   onPayment: (bookingId: string) => void;
   onComplete: (bookingId: string) => void;
   onReview: (bookingId: string) => void;
+}
+
+export interface PaymentResponse {
+  _id: string;
+  bookingId: Pick<Booking, "_id" | "status" | "paymentStatus" | "tourId" | "travelerId" | "adults" | "children" | "youths">;
+  userId: Pick<UserInfo, "_id" | "email" | "fullName" | "phoneNumber">,
+  transactionId: string;
+  transactionNo: string;
+  bankCode: string;
+  typePayment: 'VNPAY' | 'MOMO';
+  paymentTime: Date;
+  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'REFUND';
+  amountPaid: number;
+  paymentUrl: string;
 }

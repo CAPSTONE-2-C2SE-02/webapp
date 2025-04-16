@@ -20,5 +20,9 @@ export const API = {
   BOOKING: {
     TRAVELER_BOOKING: `/bookings/traveler`,
     TOURGUIDE_BOOKING: `/bookings/tour-guide`,
+  },
+  REVIEW: {
+    REVIEW_INFO: (bookingId: string) => `/reviews/booking/${bookingId}`,
+    REVIEW_TOURGUIDE: (tourGuideId: string) => `reviews/tour-guide/${tourGuideId}`,
   }
 }

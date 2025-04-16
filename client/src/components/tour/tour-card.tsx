@@ -1,7 +1,8 @@
 import { Tour } from "@/lib/types";
-import { ArrowRight, Heart, MapPin, Star, Clock, UsersRound, CircleDollarSign } from "lucide-react";
+import { ArrowRight, Heart, MapPin, Star, Clock, UsersRound, CircleDollarSign, CalendarClock } from "lucide-react";
 import { Button } from "../ui/button";
 import { Link } from "react-router";
+import useAuthInfo from "@/hooks/useAuth";
 
 interface TourCardProps {
   tour: Tour;
@@ -9,6 +10,7 @@ interface TourCardProps {
 }
 
 const TourCard = ({ tour, type }: TourCardProps) => {
+  const auth = useAuthInfo();
   return (
     <>
       {type === "grid" ? (
@@ -37,12 +39,15 @@ const TourCard = ({ tour, type }: TourCardProps) => {
                   <MapPin className="h-4 w-4 mr-1" />
                   <span className="text-xs">{tour.destination}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1">
                     <UsersRound className="h-[18px] w-[18px] text-primary" />
                     <span className="text-xs font-medium">{tour.maxParticipants}</span>
                   </div>
-                  <span className="text-xs text-gray-600">{tour.duration}</span>
+                  <div className="flex items-center gap-1">
+                    <CalendarClock className="h-[18px] w-[18px] text-primary" />
+                    <span className="text-xs font-medium">{tour.duration}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -58,7 +63,7 @@ const TourCard = ({ tour, type }: TourCardProps) => {
             </div>
               <Button className="absolute bottom-0 w-full justify-between rounded-full opacity-0 translate-y-3 invisible transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible" asChild>
                 <Link to={`/tours/${tour._id}`}>
-                  Book now <ArrowRight className="size-4" />
+                  {auth?.role === "TRAVELER" ? "Book now" : "View detail"} <ArrowRight className="size-4" />
                 </Link>
               </Button>
           </div>

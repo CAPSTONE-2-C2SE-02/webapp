@@ -9,7 +9,7 @@ interface TourInfoProps {
 
 export default function TourInfo({ tour }: TourInfoProps) {
   return (
-    <div className="w-full bg-white px-6 py-5 rounded-lg shadow-md border border-border">
+    <div className="w-full bg-white px-6 py-5 rounded-lg shadow-sm border border-border">
       <h1 className="text-3xl font-bold mb-4">{tour.title}</h1>
       <div className="grid grid-cols-3 gap-2 mb-4">
         <div className="flex items-center gap-2 text-primary col-span-2">

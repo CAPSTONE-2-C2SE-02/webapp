@@ -62,7 +62,7 @@ class ProfileController {
                     dateOfBirth: request.dateOfBirth || user.dateOfBirth,
                 },
                 { new: true }
-            ).select("-password");
+            ).select("-password -role -googleId");
 
             return res.status(StatusCodes.OK).json({
                 success: true,

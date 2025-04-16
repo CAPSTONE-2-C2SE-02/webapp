@@ -6,6 +6,8 @@ import { useNavigate } from "react-router";
 import { profileSchema } from "@/lib/validations";
 import { z } from "zod";
 import { AxiosError } from "axios";
+import { useAppDispatch } from "@/hooks/redux";
+import { setAuthUser } from "@/stores/slices/auth-slice";
 
 export function useUserInfoQuery(username: string) {
     return useQuery<UserInfo, Error>({
@@ -94,14 +96,15 @@ export const handleSaveProfile = (
 export function useUpdateUserProfileMutation() {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
 
     const mutation = useMutation<UserInfo, Error, { userId: string; data: FormData | Record<string, any>; }>({
         mutationFn: ({ userId, data }) => updateUserProfile({ userId, data }),
         onSuccess: (updatedUser) => {
-            console.log("Updated user data:", updatedUser);
             queryClient.setQueryData(["user", updatedUser.username], updatedUser);
             toast.success("Profile update successful!");
             queryClient.invalidateQueries({ queryKey: ["user"] });
+            dispatch(setAuthUser(updatedUser))
         },
         onError: (error: Error) => {
             console.error("Lỗi trong mutation:", error.message);
