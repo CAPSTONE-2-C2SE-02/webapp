@@ -111,10 +111,11 @@ export const bookingFormSchema = z.object({
 export type BookingFormValues = z.infer<typeof bookingFormSchema>;
 
 export const createReviewSchema = z.object({
-  rating: z.number().min(1, "Rating must be at least 1").max(5, "Rating cannot exceed 5"),
-  tourReview: z.string().max(500, "Tour review cannot exceed 500 characters"),
-  guideReview: z.string().max(500, "Guide review cannot exceed 500 characters"),
-  images: z.array(z.instanceof(File)).max(5, "You can upload up to 5 images"),
+  ratingForTour: z.number().min(1, "Rating must be at least 1").max(5, "Rating cannot exceed 5"),
+  ratingForTourGuide: z.number().min(1, "Rating must be at least 1").max(5, "Rating cannot exceed 5"),
+  reviewTour: z.string().max(500, "Tour review cannot exceed 500 characters"),
+  reviewTourGuide: z.string().max(500, "Guide review cannot exceed 500 characters"),
+  imageUrls: z.array(z.instanceof(File)).max(5, "You can upload up to 5 images"),
 });
 
 export type CreateReviewValues = z.infer<typeof createReviewSchema>;

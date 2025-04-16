@@ -13,10 +13,12 @@ import {
 } from "@/components/ui/pagination"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/hooks/redux";
-import { Booking } from "@/lib/types";
+import { Booking, Review } from "@/lib/types";
+import { fetchReviewByBookingId } from "@/services/tours/review-api";
 import { fetchTourGuideBookings, fetchTravelerBookings } from "@/services/users/user-api";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const HistoryBookingPage = () => {
     const userInfo = useAppSelector((state) => state.auth.userInfo);
@@ -26,6 +28,8 @@ const HistoryBookingPage = () => {
     const [activeTab, setActiveTab] = useState("waitingForPayment");
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [isEditable, setIsEditable] = useState(true);
+    const [reviewData, setReviewData] = useState<Review | null>(null);
 
     const { data: bookings, isLoading, error } = useQuery<Booking[], Error>({
       queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
@@ -45,10 +49,31 @@ const HistoryBookingPage = () => {
   
     const handleReview = async (bookingId: string) => {
       const booking = bookings?.find((b) => b._id === bookingId);
-      if (booking) {
-        setSelectedBooking(booking);
-        setIsReviewModalOpen(true);
+      if (!booking) {
+        toast.error("Booking not found.");
+        return;
       }
+
+      setSelectedBooking(booking);
+      console.log("Booking isReview:", booking.isReview);
+      if (booking.isReview) {
+        try {
+          const review = await fetchReviewByBookingId(booking._id);
+          console.log("Fetched Review:", review);
+          setReviewData(review);
+          setIsEditable(false);
+        } catch (error) {
+          console.error("Error fetching review:", error);
+          setReviewData(null);
+          setIsEditable(true);
+          toast.error("Failed to load review. Please try again.");
+        }
+      } else {
+        setReviewData(null);
+        setIsEditable(true);
+      }
+
+      setIsReviewModalOpen(true);
     };
   
     if (isLoading) {
@@ -173,6 +198,8 @@ const HistoryBookingPage = () => {
             setIsReviewModalOpen(open);
             if (!open) setSelectedBooking(null);
           }}
+          reviewData={reviewData}
+          isEditable={isEditable}
         />
       )}
     </div>
