@@ -10,27 +10,6 @@ const paymentSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
-    fullName: {
-        type: String,
-    },
-    country: {
-        type: String,
-    },
-    phoneNumber: {
-        type: String,
-    },
-    email: {
-        type: String,
-    },
-    address: {
-        type: String,
-    },
-    city: {
-        type: String,
-    },
-    note: {
-        type: String,
-    },
     transactionId: {
         type: String
     },
@@ -42,7 +21,7 @@ const paymentSchema = new mongoose.Schema({
     },
     typePayment: {
         type: String,
-        enum: ['VNPAY'],
+        enum: ['VNPAY', "MOMO"],
     },
     paymentTime: {
         type: Date

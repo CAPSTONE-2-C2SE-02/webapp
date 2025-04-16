@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchUserInfoByUsername, updateUserProfile, fetchMyInfo } from "./user-api";
+import { fetchUserInfoByUsername, updateUserProfile, fetchMyInfo, deleteBusyDate } from "./user-api";
 import { UserInfo, AuthUserInfo, EditProfileData } from "@/lib/types";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
 import { profileSchema } from "@/lib/validations";
 import { z } from "zod";
+import { AxiosError } from "axios";
 
 export function useUserInfoQuery(username: string) {
     return useQuery<UserInfo, Error>({
@@ -119,4 +120,21 @@ export function useMyInfoQuery() {
         queryKey: ["my-info"],
         queryFn: fetchMyInfo,
     });
+};
+
+export function useDeleteBusyDate(tourGuideId: string) {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (date: Date) => deleteBusyDate(date),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["busyDates", tourGuideId] });
+            toast.success("Remove Busy date successfully")
+        },
+        onError: (error) => {
+            if (error instanceof AxiosError) {
+                toast.error(error.response?.data?.error);
+            }
+        },
+    })
 }

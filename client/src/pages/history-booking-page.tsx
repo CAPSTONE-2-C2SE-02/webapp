@@ -19,72 +19,72 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 const HistoryBookingPage = () => {
-    const userInfo = useAppSelector((state) => state.auth.userInfo);
-    const userId = userInfo?._id;
-    const role = userInfo?.role;
-    //const queryClient = useQueryClient();
-    const [activeTab, setActiveTab] = useState("waitingForPayment");
-    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const userInfo = useAppSelector((state) => state.auth.userInfo);
+  const userId = userInfo?._id;
+  const role = userInfo?.role;
+  //const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("waitingForPayment");
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
-    const { data: bookings, isLoading, error } = useQuery<Booking[], Error>({
-      queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
-      queryFn: () =>
-        role === "TRAVELER" ? fetchTravelerBookings() : fetchTourGuideBookings(),
-      enabled: !!userId && !!role,
-    });
-  
-    const handleCancel = async (bookingId: string) => {
-    };
-  
-    const handlePayment = async (bookingId: string) => {    
-    };
-  
-    const handleComplete = async (bookingId: string) => {
-    };
-  
-    const handleReview = async (bookingId: string) => {
-      const booking = bookings?.find((b) => b._id === bookingId);
-      if (booking) {
-        setSelectedBooking(booking);
-        setIsReviewModalOpen(true);
-      }
-    };
-  
-    if (isLoading) {
-      return <div className="text-center py-10 bg-slate-300">
-        Loading...
-      </div>;
-    }
-  
-    if (error) {
-      return (
-        <div className="text-center py-10 text-red-500">
-          Error: {(error as Error).message}
-        </div>
-      );
-    }
+  const { data: bookings, isLoading, error } = useQuery<Booking[], Error>({
+    queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
+    queryFn: () =>
+      role === "TRAVELER" ? fetchTravelerBookings() : fetchTourGuideBookings(),
+    enabled: !!userId && !!role,
+  });
 
-    if (!userId) {
-      return <div className="text-center py-10">Please login to view your booking history</div>;
+  const handleCancel = async (bookingId: string) => {
+  };
+
+  const handlePayment = async (bookingId: string) => {
+  };
+
+  const handleComplete = async (bookingId: string) => {
+  };
+
+  const handleReview = async (bookingId: string) => {
+    const booking = bookings?.find((b) => b._id === bookingId);
+    if (booking) {
+      setSelectedBooking(booking);
+      setIsReviewModalOpen(true);
     }
-  
-    // filter booking by tab
-    const filteredBookings = bookings?.filter((booking) => {
-      if (activeTab === "waitingForPayment") {
-        return booking.paymentStatus === "PENDING";
-      }
-      if (activeTab === "waitingForTourCompletion") {
-        return booking.paymentStatus === "PAID" && booking.status === "PAID";
-      }
-      if (activeTab === "completed") {
-        return booking.status === "COMPLETED" ;
-      }
-      if (activeTab === "canceled") {
-        return booking.status === "CANCELED";
-      }
-      return true;
-    });
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-10 bg-slate-300">
+      Loading...
+    </div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10 text-red-500">
+        Error: {(error as Error).message}
+      </div>
+    );
+  }
+
+  if (!userId) {
+    return <div className="text-center py-10">Please login to view your booking history</div>;
+  }
+
+  // filter booking by tab
+  const filteredBookings = bookings?.filter((booking) => {
+    if (activeTab === "waitingForPayment") {
+      return booking.paymentStatus === "PENDING";
+    }
+    if (activeTab === "waitingForTourCompletion") {
+      return booking.paymentStatus === "PAID" && booking.status === "PAID";
+    }
+    if (activeTab === "completed") {
+      return booking.status === "COMPLETED";
+    }
+    if (activeTab === "canceled") {
+      return booking.status === "CANCELED";
+    }
+    return true;
+  });
   return (
     <div className="my-8 w-full flex flex-col items-start gap-3 bg-white rounded-xl pb-5 mb-5">
       <div className="pt-5 pl-5 font-semibold text-3xl">History Booking</div>
@@ -169,7 +169,10 @@ const HistoryBookingPage = () => {
         <ReviewTourModal
           booking={selectedBooking}
           open={isReviewModalOpen}
-          onOpenChange={setIsReviewModalOpen}
+          onOpenChange={(open) => {
+            setIsReviewModalOpen(open);
+            if (!open) setSelectedBooking(null);
+          }}
         />
       )}
     </div>

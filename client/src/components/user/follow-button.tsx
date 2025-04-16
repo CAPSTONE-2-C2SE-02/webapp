@@ -2,7 +2,7 @@ import { useState } from "react";
 import { UserPlus, UserCheck } from "lucide-react";
 import { Button } from "../ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { followUser } from "@/services/user-api"; // API gọi đến backend
+import { followUser } from "@/services/user-api";
 import { UserInfo } from "@/lib/types";
 
 interface FollowButtonProps {
@@ -19,7 +19,7 @@ const FollowButton = ({ targetUserId, currentUserId, initialIsFollowing }: Follo
     mutationFn: () => followUser(targetUserId),
     onMutate: async () => {
       const queryKey = ["user-profile", targetUserId];
-      
+
       // Cancel pending refetch to avoid overwriting old data
       await queryClient.cancelQueries({ queryKey });
 

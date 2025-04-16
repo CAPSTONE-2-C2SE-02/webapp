@@ -1,9 +1,10 @@
 import { ApiResponse, Booking, Calendar, SetAvailabilityResponse, UserInfo } from "@/lib/types";
-import { rootApi } from "./root-api";
+import { rootApi } from "../root-api";
 import { API } from "@/config/constants";
 import axiosInstance from "@/config/api";
 import axios from "axios";
 import { format } from "date-fns";
+import publicApi from "@/config/public.api";
 
 interface PhotoResponse {
   success: boolean;
@@ -51,6 +52,12 @@ export const saveBusyDatesToServer = async (dates: Date[]): Promise<SetAvailabil
   return response.data;
 };
 
+export const deleteBusyDate = async (date: Date) => {
+  // const dateFormatted = format(date, "yyyy-MM-dd");
+  const response = await axiosInstance.patch(API.CALENDER.DELETE_BUSY_DATE, { date });
+  return response.data;
+};
+
 export const fetchTravelerBookings = async (): Promise<Booking[]> => {
   const response = await axiosInstance.get(API.BOOKING.TRAVELER_BOOKING);
   if (!response.data.success) {
@@ -80,12 +87,12 @@ export const updateUserProfile = async ({
     if (data instanceof FormData) {
       const profilePicture = data.get("profilePicture");
       const coverPhoto = data.get("coverPhoto");
-      const validTypes = ["image/jpeg", "image/png"];
+      const validTypes = ["image/jpeg", "image/png", "image/jpg"];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
       if (profilePicture instanceof File && profilePicture.size > 0) {
         if (!validTypes.includes(profilePicture.type)) {
-          throw new Error("Profile picture must be JPEG or PNG");
+          throw new Error("Profile picture must be JPEG, JPG or PNG");
         }
         if (profilePicture.size > maxSize) {
           throw new Error("Profile picture must not exceed 5MB");
@@ -94,7 +101,7 @@ export const updateUserProfile = async ({
 
       if (coverPhoto instanceof File && coverPhoto.size > 0) {
         if (!validTypes.includes(coverPhoto.type)) {
-          throw new Error("Cover photo must be JPEG or PNG");
+          throw new Error("Cover photo must be JPEG, JPG or PNG");
         }
         if (coverPhoto.size > maxSize) {
           throw new Error("Cover photo must not exceed 5MB");
@@ -181,4 +188,5 @@ export const fetchUserPhotos = async (userId: string): Promise<string[]> => {
       error.response?.data?.error || error.message || "Unable to fetch photos. Please try again later."
     );
   }
-};
+
+}

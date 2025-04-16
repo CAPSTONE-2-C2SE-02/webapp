@@ -6,14 +6,14 @@ import Payment from "../models/payment.model.js";
 class PaymentController {
     async createPayment(req, res) {
         try {
-            const { bookingId, typePayment, fullName, country, address, city, note } = req.body;
+            const { bookingId, typePayment } = req.body;
             const userId = req.user.userId;
 
             if (!bookingId) {
                 return res.status(StatusCodes.BAD_REQUEST).json({ success: false, error: "Missing booking id" });
             }
 
-            sendToQueue("PAYMENT_QUEUE", { bookingId, typePayment, fullName, country, address, city, note, userId });
+            sendToQueue("PAYMENT_QUEUE", { bookingId, typePayment, userId });
 
             return res.status(StatusCodes.OK).json({ success: true, message: "Payment request queued successfully" });
         } catch (error) {

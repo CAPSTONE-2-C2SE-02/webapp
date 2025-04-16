@@ -61,7 +61,7 @@ export type Tour = {
   priceForYoung: number;
   priceForChildren: number;
   maxParticipants: number;
-  duration: string;
+  duration: number;
   schedule:
   {
     title: string;
@@ -94,13 +94,6 @@ export type Review = {
   tourGuideReview: string;
   images?: string[];
   createdAt: string;
-}
-
-interface ReviewResponse {
-  success: boolean;
-  result?: Review;
-  message?: string;
-  error?: string;
 }
 
 export type UserInfo = {
@@ -210,7 +203,7 @@ export interface EditProfileData {
 export interface DateEntry {
   _id: string;
   date: Date; // "YYYY-MM-DD"
-  status: 'UNAVAILABLE'; // As expected by the backend
+  status: 'UNAVAILABLE' | 'AVAILABLE'; // As expected by the backend
 }
 
 export interface Calendar {
@@ -244,6 +237,7 @@ export interface Booking {
   totalAmount: number;
   paymentStatus: "PENDING" | "TIMEOUT" |  "FAILED" | "PAID" | "REFUNDED";
   status: "PENDING" | "PAID"| "FAILED" | "CANCELED"| "TIMEOUT" | "COMPLETED";
+  isReview: Boolean;
 }
 
 export interface TourBookingInfoCardProps {

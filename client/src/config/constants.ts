@@ -1,6 +1,7 @@
 export const API = {
   POST: {
-    LIKE: '/posts/like'
+    LIKE: '/posts/like',
+    SEARCH: (tag: string) => `/posts/search?q=${tag}`
   },
   PROFILE: {
     FOLLOW: (userId: string) => `/profiles/follow/${userId}`,
@@ -9,10 +10,12 @@ export const API = {
     PHOTOS: (userId: string) => `/profiles/photos/${userId}`,
     FOLLOWERS: `/profiles/followers`,
     FOLLOWINGS: `/profiles/followings`,
+    PHOTOS: (username: string) => `/profiles/photos/${username}`
   },
   CALENDER: {
     SCHEDULE: `/calendars`,
-    SCHEDULE_INFO: (userId: string) => `/calendars/${userId}`
+    SCHEDULE_INFO: (userId: string) => `/calendars/${userId}`,
+    DELETE_BUSY_DATE: `/calendars/busy-date`,
   },
   BOOKING: {
     TRAVELER_BOOKING: `/bookings/traveler`,

@@ -37,6 +37,7 @@ export function useCreatePostMutation() {
       );
 
       toast.success("Post deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["rankings"] })
     },
     onError: (error) => {
       console.error(error);

@@ -60,6 +60,10 @@ const tourSchema = new mongoose.Schema({
         enum: Object.values(StatusTour),
         default: "ACTIVE"
     },
+    rating: {
+        type: Number,
+        default: 0,
+    }
 },
     { timestamps: true, versionKey: false }
 );

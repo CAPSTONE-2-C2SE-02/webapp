@@ -28,7 +28,7 @@ interface ReviewTourProps {
 
 const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
   const queryClient = useQueryClient();
-
+  const isEditable = !booking.isReview;
   const form = useForm<CreateReviewValues>({
     resolver: zodResolver(createReviewSchema),
     defaultValues: {
@@ -38,6 +38,8 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
       images: [],
     },
   });
+
+  
 
   const { mutate: createReviewMutation, isPending: isLoading } = useMutation({
     mutationFn: createReview,
@@ -55,20 +57,6 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
 
   const totalPeople = booking.adults + booking.youths + booking.children;
 
-  const handleImageDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      const remainingSlots = 5 - (form.getValues("images")?.length || 0);
-      if (remainingSlots <= 0) {
-        toast.error("You can only upload up to 5 images.");
-        return;
-      }
-      const newImages = files.slice(0, remainingSlots);
-      form.setValue("images", [...(form.getValues("images") || []), ...newImages]);
-    }
-  };
-
   const onSubmit = async (values: CreateReviewValues) => {
     createReviewMutation({
       ...values,
@@ -76,7 +64,11 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
     });
   };
 
-  // Giải phóng URL khi modal đóng
+  const handleDelete = () => {
+    console.log("Delete review for booking:", booking._id);
+    onOpenChange(false);
+  };
+
   const handleClose = (open: boolean) => {
     if (!open) {
       const images = form.getValues("images") || [];
@@ -170,6 +162,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
                   <FormLabel className="font-medium">Tour Review</FormLabel>
                   <FormControl>
                     <Textarea
+                      disabled={!isEditable}
                       placeholder="Type your message here."
                       {...field}
                       className="min-h-[100px]"
@@ -188,6 +181,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
                   <FormLabel className="font-medium">Tour Guide Review</FormLabel>
                   <FormControl>
                     <Textarea
+                      disabled={!isEditable}
                       placeholder="Type your message here."
                       {...field}
                       className="min-h-[100px]"
@@ -272,14 +266,15 @@ const ReviewTourModal = ({ booking, open, onOpenChange }: ReviewTourProps) => {
             />
 
             <div className="flex justify-end mt-4">
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isLoading && <Loader2 className="size-4 animate-spin mr-2" />}
-                Send
-              </Button>
+              {isEditable ? (
+                <Button onSubmit={form.handleSubmit(onSubmit)} className="bg-blue-600 hover:bg-blue-700">
+                  Send
+                </Button>
+              ) : (
+                <Button variant="destructive" onClick={handleDelete}>
+                Delete
+                </Button>
+              )}
             </div>
           </form>
         </Form>

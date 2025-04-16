@@ -19,7 +19,7 @@ async function processPayment() {
 
     channel.consume(QUEUE_NAME, async (msg) => {
         if (msg !== null) {
-            const { bookingId, fullName, country, address, city, note, userId } = JSON.parse(msg.content.toString());
+            const { bookingId, userId } = JSON.parse(msg.content.toString());
             console.log(`💳 Processing payment for bookingId: ${bookingId}`);
 
             try {
@@ -64,11 +64,6 @@ async function processPayment() {
                 const newPayment = await Payment.create({
                     bookingId,
                     userId,
-                    fullName,
-                    country,
-                    address,
-                    city,
-                    note,
                     transactionId,
                     typePayment: "VNPAY",
                     amountPaid: booking.depositAmount,

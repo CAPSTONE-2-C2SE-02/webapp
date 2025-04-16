@@ -3,7 +3,9 @@ python-dotenv
 sentence-transformers
 langchain
 transformers_stream_generator 
-transformers accelerate torch
+transformers
+accelerate
+torch
 huggingface_hub
 tiktoken
 Flask

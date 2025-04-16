@@ -33,7 +33,7 @@ console.log(`Swagger Docs available at: http://localhost:${process.env.PORT}/api
 const startServer = () => {
   app.use(cors({
     origin: process.env.CORS_ORIGINS,
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   }));
   app.use(bodyParser.json());

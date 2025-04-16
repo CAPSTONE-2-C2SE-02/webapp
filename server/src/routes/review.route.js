@@ -185,5 +185,6 @@ router.get("/tour/:tourId", reviewController.getReviewsByTourId);
 router.delete("/:reviewId", authenticated, reviewController.deleteReview);
 router.get("/tour-guide/:tourGuideId", reviewController.getReviewsByTourGuideId);
 router.get("/tour/:tourId/rating", reviewController.getTourRatingStats);
+router.get("/booking/:bookingId", reviewController.getReviewByBookingId);
 
 export default router;

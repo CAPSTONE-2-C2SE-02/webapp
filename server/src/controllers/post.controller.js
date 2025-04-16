@@ -265,7 +265,7 @@ class PostController {
 
             if (!isLiked) {
                 // Send notification
-                if (user._id != post.createdBy) {
+                if (userId !== post.createdBy.toString()) {
                     await notificationController.sendNotification({
                         body: {
                             type: "LIKE",

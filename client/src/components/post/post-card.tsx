@@ -123,7 +123,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
             <div className="flex items-center gap-1 mt-1">
               {postData?.hashtag?.length > 0 && postData.hashtag.map(tag => (
                 <Link
-                  to={`/posts?search=${tag}`}
+                  to={`/hashtag/${tag}`}
                   className="hover:underline text-sm text-primary"
                   key={tag}
                 >

@@ -154,6 +154,7 @@ const router = express.Router();
 // Routes
 router.post("/", authenticated, authorize("TRAVELER"), validate(bookingSchema), bookingController.createBooking);
 router.get("/traveler", authenticated, authorize("TRAVELER"), bookingController.getTravelerBookings);
+router.get("/traveler/pay-later", authenticated, authorize("TRAVELER"), bookingController.getTravelerPayLaterBookings);
 router.get("/tour-guide", authenticated, authorize("TOUR_GUIDE"), bookingController.getTourGuideBookings);
 router.post("/:id/confirm/tour-guide", authenticated, authorize("TOUR_GUIDE"), bookingController.confirmByTourGuide);
 router.post("/:id/confirm/traveler", authenticated, authorize("TRAVELER"), bookingController.confirmByTraveler);
