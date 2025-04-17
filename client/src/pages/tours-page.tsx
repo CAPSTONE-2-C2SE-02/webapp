@@ -1,14 +1,17 @@
 import TourFilterPanel from "@/components/tour/tour-filter-panel";
 import TourListing from "@/components/tour/tour-listings";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchAllTours } from "@/services/tours/tour-api";
 import TourSearchBox from "@/components/tour/tour-search-box";
+import { PlusIcon } from "lucide-react";
+import useAuthInfo from "@/hooks/useAuth";
 
 const ToursPage = () => {
   const [searchParams] = useSearchParams();
   const params = Object.fromEntries([...searchParams]);
+  const auth = useAuthInfo();
   
   const page = params.page ? parseInt(params.page) : 1;
   const sortBy = (params.sortBy || "createdAt") as | "price" | "rating" | "createdAt";
@@ -65,6 +68,14 @@ const ToursPage = () => {
           loading={isPending}
         />
       </div>
+      {auth?.role === "TOUR_GUIDE" && (
+        <Button className="fixed bottom-8 right-8 rounded-full transition-all duration-300 overflow-hidden w-10 h-10 hover:w-[152px] group z-30" asChild>
+          <Link to={"/tours/create"}>
+            <PlusIcon className="z-10 absolute left-3" />
+            <span className="origin-right absolute right-5 translate-x-10 opacity-0 invisible transition-all duration-300 group-hover:opacity-100 group-hover:delay-75 group-hover:visible group-hover:translate-x-0">Create new tour</span>
+          </Link>
+        </Button>
+      )}
     </div>
   )
 };

@@ -61,6 +61,7 @@ export type Tour = {
   priceForYoung: number;
   priceForChildren: number;
   maxParticipants: number;
+  totalBookings: number;
   duration: number;
   schedule:
   {
@@ -157,7 +158,7 @@ type BaseNotification = {
   _id: string;
   message: string;
   isRead: boolean;
-  senderId: {
+  senderId?: {
     _id: string;
     username: string;
     fullName: string;

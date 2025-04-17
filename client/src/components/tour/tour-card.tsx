@@ -11,6 +11,16 @@ interface TourCardProps {
 
 const TourCard = ({ tour, type }: TourCardProps) => {
   const auth = useAuthInfo();
+
+  const generateRatingText = (rating: number | null | undefined): string => {
+    if (!rating) return "No Rating";
+    if (rating >= 4.5) return "Excellent";
+    else if (rating >= 4.0) return "Very Good";
+    else if (rating >= 3.0) return "Good";
+    else if (rating >= 2.0) return "Average";
+    else return "Poor";
+  };
+
   return (
     <>
       {type === "grid" ? (
@@ -55,7 +65,7 @@ const TourCard = ({ tour, type }: TourCardProps) => {
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center py-1.5 px-3 bg-slate-50 rounded-full">
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                <span className="text-sm font-medium">{tour.rating} Good</span>
+                <span className="text-sm font-medium">{tour?.rating > 0 && tour.rating} {generateRatingText(tour.rating)}</span>
               </div>
               <span className="text-primary text-base font-semibold">
                 ${tour.priceForAdult}
