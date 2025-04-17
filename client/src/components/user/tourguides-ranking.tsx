@@ -51,7 +51,7 @@ const TourguidesRanking = () => {
         <div className="w-[calc((100%/2)-8px)] py-1 absolute top-2 right-2 bg-slate-100 rounded-lg">
           <p className="text-base w-full text-primary font-semibold text-center">Tour Guides</p>
         </div>
-        <div className="flex items-end justify-center gap-6 px-8">
+        <div className="flex items-end justify-center gap-6 px-5">
           {isError && <p className="text-center bg-slate-200 py-2 rounded-md text-red-500 font-medium">Error Loading Ranking</p>}
           {/* Top 3 tourguide */}
           {isSuccess && topThreeRank && reorderedTopGuides.map((item, index) => {
