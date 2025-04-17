@@ -93,10 +93,10 @@ export type Review = {
   user: string;
   bookingId: Booking;
   ratingForTour: number;
-  ratingForTourguide: number;
+  ratingForTourGuide: number;
   reviewTour: string;
   reviewTourGuide: string;
-  imageUrls?: File[];
+  imageUrls?: string[];
   createdAt: string;
   tourId?: Tour;
   travelerId?: UserInfo;

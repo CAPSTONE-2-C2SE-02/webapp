@@ -16,7 +16,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { Booking, Review } from "@/lib/types";
 import { fetchReviewByBookingId } from "@/services/tours/review-api";
 import { fetchTourGuideBookings, fetchTravelerBookings } from "@/services/users/user-api";
-import { useQuery } from "@tanstack/react-query";
+import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -24,7 +24,7 @@ const HistoryBookingPage = () => {
     const userInfo = useAppSelector((state) => state.auth.userInfo);
     const userId = userInfo?._id;
     const role = userInfo?.role;
-    //const queryClient = useQueryClient();
+    const queryClient = useQueryClient();
     const [activeTab, setActiveTab] = useState("waitingForPayment");
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
@@ -39,12 +39,35 @@ const HistoryBookingPage = () => {
     });
   
     const handleCancel = async (bookingId: string) => {
+      
     };
   
-    const handlePayment = async (bookingId: string) => {    
+    const handlePayment = async (bookingId: string) => {  
+     queryClient.setQueryData<Booking[]>(
+        [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
+        (oldBookings) => {
+          if (!oldBookings) return oldBookings;
+          return oldBookings.map((booking) =>
+            booking._id === bookingId
+              ? { ...booking, status: "PAID", paymentStatus: "PAID" }
+              : booking
+          );
+        }
+      );
+      toast.success("Payment completed successfully");
     };
   
     const handleComplete = async (bookingId: string) => {
+      queryClient.setQueryData<Booking[]>(
+        [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
+        (oldBookings) => {
+          if (!oldBookings) return oldBookings;
+          return oldBookings.map((booking) =>
+            booking._id === bookingId ? { ...booking, status: "COMPLETED" } : booking
+          );
+        }
+      );
+      toast.success("Tour completed successfully");
     };
   
     const handleReview = async (bookingId: string) => {

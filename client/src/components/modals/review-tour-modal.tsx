@@ -47,10 +47,10 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
     if (reviewData) {
       form.reset({
         ratingForTour: reviewData.ratingForTour,
-        ratingForTourGuide: reviewData.ratingForTourguide,
+        ratingForTourGuide: reviewData.ratingForTourGuide,
         reviewTour: reviewData.reviewTour,
         reviewTourGuide: reviewData.reviewTourGuide,
-        imageUrls: [],
+        imageUrls: reviewData.imageUrls || [] ,
       });
     } else {
       form.reset({
@@ -249,10 +249,11 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-medium">
-                    Upload Images <span className="text-red-500">*</span>
+                    Upload Images 
                   </FormLabel>
                   <FormControl>
                     <div className="flex flex-wrap gap-2">
+                    {isEditable && (
                       <label className="w-[120px] h-[120px] border-2 border-dashed rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
                         <ImagePlus className="h-6 w-6 text-gray-400" />
                         <span className="text-xs text-gray-500 text-center mt-1">
@@ -278,46 +279,48 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                           }}
                         />
                       </label>
-
+                    )}
                       {field.value && field.value.length > 0 && (
                         <Carousel className="flex-1 overflow-x-auto">
                           <CarouselContent>
-                            {field.value.map((image, index) => (
-                              <CarouselItem key={index} className="basis-auto">
-                                <div className="relative w-[120px] h-[120px] overflow-hidden rounded-md border">
-                                  {isEditable && (
-                                    <Button
-                                      type="button"
-                                      variant="destructive"
-                                      size="icon"
-                                      className="absolute right-1 top-1 h-6 w-6"
-                                      onClick={() => {
-                                        const updatedImages = field.value.filter(
-                                          (_, i) => i !== index
-                                        );
-                                        field.onChange(updatedImages);
-                                      }}
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  )}
-                                  <img
-                                    src={URL.createObjectURL(image)}
-                                    alt={`Uploaded image ${index + 1}`}
-                                    className="object-cover w-full h-full"
-                                  />
-                                </div>
-                              </CarouselItem>
-                            ))}
-                          </CarouselContent>
-                        </Carousel>
+                          {field.value.map((image, index) => {
+                                    const src = typeof image === "string" ? image : URL.createObjectURL(image);
+
+                                    return (
+                                      <CarouselItem key={index} className="basis-auto">
+                                        <div className="relative w-[120px] h-[120px] overflow-hidden rounded-md border">
+                                          {isEditable && (
+                                            <Button
+                                              type="button"
+                                              variant="destructive"
+                                              size="icon"
+                                              className="absolute right-1 top-1 h-6 w-6"
+                                              onClick={() => {
+                                                const updatedImages = field.value.filter((_, i) => i !== index);
+                                                field.onChange(updatedImages);
+                                              }}
+                                            >
+                                              <X className="h-4 w-4" />
+                                            </Button>
+                                          )}
+                                          <img
+                                            src={src}
+                                            alt={`Uploaded image ${index + 1}`}
+                                            className="object-cover w-full h-full"
+                                          />
+                                        </div>
+                                      </CarouselItem>
+                                    );
+                                  })}
+                                  </CarouselContent>
+                                </Carousel>
+                              )}
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
                       )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    />
 
             <div className="flex justify-end mt-4">
               {isEditable ? (
