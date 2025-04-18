@@ -29,6 +29,12 @@ export const fetchAllPostTourGuide = async (): Promise<Tour[]> => {
   return response.data.result;
 };
 
+// get all tours by usename
+export const fetchTourByUsername = async (username: string): Promise<Tour[]> => {
+  const response = await axiosInstance.get(`/tours/profile/${username}`);
+  return response.data.result;
+}
+
 // get all tours
 export const fetchAllTours = async ({
   pageParam = 1,

@@ -11,11 +11,12 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination"
-import { Link } from 'react-router';
-import useGetOwnTour from '@/hooks/useGetOwnTour';
+import { Link, useParams } from 'react-router';
+import useGetTourByUsername from '@/hooks/useGetTourByUsername';
 
 const UserProfileToursPage = () => {
-    const { data: tours } = useGetOwnTour();
+    const { username } = useParams<{ username: string }>();
+    const {data: tours} = useGetTourByUsername(username as string)
     return (
         <div className="my-1 w-full flex flex-col items-start gap-2 bg-white rounded-t-xl">
             {/* Header */}
