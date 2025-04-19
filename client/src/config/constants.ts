@@ -10,7 +10,6 @@ export const API = {
     PHOTOS: (userId: string) => `/profiles/photos/${userId}`,
     FOLLOWERS: `/profiles/followers`,
     FOLLOWINGS: `/profiles/followings`,
-    PHOTOS: (username: string) => `/profiles/photos/${username}`
   },
   CALENDER: {
     SCHEDULE: `/calendars`,

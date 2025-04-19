@@ -37,7 +37,6 @@ const routes = createBrowserRouter([
           { index: true, element: <UserProfilePage /> },
           { path: "follow", element: <UserProfileFollowPage /> },
           { path: "photos", element: <UserProfilePhotosPage /> },
-          { path: "photos", element: <UserProfileImages /> },
           { path: "tours", element: <UserProfileToursPage /> },
           { path: "reviews", element: <UserProfileReviewPage /> },
         ]

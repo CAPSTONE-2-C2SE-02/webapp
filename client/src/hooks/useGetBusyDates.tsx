@@ -1,4 +1,4 @@
-import { getBusyDates } from "@/services/user-api";
+import { getBusyDates } from "@/services/users/user-api";
 import { useQuery } from "@tanstack/react-query";
 
 export default function useGetBusyDates(tourGuideId: string) {

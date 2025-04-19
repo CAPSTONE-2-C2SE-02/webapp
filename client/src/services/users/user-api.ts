@@ -4,13 +4,6 @@ import { API } from "@/config/constants";
 import axiosInstance from "@/config/api";
 import axios from "axios";
 import { format } from "date-fns";
-import publicApi from "@/config/public.api";
-
-interface PhotoResponse {
-  success: boolean;
-  result: string[];
-  error?: string;
-}
 
 export const userApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -20,6 +13,7 @@ export const userApi = rootApi.injectEndpoints({
         method: "GET",
       }),
     }),
+
   }),
 });
 
@@ -53,7 +47,6 @@ export const saveBusyDatesToServer = async (dates: Date[]): Promise<SetAvailabil
 };
 
 export const deleteBusyDate = async (date: Date) => {
-  // const dateFormatted = format(date, "yyyy-MM-dd");
   const response = await axiosInstance.patch(API.CALENDER.DELETE_BUSY_DATE, { date });
   return response.data;
 };
@@ -169,24 +162,11 @@ export const fetchMyInfo = async (): Promise<UserInfo> => {
   return response.data.result;
 };
 
-export const fetchUserPhotos = async (userId: string): Promise<string[]> => {
-  if (!userId) throw new Error("User ID is required");
-  try {
-    const response = await axiosInstance.get<PhotoResponse>(API.PROFILE.PHOTOS(userId));
-    console.log("Fetched photos:", response.data); // Debug log
-    if (!response.data.success) {
-      throw new Error(response.data.error || "Failed to fetch user photos");
-    }
-    return response.data.result;
-  } catch (error: any) {
-    console.error("Error fetching user photos:", {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-    });
-    throw new Error(
-      error.response?.data?.error || error.message || "Unable to fetch photos. Please try again later."
-    );
+export const fetchUserPhotos = async (username: string): Promise<string[]> => {
+  if (!username) throw new Error("Username is required");
+  const response = await axiosInstance.get(API.PROFILE.PHOTOS(username));
+  if (!response.data.success) {
+    throw new Error(response.data.error || "Failed to fetch user photos");
   }
-
-}
+  return Array.isArray(response.data.result?.postImages) ? response.data.result.postImages : [];
+};

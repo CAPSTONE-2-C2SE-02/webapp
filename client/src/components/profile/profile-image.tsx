@@ -24,29 +24,28 @@ export function ProfileImages({
     const [activeTab, setActiveTab] = useState<"images" | "videos">("images");
 
     return (
-        <div className="mt-6 mb-6 mr-6 ml-6 bg-white p-6 rounded-lg shadow-md">
+        <div className="p-6 min-h-[400px] w-full flex flex-col items-start gap-3 bg-white rounded-xl mb-5">
             {/* Custom Tabs */}
-            <div className="flex space-x-4 border-b border-gray-200 justify-start">
+            <div className="flex border-b border-gray-200 justify-start w-full">
                 <button
                     onClick={() => setActiveTab("images")}
-                    className={`pb-2 font-medium text-sm ${activeTab === "images" ? "text-gray-700 border-b-2 border-blue-600" : "text-gray-500"
+                    className={`pb-2 font-medium mr-4 text-sm ${activeTab === "images" ? "text-gray-700 border-b-2 border-black" : "text-gray-500"
                         }`}
                 >
-                    IMAGES
+                    Photos
                 </button>
                 {/* Optional: Add videos tab if supported later */}
-                {/* <button
-          onClick={() => setActiveTab("videos")}
-          className={`pb-2 font-medium text-sm ${
-            activeTab === "videos" ? "text-gray-700 border-b-2 border-blue-600" : "text-gray-500"
-          }`}
-        >
-          VIDEOS
-        </button> */}
+                <button
+                    onClick={() => setActiveTab("videos")}
+                    className={`pb-2 font-medium text-sm ${activeTab === "videos" ? "text-gray-700 border-b-2 border-black" : "text-gray-500"
+                        }`}
+                >
+                    Videos
+                </button>
             </div>
 
             {/* Content Area */}
-            <div className="mt-4 min-h-[400px] w-full flex flex-col items-start">
+            <div className="mt-4 w-full flex flex-col items-center">
                 {activeTab === "images" ? (
                     images.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full min-h-[400px]">
@@ -65,20 +64,20 @@ export function ProfileImages({
                             ))}
                         </div>
                     ) : (
-                        <div className="text-gray-500 flex items-center justify-center w-full min-h-[400px]">
+                        <div className="text-gray-500 text-center w-full min-h-[300px] flex items-center justify-center">
                             No images available
                         </div>
                     )
                 ) : (
-                    <div className="text-gray-500 flex items-center justify-center w-full min-h-[400px]">
+                    <div className="text-gray-500 text-center w-full min-h-[300px] flex items-center justify-center">
                         No videos available
                     </div>
                 )}
             </div>
 
             {/* Pagination */}
-            {activeTab === "images" && images.length > 0 && (
-                <div className="mt-6 flex justify-center">
+            {activeTab === "images" && totalPages > 0 && (
+                <div className="mt-6 flex justify-center w-full ">
                     <Pagination>
                         <PaginationContent>
                             <PaginationItem>
