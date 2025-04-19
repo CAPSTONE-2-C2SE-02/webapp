@@ -12,6 +12,7 @@ import NotFoundPage from "@/pages/not-found-page";
 import TourBookingPage from "@/pages/tour-booking-page";
 import HistoryBookingPage from "@/pages/history-booking-page";
 import HashtagPage from "@/pages/hashtag-page";
+import PaymentStatusPage from "@/pages/payment-status-page";
 const UserProfilePage = lazy(() => import("@/pages/user-profile/userprofile-page"));
 const UserProfileToursPage = lazy(() => import("@/pages/user-profile/userprofile-tours-page"));
 const UserProfileReviewPage = lazy(() => import("@/pages/user-profile/userprofile-review-page"));
@@ -74,6 +75,9 @@ const routes = createBrowserRouter([
       { path: "/history-booking", element: <HistoryBookingPage /> },
       // Ranking Route
       { path: "/ranking", element: <RankingPage /> },
+
+      // Payment Status
+      { path: "/payment-status", element: <PaymentStatusPage /> },
 
       // Not found route
       { path: "/not-found", element: <NotFoundPage /> },

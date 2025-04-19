@@ -258,7 +258,7 @@ const TourBookingPage = () => {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full" disabled={isCreatingBooking || isCreatingPayment || isGetPaymentUrl}>
+              <Button type="submit" className="w-full" disabled={isCreatingBooking || isCreatingPayment}>
                 {isCreatingBooking && isCreatingPayment && isGetPaymentUrl ? (
                   <>
                     <Loader2 className="size-4 animate-spin" /> Paying...

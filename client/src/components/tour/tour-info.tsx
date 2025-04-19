@@ -1,4 +1,4 @@
-import { MapPin, Clock, UsersRound } from "lucide-react";
+import { MapPin, Clock, UsersRound, BookCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tour } from "@/lib/types";
 import TourImageGallery from "./tour-image-gallery";
@@ -14,19 +14,19 @@ export default function TourInfo({ tour }: TourInfoProps) {
       <div className="grid grid-cols-3 gap-2 mb-4">
         <div className="flex items-center gap-2 text-primary col-span-2">
           <MapPin className="size-5" />
-          <span className="font-medium">Destination: <span className="text-teal-500">{tour.destination}</span></span>
+          <span className="font-medium"><span className="text-teal-500">{tour.destination} - {tour.departureLocation}</span></span>
         </div>
         <div className="flex items-center gap-2 text-primary">
           <Clock className="size-5" />
           <span className="font-medium">Duration: <span className="text-teal-500">{tour.duration}</span></span>
         </div>
         <div className="flex items-center gap-2 text-primary col-span-2">
-          <MapPin className="size-5"/>
-          <span className="font-medium">Departure location: <span className="text-teal-500">{tour.departureLocation}</span></span>
-        </div>
-        <div className="flex items-center gap-2 text-primary">
           <UsersRound className="size-5" />
           <span className="font-medium">Max participants: <span className="text-teal-500">{tour.maxParticipants}</span></span>
+        </div>
+        <div className="flex items-center gap-2 text-primary">
+          <BookCheck className="size-5"/>
+          <span className="font-medium">Bookings: <span className="text-teal-500">{tour.totalBookings}</span></span>
         </div>
       </div>
 

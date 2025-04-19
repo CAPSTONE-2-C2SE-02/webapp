@@ -7,6 +7,7 @@ import useAuthInfo from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Trash2 } from "lucide-react";
+import Logo from "@/assets/tripconnect.svg";
 
 interface NotificationCardProps {
   notification: Notification;
@@ -44,7 +45,7 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete }: Notification
         notification.isRead ? "opacity-80 bg-white" : "opacity-100"
       )}>
         <Avatar className="h-8 w-8 border border-muted">
-          <AvatarImage src={notification.senderId.profilePicture} alt="avatar user" />
+          <AvatarImage src={notification?.senderId?.profilePicture || Logo} alt="avatar user" />
           <AvatarFallback>Username</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2">

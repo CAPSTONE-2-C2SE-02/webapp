@@ -61,6 +61,7 @@ export type Tour = {
   priceForYoung: number;
   priceForChildren: number;
   maxParticipants: number;
+  totalBookings: number;
   duration: number;
   schedule:
   {
@@ -93,10 +94,10 @@ export type Review = {
   user: string;
   bookingId: Booking;
   ratingForTour: number;
-  ratingForTourguide: number;
+  ratingForTourGuide: number;
   reviewTour: string;
   reviewTourGuide: string;
-  imageUrls?: File[];
+  imageUrls?: string[];
   createdAt: string;
   tourId?: Tour;
   travelerId?: UserInfo;
@@ -158,7 +159,7 @@ type BaseNotification = {
   _id: string;
   message: string;
   isRead: boolean;
-  senderId: {
+  senderId?: {
     _id: string;
     username: string;
     fullName: string;
