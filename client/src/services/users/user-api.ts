@@ -4,7 +4,6 @@ import { API } from "@/config/constants";
 import axiosInstance from "@/config/api";
 import axios from "axios";
 import { format } from "date-fns";
-import publicApi from "@/config/public.api";
 
 export const userApi = rootApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -14,22 +13,26 @@ export const userApi = rootApi.injectEndpoints({
         method: "GET",
       }),
     }),
+
   }),
 });
 
 export const { useGetUserInfoByUsernameQuery } = userApi;
 
-export const followUser = async (userId: string) => {
+export const followUser = async (userId: string): Promise<any> => {
+  if (!userId) throw new Error("User ID is required");
   const response = await axiosInstance.post(API.PROFILE.FOLLOW(userId));
   return response.data;
 };
 
 export const getUserByUsername = async (username: string): Promise<UserInfo> => {
+  if (!username) throw new Error("Username is required");
   const response = await axios.get(`${import.meta.env.VITE_API_URL}/${API.PROFILE.USER_INFO(username)}`);
   return response.data.result;
 };
 
 export const getBusyDates = async (userId: string): Promise<Calendar> => {
+  if (!userId) throw new Error("User ID is required");
   const response = await axiosInstance.get(API.CALENDER.SCHEDULE_INFO(userId));
   return response.data.result;
 };
@@ -44,7 +47,6 @@ export const saveBusyDatesToServer = async (dates: Date[]): Promise<SetAvailabil
 };
 
 export const deleteBusyDate = async (date: Date) => {
-  // const dateFormatted = format(date, "yyyy-MM-dd");
   const response = await axiosInstance.patch(API.CALENDER.DELETE_BUSY_DATE, { date });
   return response.data;
 };
@@ -72,6 +74,8 @@ export const updateUserProfile = async ({
   userId: string;
   data: FormData | Record<string, any>;
 }): Promise<UserInfo> => {
+  if (!userId) throw new Error("User ID is required");
+
   try {
     if (data instanceof FormData) {
       const profilePicture = data.get("profilePicture");
@@ -79,16 +83,16 @@ export const updateUserProfile = async ({
       const validTypes = ["image/jpeg", "image/png", "image/jpg"];
       const maxSize = 5 * 1024 * 1024; // 5MB
 
-      if (profilePicture instanceof File) {
+      if (profilePicture instanceof File && profilePicture.size > 0) {
         if (!validTypes.includes(profilePicture.type)) {
           throw new Error("Profile picture must be JPEG, JPG or PNG");
         }
         if (profilePicture.size > maxSize) {
-          throw new Error("Avatar must not exceed 5MB");
+          throw new Error("Profile picture must not exceed 5MB");
         }
       }
 
-      if (coverPhoto instanceof File) {
+      if (coverPhoto instanceof File && coverPhoto.size > 0) {
         if (!validTypes.includes(coverPhoto.type)) {
           throw new Error("Cover photo must be JPEG, JPG or PNG");
         }
@@ -97,38 +101,36 @@ export const updateUserProfile = async ({
         }
       }
 
-      console.log("Send FormData:", [...data.entries()]);
+      console.log("Sending FormData:", [...data.entries()]);
     } else {
-      console.log("Send JSON data:", data);
+      console.log("Sending JSON data:", data);
     }
 
     const response = await axiosInstance.put(API.PROFILE.UPDATE_INFO(userId), data, {
       headers: data instanceof FormData ? { "Content-Type": "multipart/form-data" } : undefined,
     });
 
-    console.log("Response from server:", response.data);
-
     if (!response?.data) {
       throw new Error("No data received from server");
     }
 
     if (!response.data.result) {
-      throw new Error("Invalid response format: missing field 'result'");
+      throw new Error("Invalid response format: missing 'result' field");
     }
 
+    const result = response.data.result;
     if (data instanceof FormData) {
-      const result = response.data.result;
       if (!result.profilePicture && data.get("profilePicture")) {
-        console.warn("Avatar not updated in response");
+        console.warn("Profile picture not updated in response");
       }
       if (!result.coverPhoto && data.get("coverPhoto")) {
         console.warn("Cover photo not updated in response");
       }
     }
 
-    return response.data.result;
+    return result;
   } catch (error: any) {
-    console.error("Error in updateUserProfile:", {
+    console.error("Error updating user profile:", {
       message: error.message,
       status: error.response?.status,
       data: error.response?.data,
@@ -136,11 +138,11 @@ export const updateUserProfile = async ({
 
     let errorMessage = "Unable to update profile. Please try again later.";
     if (error.response?.status === 500) {
-      errorMessage = "Server Error: Unable to process uploaded file. Please check the file format (JPEG/PNG) and try again.";
+      errorMessage = "Server error: Unable to process uploaded file. Please check the file format (JPEG/PNG) and try again.";
     } else if (error.response?.data?.error) {
       errorMessage = error.response.data.error;
     } else if (error.response?.status === 400) {
-      errorMessage = "The submitted data is invalid. Please check again.";
+      errorMessage = "Invalid data submitted. Please check your input.";
     } else if (error.message) {
       errorMessage = error.message;
     }
@@ -150,6 +152,7 @@ export const updateUserProfile = async ({
 };
 
 export const fetchUserInfoByUsername = async (username: string): Promise<UserInfo> => {
+  if (!username) throw new Error("Username is required");
   const response = await axiosInstance.get(`/users/profile/${username}`);
   return response.data.result;
 };
@@ -159,15 +162,11 @@ export const fetchMyInfo = async (): Promise<UserInfo> => {
   return response.data.result;
 };
 
-export const getAllPhotosByUsername = async (
-  username: string
-): Promise<
-  ApiResponse<{
-    profilePicture: string;
-    coverPhoto: string;
-    postImages: string[];
-  }>
-> => {
-  const response = await publicApi.get(API.PROFILE.PHOTOS(username));
-  return response.data;
+export const fetchUserPhotos = async (username: string): Promise<string[]> => {
+  if (!username) throw new Error("Username is required");
+  const response = await axiosInstance.get(API.PROFILE.PHOTOS(username));
+  if (!response.data.success) {
+    throw new Error(response.data.error || "Failed to fetch user photos");
+  }
+  return Array.isArray(response.data.result?.postImages) ? response.data.result.postImages : [];
 };

@@ -32,7 +32,7 @@ const SetBusySchedulePage = () => {
   const { data: busyDatesData, isLoading } = useGetBusyDates(tourGuideId as string);
 
   const { mutate: saveBusyDates } = useMutation({
-    mutationFn: saveBusyDatesToServer, 
+    mutationFn: saveBusyDatesToServer,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["busyDates", tourGuideId] })
       setSelectedDates([])
@@ -44,7 +44,7 @@ const SetBusySchedulePage = () => {
 
   const handleSaveAndUpdateSchedule = () => {
     if (selectedDates.length === 0) return;
-  
+
     const normalizedSelectedDates = selectedDates.map(normalizeDate);
     const newDates = normalizedSelectedDates.filter(
       (selectedDate) =>
@@ -55,7 +55,7 @@ const SetBusySchedulePage = () => {
     setBusyDates(updatedBusyDates);
     setSelectedDates([]);
 
-    saveBusyDates(updatedBusyDates); 
+    saveBusyDates(updatedBusyDates);
   };
 
   // Remove a specific busy date
@@ -86,7 +86,7 @@ const SetBusySchedulePage = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <Card className="w-full max-w-3xl mx-auto"> 
+      <Card className="w-full max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle className="text-xl text-center text-primary">Manage Your Busy Schedule</CardTitle>
           <CardDescription className="text-center">Select multiple dates when you're unavailable</CardDescription>
@@ -173,7 +173,7 @@ const SetBusySchedulePage = () => {
                         <Button variant="ghost" disabled={isPending} size="icon" onClick={() => removeBusyDate(date.date)}>
                           <Trash2 className="h-4 w-4 text-red-400" />
                         </Button>
-                      </div>    
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -186,9 +186,9 @@ const SetBusySchedulePage = () => {
           </Tabs>
         </CardContent>
         <CardFooter>
-          <Button variant={"outline"} onClick={handleSaveAndUpdateSchedule} disabled={selectedDates.length === 0 && busyDates.length ===0} className="w-full text-primary bg-blue-100 border-primary">
-              <CalendarRange className="mr-2 w-4" />
-              Save Busy Schedule {selectedDates.length} Date{selectedDates.length !== 1 ? "s" : ""} to Busy Schedule
+          <Button variant={"outline"} onClick={handleSaveAndUpdateSchedule} disabled={selectedDates.length === 0 && busyDates.length === 0} className="w-full text-primary bg-blue-100 border-primary">
+            <CalendarRange className="mr-2 w-4" />
+            Save Busy Schedule {selectedDates.length} Date{selectedDates.length !== 1 ? "s" : ""} to Busy Schedule
           </Button>
         </CardFooter>
       </Card>
