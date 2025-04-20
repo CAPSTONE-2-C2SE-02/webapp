@@ -10,6 +10,7 @@ import calendarRouter from "./calendar.route.js";
 import bookingRouter from "./booking.route.js";
 import chatRouter from "./conversation.route.js";
 import messageRouter from "./message.route.js";
+import exportRouter from "./export.route.js";
 
 
 const router = express.Router();
@@ -24,5 +25,6 @@ router.use('/calendars', calendarRouter);
 router.use('/bookings', bookingRouter);
 router.use('/chats', chatRouter);
 router.use('/messages', messageRouter);
+router.use('/chatbot', exportRouter);
 
 export default router;
