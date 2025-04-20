@@ -1,19 +1,17 @@
 from os import path
 import sys
 import json
+import random
 import re
 from huggingface_hub import InferenceClient
 from config import API_KEY
+from openai import OpenAI
 
 
 sys.path.append(path.abspath(path.join(path.dirname(__file__), "..")))
 from src.pineconeClient import query_pinecone
 
-client = InferenceClient(
-    provider="novita",
-    api_key=API_KEY,
-)
-model_name = "deepseek-ai/DeepSeek-V3-0324"
+client = OpenAI(api_key=API_KEY)
 
 current_tour = None
 last_query = ""
@@ -37,6 +35,7 @@ conversation_state = {
 def load_all_tours():
     global ALL_TOURS, SUPPORTED_DESTINATIONS
     ALL_TOURS = {"all": []}
+    SUPPORTED_DESTINATIONS = []
     
     print("🌟 Chào mừng đến với Chatbot Du lịch! 🌟")
     print("👉 Đang tải dữ liệu tour...")
@@ -47,11 +46,15 @@ def load_all_tours():
     tour_by_id = {}
     
     if all_tours:
-        # Trích xuất tất cả destinations
+        # Trích xuất tất cả cặp departure-destination
         for tour in all_tours:
             destination = tour.get('destination', '')
-            if destination and destination != "Khác" and destination not in SUPPORTED_DESTINATIONS:
-                SUPPORTED_DESTINATIONS.append(destination)
+            departure = tour.get('departure', '')
+            
+            if destination and departure:
+                route = f"{departure} - {destination}"
+                if route not in SUPPORTED_DESTINATIONS and destination != "Khác":
+                    SUPPORTED_DESTINATIONS.append(route)
         
         # Lưu trữ trong tour_by_id để truy cập nhanh
         for tour in all_tours:
@@ -59,20 +62,22 @@ def load_all_tours():
             if tour_id:
                 tour_by_id[tour_id] = tour
         
-        # Phân loại tours theo destinations
+        # Đảm bảo lưu trữ theo cả route
         for tour in all_tours:
             destination = tour.get('destination', '')
+            departure = tour.get('departure', '')
+        
+            if destination and departure:
+                route = f"{departure} - {destination}"
+                if route not in ALL_TOURS:
+                    ALL_TOURS[route] = []
             
-            # Thêm destination vào tour nếu chưa có
-            if 'destination' not in tour:
-                tour['destination'] = destination
-                
-            # Thêm tour vào danh sách theo điểm đến
-            if destination not in ALL_TOURS:
-                ALL_TOURS[destination] = []
+                ALL_TOURS[route].append(tour)
+                ALL_TOURS["all"].append(tour)
             
-            ALL_TOURS[destination].append(tour)
-            ALL_TOURS["all"].append(tour)
+                # Thêm route vào danh sách các tuyến hỗ trợ nếu chưa có
+                if route not in SUPPORTED_DESTINATIONS:
+                    SUPPORTED_DESTINATIONS.append(route)
     
     # Lưu cache vào biến toàn cục để truy cập nhanh
     global TOUR_CACHE
@@ -81,10 +86,6 @@ def load_all_tours():
     }
     
     print("✅ Đã tải xong dữ liệu tour.")
-    print(f"ALL_TOURS loaded with {len(ALL_TOURS)} destinations")
-    for dest in ALL_TOURS:
-        if dest != "all":
-            print(f"- {dest}: {len(ALL_TOURS[dest])} tours")
     print("👉 Bạn có thể hỏi về các tour tại:", ", ".join(SUPPORTED_DESTINATIONS) 
           if SUPPORTED_DESTINATIONS else "Chưa có địa điểm nào")
 
@@ -102,50 +103,139 @@ def _reset_conversation_state():
 def is_destination_related(query):
     query_lower = query.lower()
     
-    # Tạo bảng băm từ các từ trong query
-    query_words_set = set(query_lower.split())
+    # Tạo cấu trúc để lưu trữ kết quả với hướng đi chính xác
+    found_routes = []
     
-    # Kiểm tra match chính xác trước
-    for location in SUPPORTED_DESTINATIONS:
-        loc_lower = location.lower()
-        if loc_lower in query_lower:
-            return location
+    # Kiểm tra các pattern cụ thể để xác định điểm đi và điểm đến
+    for route in SUPPORTED_DESTINATIONS:
+        route_lower = route.lower()
+        departure, destination = route_lower.split(" - ")
+        
+        # Tạo cả hai chiều của tuyến đường để kiểm tra
+        forward_route = f"{departure} - {destination}"  # tuyến gốc
+        reverse_route = f"{destination} - {departure}"  # tuyến ngược chiều
+        
+        # Kiểm tra pattern rõ ràng cho tuyến gốc
+        forward_indicators = [
+            re.compile(f"{departure}\\s*[-–—]\\s*{destination}"),
+            re.compile(f"từ\\s+{departure}\\s+(?:đi|đến|tới|ra)\\s+{destination}"),
+            re.compile(f"{departure}\\s+(?:đi|đến|tới|ra)\\s+{destination}")
+        ]
+        
+        # Kiểm tra pattern rõ ràng cho tuyến ngược
+        reverse_indicators = [
+            re.compile(f"{destination}\\s*[-–—]\\s*{departure}"),
+            re.compile(f"từ\\s+{destination}\\s+(?:đi|đến|tới|ra)\\s+{departure}"),
+            re.compile(f"{destination}\\s+(?:đi|đến|tới|ra)\\s+{departure}")
+        ]
+        
+        # Kiểm tra từ ngữ cảnh theo hướng đi
+        forward_context = [
+            (f"từ {departure}", f"đến {destination}"),
+            (f"từ {departure}", f"tới {destination}"),
+            (f"từ {departure}", f"ra {destination}"),
+            (f"{departure}", f"đi {destination}"),
+            (f"tour {departure}", f"{destination}")
+        ]
+        
+        reverse_context = [
+            (f"từ {destination}", f"đến {departure}"),
+            (f"từ {destination}", f"tới {departure}"),
+            (f"từ {destination}", f"ra {departure}"),
+            (f"{destination}", f"đi {departure}"),
+            (f"tour {destination}", f"{departure}")
+        ]
+        
+        # Kiểm tra tuyến gốc
+        for pattern in forward_indicators:
+            if pattern.search(query_lower):
+                found_routes.append((route, 0.9))  # Độ tin cậy cao
+                break
+                
+        # Kiểm tra tuyến ngược
+        for pattern in reverse_indicators:
+            if pattern.search(query_lower):
+                # Tìm tuyến ngược trong danh sách hỗ trợ
+                reverse_in_supported = False
+                for supported_route in SUPPORTED_DESTINATIONS:
+                    if supported_route.lower() == reverse_route:
+                        found_routes.append((supported_route, 0.9))
+                        reverse_in_supported = True
+                        break
+                
+                # Nếu không có, thử tạo tuyến ngược mới
+                if not reverse_in_supported:
+                    found_routes.append((reverse_route, 0.85))
+                break
+        
+        # Kiểm tra ngữ cảnh cho tuyến gốc
+        for start, end in forward_context:
+            if start in query_lower and end in query_lower and query_lower.find(start) < query_lower.find(end):
+                found_routes.append((route, 0.8))
+                break
+        
+        # Kiểm tra ngữ cảnh cho tuyến ngược
+        for start, end in reverse_context:
+            if start in query_lower and end in query_lower and query_lower.find(start) < query_lower.find(end):
+                # Tìm tuyến ngược trong danh sách hỗ trợ
+                reverse_in_supported = False
+                for supported_route in SUPPORTED_DESTINATIONS:
+                    if supported_route.lower() == reverse_route:
+                        found_routes.append((supported_route, 0.8))
+                        reverse_in_supported = True
+                        break
+                
+                # Nếu không có, thử tạo tuyến ngược mới
+                if not reverse_in_supported:
+                    found_routes.append((reverse_route, 0.75))
+                break
+        
+        # Kiểm tra đơn giản các từ khóa
+        if f"tour {departure} {destination}" in query_lower:
+            found_routes.append((route, 0.7))
+        elif f"tour {destination} {departure}" in query_lower:
+            # Tìm tuyến ngược trong danh sách hỗ trợ
+            reverse_in_supported = False
+            for supported_route in SUPPORTED_DESTINATIONS:
+                if supported_route.lower() == reverse_route:
+                    found_routes.append((supported_route, 0.7))
+                    reverse_in_supported = True
+                    break
+            
+            # Nếu không có, thử tạo tuyến ngược mới
+            if not reverse_in_supported:
+                found_routes.append((reverse_route, 0.65))
     
-    # Tìm destination có tỉ lệ match cao nhất
-    best_match = None
-    best_score = 0
-    for location in SUPPORTED_DESTINATIONS:
-        loc_lower = location.lower()
-        loc_words_set = set(loc_lower.split())
-        
-        # Tính tỉ lệ trùng khớp
-        common_words = query_words_set.intersection(loc_words_set)
-        if common_words:
-            score = len(common_words) / len(loc_words_set)
-            if score > best_score and score >= 0.5:  # Yêu cầu tỉ lệ match tối thiểu 50%
-                best_score = score
-                best_match = location
+    # Sắp xếp kết quả theo độ tin cậy và trả về tuyến đáng tin cậy nhất
+    if found_routes:
+        found_routes.sort(key=lambda x: x[1], reverse=True)
+        print(f"Found routes: {found_routes}")  # Debug log
+        return found_routes[0][0]
     
-    # Nếu không tìm thấy địa điểm phù hợp, kiểm tra xem có phải người dùng đang hỏi về địa điểm không được hỗ trợ
-    if not best_match:
-        # Danh sách các từ khóa chỉ địa điểm
-        location_keywords = ["đi", "tour", "du lịch", "tham quan", "địa điểm"]
-        
-        # Kiểm tra xem câu query có chứa từ khóa chỉ địa điểm không
-        contains_location_keyword = any(keyword in query_lower for keyword in location_keywords)
-        
-        # Kiểm tra xem trong câu có từ nào không nằm trong danh sách SUPPORTED_DESTINATIONS không
-        potential_locations = [word for word in query_lower.split() if len(word) > 3 and word not in ["tour", "không", "sắp", "tới", "có", "đi"]]
-        
-        if contains_location_keyword and potential_locations:
-            # Trả về từ có thể là địa điểm nhưng không được hỗ trợ
-            for word in potential_locations:
-                if word not in ' '.join(SUPPORTED_DESTINATIONS).lower():
-                    return word.capitalize()  
-    
-    return best_match
-
+    return None
 def is_tour_related(query):
+    query_lower = query.lower().strip()
+    
+    # Kiểm tra đặc biệt cho các câu ngắn về cảm xúc
+    emotion_words = ["buồn", "chán", "vui", "hạnh phúc", "đau", "mệt", "khỏe", "ốm", "bệnh", 
+                     "nhớ", "ghét", "yêu", "thương", "thích", "lo", "sợ"]
+    
+    # Nhận diện câu ngắn có từ ngữ cảm xúc
+    if len(query_lower.split()) <= 4:  # Câu ngắn <= 4 từ
+        # Nếu câu đề cập đến cảm xúc mà không có từ khóa tour
+        if any(word in query_lower for word in emotion_words) and not any(word in query_lower for word in ["tour", "du lịch", "đi", "chuyến"]):
+            return False
+            
+    # Nhận diện các đại từ nhân xưng + cảm xúc
+    pronouns = ["tôi", "mình", "tớ", "t", "ta", "tao", "mik", "mk", "bạn", "cậu", "mày"]
+    
+    # Nếu câu có cấu trúc "đại từ + cảm xúc"
+    for pronoun in pronouns:
+        for emotion in emotion_words:
+            if f"{pronoun} {emotion}" in query_lower:
+                return False
+    
+    # Danh sách từ khóa liên quan tour (giữ nguyên như cũ)
     related_keywords = [
         # Từ khóa chung về tour
         "tour", "du lịch", "tham quan", "khám phá", "trải nghiệm",
@@ -176,10 +266,29 @@ def is_tour_related(query):
         "thông tin", "diễn ra", "như thế nào", "ra sao", "ntn"
     ]
     
-    query_lower = query.lower()
-    
+    # Những câu cực kỳ ngắn và không rõ nghĩa thì không thể xác định
     if len(query_lower.split()) <= 3:
-        return True
+        basic_words = query_lower.split()
+        if any(word in ["tour", "du lịch", "đi", "chuyến"] for word in basic_words):
+            return True
+        return False
+    
+    # Danh sách các pattern rõ ràng về cảm xúc cá nhân không liên quan tour
+    non_tour_patterns = [
+        r"\b(tôi|mình|tớ|t|ta|tao|mik|mk)\s+(buồn|chán|vui|hạnh phúc|đau|mệt|khỏe|ốm|bệnh)(\s+|$|\.|\?)",
+        r"\b(cảm thấy|cảm giác|thấy)\s+(buồn|chán|vui|hạnh phúc|đau|mệt|khỏe|ốm|bệnh)(\s+|$|\.|\?)",
+        r"\b(bạn|cậu|mày|bồ)\s+(là ai|tên gì|có khỏe|thế nào|ra sao|làm gì)(\s+|$|\.|\?)",
+        r"^(chào|hello|hi|hey|xin chào)(\s+|$|\.|\?)",
+        r"(thời tiết|tin tức|bóng đá|covid|dịch bệnh)",
+        r"(làm thế nào để|cách để|hướng dẫn)\s+(nấu ăn|học|kiếm tiền|giảm cân)",
+        r"(yêu|thương|ghét|nhớ|thích)",
+        r"(gia đình|công việc|trường học|bạn bè)"
+    ]
+    
+    # Kiểm tra nếu câu hỏi khớp với mẫu không liên quan
+    for pattern in non_tour_patterns:
+        if re.search(pattern, query_lower):
+            return False
         
     return any(keyword in query_lower for keyword in related_keywords)
 
@@ -249,6 +358,44 @@ def is_follow_up_question(query, conversation_state):
         
     return False
 
+def is_price_related_query(query):
+    query_lower = query.lower()
+    
+    # Từ khóa liên quan đến giá
+    price_keywords = [
+        'giá', 'chi phí', 'phí', 'tiền', 'đắt', 'rẻ', 'giá cả',
+        'giá thành', 'giá tiền', 'chi phí', 'tốn', 'kinh phí'
+    ]
+    
+    # Từ khóa liên quan đến so sánh giá
+    min_price_indicators = [
+        'rẻ nhất', 'thấp nhất', 'ít nhất', 'ít tiền nhất', 'tiết kiệm nhất', 
+        'giá thấp', 'giá rẻ', 'giảm giá', 'phải chăng', 'hợp lý', 'kinh tế nhất'
+    ]
+    
+    max_price_indicators = [
+        'đắt nhất', 'cao nhất', 'nhiều nhất', 'tốn nhất', 'đắt đỏ nhất',
+        'giá cao', 'cao cấp', 'vip', 'sang trọng', 'đắt tiền'
+    ]
+    
+    has_price_keyword = any(keyword in query_lower for keyword in price_keywords)
+    
+    if not has_price_keyword:
+        return None, None
+    
+    price_type = None
+    
+    # Xác định loại so sánh giá
+    if any(indicator in query_lower for indicator in min_price_indicators):
+        price_type = "min"
+    elif any(indicator in query_lower for indicator in max_price_indicators):
+        price_type = "max"
+    
+    # Kiểm tra xem có tuyến đường nào được đề cập không
+    destination = is_destination_related(query)
+    
+    return price_type, destination
+
 def _determine_query_type(query_lower, conversation_state):
     """Xác định loại câu hỏi."""
     if not query_lower.strip() or query_lower.strip() in ["....", ".", "..", "...", "?", "???"]:
@@ -257,62 +404,127 @@ def _determine_query_type(query_lower, conversation_state):
     if not any(c.isalnum() for c in query_lower):
         return "empty"  
     
+    specific_tour_patterns = [
+        r"(cho\s+\w+\s+biết|thông tin)\s+về\s+tour\s+[\w\s]+",  # "cho tôi biết về tour..."
+        r"(thông tin|chi tiết|mô tả|lịch trình|giá|chi phí|thời gian của|số người tham gia)\s+tour\s+[\w\s]+",  
+        r"(giới thiệu|nói|kể)\s+về\s+tour\s+[\w\s]+",  # "giới thiệu về tour..."
+        r"tour\s+[\w\s]+(\d+\s+ngày|\d+\s+đêm)",  # Tour + số ngày/đêm
+        r"tour\s+[\w\s]+(có gì|như thế nào|ra sao|thế nào|đặc biệt|hay ho|đáng chú ý)",  # Tour + có gì/như thế nào/...
+        r"tour\s+[\w\s]+(phun lửa|ẩm thực|khám phá|trải nghiệm|tham quan)",  # Tour + hoạt động đặc biệt
+        r"tour\s+[^?]+\?$"  # Bất kỳ câu hỏi nào bắt đầu bằng "Tour [tên tour]" và kết thúc bằng dấu ?
+    ]
+    
+    for pattern in specific_tour_patterns:
+        if re.search(pattern, query_lower):
+            return "specific_tour"
+    
+    # Kiểm tra nếu là câu hỏi về tuyến du lịch
+    for route in SUPPORTED_DESTINATIONS:
+        if re.search(r"" + re.escape(route.lower()) + r"\s+(có|những|các|có những|có các)\s+.*(tour|chuyến đi|du lịch)", query_lower):
+            return "new_tour"
+    
+    # Pattern cho "Từ [departure] đi [destination] có những tour nào?"
+    for route in SUPPORTED_DESTINATIONS:
+        departure, destination = route.split(" - ")
+        if re.search(r"từ\s+" + re.escape(departure.lower()) + r"\s+(đi|đến)\s+" + re.escape(destination.lower()), query_lower):
+            return "new_tour"
+
+    # Ưu tiên cao nhất: Kiểm tra câu hỏi về tour ở một điểm đến cụ thể
+    for dest in SUPPORTED_DESTINATIONS:
+        # Loại bỏ dấu ^ để không bắt buộc đầu câu, cho phép linh hoạt hơn
+        if re.search(r"" + re.escape(dest.lower()) + r"\s+(có|những|các|có những|có các)\s+.*(tour|chuyến đi|du lịch)", query_lower):
+            return "new_tour"
+    
+    # Pattern cụ thể cho "Điểm đến có những tour nào?"
+    for dest in SUPPORTED_DESTINATIONS:
+        if re.search(r"" + re.escape(dest.lower()) + r".*có.*những.*tour", query_lower):
+            return "new_tour"
+    
+    # Nếu câu hỏi đề cập đến điểm đến cụ thể và có từ khóa liên quan đến tour
+    tour_keywords = ["tour", "du lịch", "chuyến đi", "tham quan", "khám phá", "đi", "gợi ý"]
+    if any(dest.lower() in query_lower for dest in SUPPORTED_DESTINATIONS) and any(kw in query_lower for kw in tour_keywords):
+        return "new_tour"
+    
+    # Kiểm tra điểm đến mới (đặt lên trước để ưu tiên hơn general_tour_patterns)
+    if any(dest.lower() in query_lower for dest in SUPPORTED_DESTINATIONS):
+        if 'current_tour' in locals() and current_tour:
+            current_dest = current_tour.get('destination', '').lower() 
+            for dest in SUPPORTED_DESTINATIONS:
+                if dest.lower() in query_lower and dest.lower() != current_dest:
+                    return "new_tour"
+        return "new_tour"  # Nếu có điểm đến, mặc định là new_tour
+    
+    # Kiểm tra câu hỏi về điểm đến đơn trước các loại khác
+    if find_single_destination(query_lower):
+        # Kiểm tra nếu là câu hỏi về điểm khởi hành
+        departure_indicators = [
+            r"(?:đi|khởi hành|xuất phát)\s+từ",
+            r"từ\s+\w+\s+(?:đi|khởi hành|tới|đến)",
+            r"tour\s+(?:đi|khởi hành)\s+từ",
+            r"bắt đầu\s+từ",
+            r"khởi\s+hành\s+ở",
+            r"tour\s+(?:nào|gì)?\s+khởi\s+hành\s+ở",
+            r"có\s+tour\s+(?:nào|gì)?\s+ở"
+        ]
+        
+        for indicator in departure_indicators:
+            if re.search(indicator, query_lower):
+                return "single_departure"
+        
+        return "single_destination"
+    
+    personal_patterns = [
+        r"\b(tôi|mình|t|tao|ta|mik|mk)\s+(buồn|chán|vui|khỏe|mệt|ốm|đau)",  
+        r"\b(cảm thấy|cảm giác|thấy)\s+(buồn|chán|vui|khỏe|mệt|ốm|đau)",
+        r"\b(bạn|cậu|mày)\s+(là ai|tên gì|có khỏe|tuổi|làm gì)",
+        r"^\s*(chào|hello|hi|hey|hola)\s*$",
+        r"\b(thời tiết|tin tức|bóng đá|covid)\b",
+        r"\b(làm thế nào để|cách để)\s+(nấu ăn|học|kiếm tiền)"
+    ]
+    
+    # Kiểm tra nếu câu hỏi là cá nhân không liên quan tour
+    for pattern in personal_patterns:
+        if re.search(pattern, query_lower):
+            tour_terms = ["tour", "du lịch", "chuyến đi", "đi đâu", "điểm đến"]
+            if not any(term in query_lower for term in tour_terms):
+                return "non_tour"
+    
     # Ưu tiên 1: Kiểm tra nếu là câu hỏi về vùng miền
     if any(region in query_lower for region in ["miền bắc", "miền trung", "miền nam"]):
         return "region"
     
     # Ưu tiên 2: Nhận diện câu hỏi về HOẠT ĐỘNG (cần xử lý trước để không bị nhầm)
-    import re
     activity_patterns = [
         r"(tour|chuyến đi).*(nào).*(có).*(hoạt động|lặn|bơi|ăn uống|ẩm thực)",  # Tour nào có hoạt động gì
         r"(có).*(tour|chuyến đi).*(nào).*(về|có).*(hoạt động|lặn|bơi|ăn uống|ẩm thực)",  # Có tour nào về hoạt động
         r"(tìm|kiếm).*(tour).*(lặn|bơi|ăn uống|ẩm thực)",  # Tìm tour có hoạt động
-        r"(muốn|thích).*(lặn|bơi|ăn uống|tham quan)",  # Muốn hoạt động gì
         r"(tour|chuyến đi).*(để).*(lặn|bơi|ăn uống)",  # Tour để làm gì
         r"(tour|chuyến đi).*(phù hợp).*(lặn|bơi|ăn uống)"  # Tour phù hợp với hoạt động gì
     ]
     
     for pattern in activity_patterns:
         if re.search(pattern, query_lower):
-            print(f"Matched activity pattern: {pattern}")
             return "activity"
     
-    # Ưu tiên 3: Nhận diện câu hỏi về tour cụ thể
-    specific_tour_patterns = [
-        r"tour\s+(trải nghiệm|khám phá)\s+[\w\s]+(hà nội|đà nẵng|hội an|huế|hồ chí minh|sài gòn|nha trang|đà lạt)",  
-        r"(cho\s+\w+\s+biết|thông tin)\s+về\s+tour\s+[\w\s]+",  # "cho tôi biết về tour..."
-        r"(giới thiệu|nói|kể)\s+về\s+tour\s+[\w\s]+",  # "giới thiệu về tour..."
-        r"tour\s+[\w\s]+(\d+\s+ngày|\d+\s+đêm)"  # Tour + số ngày/đêm
-    ]
-    
-    for pattern in specific_tour_patterns:
-        if re.search(pattern, query_lower):
-            print(f"Matched specific tour pattern: {pattern}")
-            return "specific_tour"
-    
-    # Ưu tiên 4: Kiểm tra nếu là câu hỏi về tour mới
+    # Ưu tiên 3: Kiểm tra nếu là câu hỏi về tour mới
     new_tour_indicators = [
         "tour khác", "còn tour nào", "tour mới", "tìm tour", "giới thiệu tour", 
         "có tour nào", "tour du lịch", "thông tin tour", "giá của tour", "thời gian tour",
         "mô tả tour", "danh sách tour", "tour ở", "tour tại", "tour đi", "tour đến"
     ]
     if any(indicator in query_lower for indicator in new_tour_indicators):
-        # Kiểm tra nếu có đề cập đến điểm đến cụ thể
-        for dest in SUPPORTED_DESTINATIONS:
-            if dest.lower() in query_lower:
-                return "new_tour"
         return "new_tour"
     
-    # Ưu tiên 5: Kiểm tra nếu là câu hỏi follow-up cho tour hiện tại
+    # Ưu tiên 4: Kiểm tra nếu là câu hỏi follow-up cho tour hiện tại
     if current_tour and is_follow_up_question(query_lower, conversation_state):
         return "follow_up"
     
-    # Ưu tiên 6: Kiểm tra từ khóa hoạt động riêng lẻ (sau khi đã loại trừ các trường hợp trên)
+    # Ưu tiên 5: Kiểm tra từ khóa hoạt động riêng lẻ (sau khi đã loại trừ các trường hợp trên)
     activity_keywords = [
         "lặn", "biển", "bơi",
         "ăn uống", "đồ ăn", "món ăn", "ẩm thực", "ăn", "uống", "đặc sản", "hải sản",
         "bbq", "nướng", "tiệc nướng",
-        "tham quan", "khám phá", "du lịch", "check-in",
+        "tham quan", "khám phá", "check-in",
         "cầu rồng", "phun lửa", "cầu",
         "biển", "bãi biển", "bờ biển", "đại dương",
         "văn hóa", "lịch sử", "di sản", "truyền thống",
@@ -321,26 +533,43 @@ def _determine_query_type(query_lower, conversation_state):
     
     for activity in activity_keywords:
         if activity in query_lower:
-            # Nếu câu hỏi chỉ chứa từ "tour" và từ khóa hoạt động, không có tên cụ thể
-            # thì xác định là activity
+            # Nếu câu hỏi chỉ chứa từ "tour" và từ khóa hoạt động, không có tên cụ thể thì xác định là activity
             if "tour" in query_lower and len(query_lower.split()) <= 5:
                 return "activity"
                 
             # Nếu câu có dạng "tour có [hoạt động]" mà không có tên tour cụ thể
             if re.search(r"tour\s+(có|với)\s+" + activity, query_lower):
                 return "activity"
+            
+            # Kiểm tra xem nếu câu hỏi có đề cập đến địa điểm thì ưu tiên new_tour
+            if any(dest in query_lower for dest in SUPPORTED_DESTINATIONS):
+                return "new_tour"
                 
             return "activity"
     
-    # Kiểm tra điểm đến mới
-    if any(dest.lower() in query_lower for dest in SUPPORTED_DESTINATIONS) and current_tour:
-        current_dest = current_tour.get('destination', '').lower() 
-        for dest in SUPPORTED_DESTINATIONS:
-            if dest.lower() in query_lower and dest.lower() != current_dest:
-                return "new_tour"  
+    # Ưu tiên 6: Nhận diện câu hỏi chung về tour (không liên quan đến điểm đến cụ thể)
+    general_tour_patterns = [
+        r"(tour|chuyến đi).*(phổ biến|nổi tiếng|hay|đẹp|tốt)",  # Tour phổ biến/nổi tiếng
+        r"(giới thiệu|gợi ý|cho xem|đề xuất|danh sách).*(tour|chuyến đi)",  # Giới thiệu/gợi ý tour
+        r"(có).*(những|một số|các).*(tour|chuyến đi|du lịch)",  # Có những tour nào
+        r"(tour|chuyến đi).*(giá).*(dưới|trên|khoảng|từ|bao nhiêu)",  # Tour giá bao nhiêu
+        r"(tour|chuyến đi).*(nào).*(giá)",  # Tour nào giá...
+        r"(tour|chuyến đi).*(phù hợp|thích hợp).*(với|cho)",  # Tour phù hợp với...
+        r"(tour|chuyến đi).*(số lượng|nhóm|gia đình|bạn bè)"  # Tour cho số lượng/nhóm
+    ]
     
-    if not is_tour_related(query_lower):
+    for pattern in general_tour_patterns:
+        if re.search(pattern, query_lower):
+            return "general_tour"  
+    
+    # Kiểm tra nếu câu hỏi không liên quan đến tour
+    if 'is_tour_related' in globals() and not is_tour_related(query_lower):
         return "non_tour"
+    
+    # Kiểm tra câu hỏi về giá
+    price_type, _ = is_price_related_query(query_lower)
+    if price_type:
+        return "price_query"
     
     # Mặc định là câu hỏi tìm kiếm mới
     return "search"
@@ -518,21 +747,23 @@ def _find_tour_by_id(tour_id):
                 return tour
     return None
 
-def _find_tours_by_destination(destination):
-    """Lấy danh sách tour theo điểm đến.""" 
-    destination_lower = destination.lower()
+def _find_tours_by_destination(route):
+    """Lấy danh sách tour theo tuyến đường (departure - destination).""" 
+    route_lower = route.lower()
     
-    # Tìm điểm đến phù hợp nhất
-    matched_destination = None
-    for supported_dest in SUPPORTED_DESTINATIONS:
-        if supported_dest.lower() == destination_lower:
-            matched_destination = supported_dest
+    # Tìm route phù hợp nhất
+    matched_route = None
+    for supported_route in SUPPORTED_DESTINATIONS:
+        if supported_route.lower() == route_lower:
+            matched_route = supported_route
             break
     
-    if not matched_destination:
+    if not matched_route:
+        # Thử tìm ngược lại nếu không tìm thấy
+        # (Tạm bỏ qua vì bạn muốn tránh hiển thị tour ngược chiều)
         return []
     
-    return ALL_TOURS.get(matched_destination, [])
+    return ALL_TOURS.get(matched_route, [])
 
 def _find_tour_by_similar_name(query):
     """Tìm tour dựa trên tên gần đúng."""
@@ -568,6 +799,142 @@ def _find_tour_by_similar_name(query):
                     best_match = tour
                     
     return best_match
+
+def find_single_destination(query):
+    """Xác định khi người dùng hỏi về một điểm đến hoặc điểm khởi hành"""
+    query_lower = query.lower()
+    
+    # Tạo danh sách các điểm đến từ SUPPORTED_DESTINATIONS
+    all_destinations = set()
+    for route in SUPPORTED_DESTINATIONS:
+        departure, destination = route.split(" - ")
+        all_destinations.add(departure.lower())
+        all_destinations.add(destination.lower())
+    
+    # Các mẫu câu hỏi về điểm đến
+    destination_patterns = [
+        r"có\s+tour\s+(?:nào|gì|gi|j)\s+(?:đi|tới|ra|đến)\s+([^?]+?)(?:\s+không|\?|$)",
+        r"tour\s+(?:đi|tới|ra|đến)\s+([^?]+?)(?:\s+thì\s+sao|\s+không|\?|$)",
+        r"(?:đi|tới|ra|đến)\s+([^?]+?)(?:\s+có\s+tour\s+nào|\s+không|\?|$)",
+        r"có\s+đi\s+([^?]+?)(?:\s+không|\?|$)",
+        r"muốn\s+đi\s+([^?]+?)(?:\s+thì\s+sao|\s+có\s+không|\?|$)",
+        r"tour\s+([^?]+?)(?:\s+giá|\s+bao\s+nhiêu|\s+thế\s+nào|\s+có\s+không|\?|$)"
+    ]
+    
+    # Các mẫu câu hỏi về điểm khởi hành
+    departure_patterns = [
+        r"(?:đi|khởi hành|xuất phát)\s+từ\s+([^?]+?)(?:\s+không|\?|$)",
+        r"từ\s+([^?]+?)\s+(?:đi|khởi hành|tới|đến)(?:\s+không|\?|$)",
+        r"tour\s+(?:đi|khởi hành)\s+từ\s+([^?]+?)(?:\s+không|\?|$)",
+        r"(?:có|được)\s+tour\s+(?:nào|gì)\s+(?:đi|khởi hành|xuất phát)\s+từ\s+([^?]+?)(?:\s+không|\?|$)",
+        r"(?:có|được)\s+(?:đi|khởi hành|xuất phát)\s+từ\s+([^?]+?)(?:\s+không|\?|$)",
+        r"(?:bắt đầu|start)\s+từ\s+([^?]+?)(?:\s+không|\?|$)",
+        r"tour\s+từ\s+([^?]+?)(?:\s+không|\?|$)",
+        r"(?:có|được)\s+tour\s+(?:nào|gì)\s+(?:đi|khởi hành|xuất phát)\s+ở\s+([^?]+?)(?:\s+không|\?|$)",
+        r"(?:có|được)\s+tour\s+(?:nào|gì)\s+khởi\s+hành\s+ở\s+([^?]+?)(?:\s+không|\?|$)",
+        r"tour\s+(?:nào|gì)\s+khởi\s+hành\s+ở\s+([^?]+?)(?:\s+không|\?|$)",
+        r"có\s+tour\s+(?:nào|gì)\s+ở\s+([^?]+?)(?:\s+không|\?|$)"
+    ]
+    
+    # Thêm kiểm tra trực tiếp nếu một địa điểm có trong câu hỏi
+    for dest in all_destinations:
+        if dest in query_lower:
+            # Kiểm tra cụm "tour ... [địa điểm]" hoặc "đi ... [địa điểm]"
+            if f"tour {dest}" in query_lower or f"đi {dest}" in query_lower:
+                return dest
+            
+            # Kiểm tra cụm "từ [địa điểm]" hoặc "ở [địa điểm]"
+            if f"từ {dest}" in query_lower or f"ở {dest}" in query_lower:
+                return dest
+            
+            # Kiểm tra cụm "từ [địa điểm]"
+            if f"từ {dest}" in query_lower:
+                return dest
+    
+    # Tiếp tục với phần tìm kiếm theo pattern điểm đến
+    for pattern in destination_patterns:
+        matches = re.search(pattern, query_lower)
+        if matches:
+            potential_dest = matches.group(1).strip()
+            best_match = find_best_match(potential_dest, all_destinations)
+            if best_match:
+                return best_match
+    
+    # Tiếp tục với phần tìm kiếm theo pattern điểm khởi hành
+    for pattern in departure_patterns:
+        matches = re.search(pattern, query_lower)
+        if matches:
+            potential_dest = matches.group(1).strip()
+            best_match = find_best_match(potential_dest, all_destinations)
+            if best_match:
+                return best_match
+                
+    return None
+
+def find_best_match(potential_dest, all_destinations):
+    """Tìm điểm đến phù hợp nhất dựa trên text nhập vào"""
+    best_match = None
+    best_score = 0
+    
+    for dest in all_destinations:
+        # Kiểm tra chính xác trước
+        if potential_dest == dest:
+            return dest
+        
+        # Kiểm tra nếu chuỗi tìm thấy nằm trong điểm đến
+        if potential_dest in dest:
+            score = len(potential_dest) / len(dest)
+            if score > best_score:
+                best_score = score
+                best_match = dest
+        
+        # Kiểm tra nếu điểm đến nằm trong chuỗi tìm thấy
+        if dest in potential_dest:
+            score = len(dest) / len(potential_dest)
+            if score > best_score:
+                best_score = score
+                best_match = dest
+    
+    # Nếu có kết quả khớp với độ tin cậy cao
+    if best_score > 0.7:
+        return best_match
+    
+    return None
+
+def _find_tours_by_price(price_type, destination=None):
+    """
+    Tìm tour theo giá (rẻ nhất/đắt nhất) và tùy chọn theo điểm đến
+    
+    Args:
+        price_type: "min" cho rẻ nhất, "max" cho đắt nhất
+        destination: Tùy chọn tuyến đường cụ thể
+    
+    Returns:
+        Danh sách tour được sắp xếp theo giá
+    """
+    # Lấy danh sách tour để lọc
+    if destination and destination in ALL_TOURS:
+        tours_to_filter = ALL_TOURS[destination]
+    else:
+        tours_to_filter = ALL_TOURS["all"]
+    
+    # Chuyển đổi giá thành số
+    def extract_price(tour):
+        price_str = tour.get('price', '0 Đồng')
+        # Loại bỏ đơn vị tiền tệ và chuyển về số
+        numeric_str = re.sub(r'[^\d]', '', price_str)
+        if numeric_str:
+            return int(numeric_str)
+        return 0
+    
+    # Sắp xếp tour theo giá
+    if price_type == "min":
+        sorted_tours = sorted(tours_to_filter, key=extract_price)
+    else:  # price_type == "max"
+        sorted_tours = sorted(tours_to_filter, key=extract_price, reverse=True)
+    
+    # Giới hạn số lượng kết quả
+    return sorted_tours[:1]  
     
 # 4. Các hàm hỗ trợ và tiện ích
 def format_tour_for_response(tour):
@@ -577,18 +944,30 @@ def format_tour_for_response(tour):
         "price": tour.get('price', '0'),
         "duration": tour.get('duration', '0'),
         "destination": tour.get('destination', ''),
+        "departure": tour.get('departure', ''),
         "maxParticipants": tour.get('maxParticipants', 0),
         "code": tour.get('code', '')
     }
 
-def _get_ai_response(prompt):
+def _get_ai_response(prompt: str) -> str:
     completion = client.chat.completions.create(
-        model=model_name,
-        messages=[{"role": "user", "content": prompt}],
-        max_tokens=500,
+        messages=[
+            {
+                "role": "system",
+                "content": "Bạn là một hướng dẫn viên du lịch chuyên nghiệp, luôn trả lời chi tiết và thân thiện."
+            },
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        model="gpt-3.5-turbo",
+        temperature=0.7,
+        max_tokens=500
     )
-    ai_response = completion.choices[0].message["content"]
+    ai_response = completion.choices[0].message.content
     return ai_response.replace("*", "")
+
 
 def get_region_from_destination(destination):
     north = ["hà nội", "hạ long"]
@@ -634,6 +1013,7 @@ def _handle_specific_tour_question(query, tour, conversation_state):
                  f"Mô tả: {tour.get('description', '')}, "
                  f"Giá: {tour.get('price', '0')}, "
                  f"Thời gian: {tour.get('duration', '0')}, "
+                 f"Điểm khởi hành: {tour.get('departure', '')}, "
                  f"Điểm đến: {tour.get('destination', '')}, "
                  f"Số người tối đa: {tour.get('maxParticipants', '0')}")
 
@@ -683,37 +1063,62 @@ def _handle_specific_tour_question(query, tour, conversation_state):
             "data": None
         }
     
-def _handle_destination_question(query, destination, conversation_state):
+def _handle_destination_question(query, route, conversation_state):
     global current_tour
 
-    # Kiểm tra xem điểm đến có được hỗ trợ không
-    if destination not in SUPPORTED_DESTINATIONS:
+    # Kiểm tra xem tuyến đường có được hỗ trợ không
+    if route not in SUPPORTED_DESTINATIONS:
         return {
             "status": "warning",
-            "message": f"Xin lỗi, hiện tại không có thông tin về tour tại {destination}.",
+            "message": f"Xin lỗi, hiện tại không có thông tin về tour tuyến {route}.",
             "data": None,
             "error": None
         }
     
-    # Lấy danh sách tour tại điểm đến này
-    destination_tours = _find_tours_by_destination(destination)
+    # Lấy danh sách tour theo tuyến đường
+    route_tours = _find_tours_by_destination(route)
     
-    if not destination_tours:
+    if not route_tours:
         current_tour = None
         conversation_state["last_tour_id"] = None
         conversation_state["current_topic"] = None
         return {
             "status": "warning",
-            "message": f"Không tìm thấy tour nào tại {destination}.",
+            "message": f"Không tìm thấy tour nào đi tuyến {route}.",
             "data": None,
             "error": None
         }
     
+    # Phân tách điểm khởi hành và điểm đến từ route để kiểm tra khớp chính xác
+    route_departure, route_destination = route.split(" - ")
+    
+    # Lọc chỉ lấy tour khớp chính xác tuyến đường
+    exact_route_tours = []
+    for tour in route_tours:
+        if (tour.get('departure', '').lower() == route_departure.lower() and 
+            tour.get('destination', '').lower() == route_destination.lower()):
+            exact_route_tours.append(tour)
+    
+    # Nếu không có tour khớp chính xác, trả về thông báo không tìm thấy
+    if not exact_route_tours:
+        return {
+            "status": "warning",
+            "message": f"Không tìm thấy tour nào đi tuyến {route}.",
+            "data": None,
+            "error": None
+        }
+    
+    # Tiếp tục với tour khớp chính xác
+    tours_to_return = exact_route_tours
+    
     # Giới hạn số lượng tour trả về
-    max_tours = min(TOUR_CONFIG["max_tours_per_destination"], len(destination_tours))
-    min_tours = min(TOUR_CONFIG["min_tours_per_destination"], len(destination_tours))
-    num_tours = max(min_tours, min(max_tours, len(destination_tours)))
-    tours_to_return = destination_tours[:num_tours]
+    max_tours = min(TOUR_CONFIG["max_tours_per_destination"], len(tours_to_return))
+    min_tours = min(TOUR_CONFIG["min_tours_per_destination"], len(tours_to_return))
+    num_tours = max(min_tours, min(max_tours, len(tours_to_return)))
+    tours_to_return = tours_to_return[:num_tours]
+    
+    # Phân tách điểm khởi hành và điểm đến từ route
+    departure, destination = route.split(" - ")
     
     # Tạo context cho AI
     context = "\n".join([
@@ -721,6 +1126,7 @@ def _handle_destination_question(query, destination, conversation_state):
         f"Mô tả: {tour.get('description', '')}, "
         f"Giá: {tour.get('price', '0')}, "
         f"Thời gian: {tour.get('duration', '0')}, "
+        f"Điểm khởi hành: {tour.get('departure', '')}, "
         f"Điểm đến: {tour.get('destination', '')}, "
         f"Số người tối đa: {tour.get('maxParticipants', '0')}"
         for tour in tours_to_return
@@ -728,19 +1134,19 @@ def _handle_destination_question(query, destination, conversation_state):
 
     prompt = f"""Dựa trên thông tin tour sau: \n\n{context}\n\n
     Trả lời câu hỏi sau của người dùng: '{query}'.
-    Người dùng đang tìm tour tại {destination}.
+    Người dùng đang tìm tour đi từ {departure} đến {destination}.
     Hãy trình bày tất cả {len(tours_to_return)} tour theo định dạng sau cho mỗi tour: \n\n
-    1. [Tên Tour]\n   - Điểm đến/Hoạt động: [Mô tả ngắn gọn]\n   - Giá: [Giá] | Thời gian: [Thời gian]\n\n
-    Bắt đầu bằng một câu giới thiệu ngắn gọn về số lượng tour tìm thấy tại {destination}."""
+    1. [Tên Tour]\n   - Tuyến đường: {departure} - {destination}\n   - Điểm đến/Hoạt động: [Mô tả ngắn gọn]\n   - Giá: [Giá] | Thời gian: [Thời gian]\n\n
+    Bắt đầu bằng một câu giới thiệu ngắn gọn về số lượng tour tìm thấy đi từ {departure} đến {destination}."""
     
     try:
         ai_response = _get_ai_response(prompt)
         
         # Nếu chỉ có một tour, đặt làm tour hiện tại
-        if len(destination_tours) == 1:
-            current_tour = destination_tours[0]
+        if len(tours_to_return) == 1:
+            current_tour = tours_to_return[0]
             conversation_state["last_tour_id"] = current_tour.get('code', '')
-            conversation_state["current_topic"] = "destination"
+            conversation_state["current_topic"] = "route" 
         
         conversation_state["query_counter"] += 1
         
@@ -748,6 +1154,8 @@ def _handle_destination_question(query, destination, conversation_state):
             "status": "success",
             "message": ai_response,
             "data": {
+                "route": route,
+                "departure": departure,
                 "destination": destination,
                 "tours": [format_tour_for_response(tour) for tour in tours_to_return]
             },
@@ -762,28 +1170,41 @@ def _handle_destination_question(query, destination, conversation_state):
         }
     
 def _handle_general_tour_question(query, conversation_state):
-    """Xử lý câu hỏi chung về tour bằng cách giới thiệu nhiều tour từ nhiều điểm đến."""
+    """Xử lý câu hỏi chung về tour bằng cách giới thiệu nhiều tour từ nhiều tuyến đường."""
 
-    num_destinations_to_show = TOUR_CONFIG["max_destinations_to_show"]
-    destinations_to_show = []
+    num_routes_to_show = TOUR_CONFIG["max_destinations_to_show"]
+    routes_to_show = []
     all_recommended_tours = []
     
-    # Chọn một số điểm đến ngẫu nhiên từ danh sách hỗ trợ
-    import random
-    random_destinations = random.sample(SUPPORTED_DESTINATIONS, min(num_destinations_to_show, len(SUPPORTED_DESTINATIONS)))
+    # Chọn một số tuyến đường ngẫu nhiên từ danh sách hỗ trợ
+    random_routes = random.sample(SUPPORTED_DESTINATIONS, min(num_routes_to_show, len(SUPPORTED_DESTINATIONS)))
     
-    # Với mỗi điểm đến, lấy ít nhất 2 tour (nếu có)
-    for destination in random_destinations:
-        tours = _find_tours_by_destination(destination)
-        if tours:
-            # Lấy tối thiểu 1, tối đa 2 tour từ mỗi điểm đến
-            max_tours = min(TOUR_CONFIG["max_tours_per_destination"], len(tours))
-            min_tours = min(TOUR_CONFIG["min_tours_per_destination"], len(tours))
-            num_tours = max(min_tours, min(max_tours, len(tours)))
+    # Với mỗi tuyến đường, tìm tour phù hợp
+    for route in random_routes:
+        # Lấy danh sách tour theo tuyến đường
+        route_tours = _find_tours_by_destination(route)
+        
+        if route_tours:
+            # Phân tách điểm khởi hành và điểm đến từ route
+            route_departure, route_destination = route.split(" - ")
             
-            dest_tours = tours[:num_tours]
-            all_recommended_tours.extend(dest_tours)
-            destinations_to_show.append(destination)
+            # Lọc chỉ lấy tour khớp chính xác tuyến đường
+            exact_route_tours = []
+            for tour in route_tours:
+                if (tour.get('departure', '').lower() == route_departure.lower() and 
+                    tour.get('destination', '').lower() == route_destination.lower()):
+                    exact_route_tours.append(tour)
+            
+            # Nếu có tour khớp chính xác
+            if exact_route_tours:
+                # Lấy tối thiểu 1, tối đa 2 tour từ mỗi tuyến đường
+                max_tours = min(TOUR_CONFIG["max_tours_per_destination"], len(exact_route_tours))
+                min_tours = min(TOUR_CONFIG["min_tours_per_destination"], len(exact_route_tours))
+                num_tours = max(min_tours, min(max_tours, len(exact_route_tours)))
+                
+                selected_tours = exact_route_tours[:num_tours]
+                all_recommended_tours.extend(selected_tours)
+                routes_to_show.append(route)
     
     if not all_recommended_tours:
         return {
@@ -793,38 +1214,54 @@ def _handle_general_tour_question(query, conversation_state):
             "error": None
         }
     
-    # Tạo nội dung tin nhắn
-    destination_messages = []
-    tours_data = []
+    # Tạo context cho AI
+    context = "\n".join([
+        f"Tuyến đường: {tour.get('departure', '')} - {tour.get('destination', '')}, "
+        f"Tiêu đề: {tour.get('title', '')}, "
+        f"Mô tả: {tour.get('description', '')}, "
+        f"Giá: {tour.get('price', '0')}, "
+        f"Thời gian: {tour.get('duration', '0')}, "
+        f"Số người tối đa: {tour.get('maxParticipants', '0')}"
+        for tour in all_recommended_tours
+    ])
+
+    # Tạo chuỗi các tuyến đường để hiển thị trong prompt
+    routes_text = ", ".join([f"{route.split(' - ')[0]} đến {route.split(' - ')[1]}" for route in routes_to_show])
+
+    prompt = f"""Dựa trên thông tin tour sau: \n\n{context}\n\n
+    Trả lời câu hỏi chung về tour của người dùng: '{query}'.
+    Người dùng đang tìm hiểu về các tour du lịch nói chung.
+    Hãy trình bày tổng cộng {len(all_recommended_tours)} tour từ {len(routes_to_show)} tuyến đường khác nhau.
+    Nhóm các tour theo tuyến đường và hiển thị theo định dạng sau:
     
-    # Nhóm tour theo điểm đến và tạo thông báo
-    for destination in destinations_to_show:
-        dest_tours = [t for t in all_recommended_tours if t.get('destination') == destination]
-        if dest_tours:
-            destination_messages.append(f"\n🌟 Tour tại {destination}:")
-            for i, tour in enumerate(dest_tours):
-                title = tour.get('title', 'Không có tiêu đề')
-                description = tour.get('description', 'Không có mô tả')
-                price = tour.get('price', 'Không rõ giá')
-                duration = tour.get('duration', 'Không rõ thời gian')
-                
-                destination_messages.append(f"{i+1}. {title}\n   - Điểm đến/Hoạt động: {description}\n   - Giá: {price} | Thời gian: {duration}\n")
-                tours_data.append(format_tour_for_response(tour))
+    🌟 Tour từ [Điểm khởi hành] đến [Điểm đến]:
+    1. [Tên Tour]
+       - Chi tiết: [Mô tả ngắn gọn]
+       - Giá: [Giá] | Thời gian: [Thời gian]
+       - Số người tối đa: [Số người tối đa]
     
-    # Tạo phần giới thiệu
-    introduction = f"Hiện có các tour du lịch hấp dẫn tại {len(destinations_to_show)} điểm đến để bạn lựa chọn:"
+    Bắt đầu bằng một câu giới thiệu ngắn gọn về số lượng tour tìm thấy từ {len(routes_to_show)} tuyến đường khác nhau: {routes_text}."""
     
-    # Kết hợp thành tin nhắn hoàn chỉnh
-    full_message = introduction + "".join(destination_messages)
-    
-    return {
-        "status": "success",
-        "message": full_message,
-        "data": {
-            "tours": tours_data
-        },
-        "error": None
-    }
+    try:
+        ai_response = _get_ai_response(prompt)
+        
+        conversation_state["query_counter"] += 1
+        
+        return {
+            "status": "success",
+            "message": ai_response,
+            "data": {
+                "tours": [format_tour_for_response(tour) for tour in all_recommended_tours]
+            },
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": f"Lỗi khi gọi model AI: {str(e)}",
+            "message": "",
+            "data": None
+        }
 
 def _handle_pinecone_results(query, pinecone_results, conversation_state):
     global current_tour
@@ -869,12 +1306,13 @@ def _handle_pinecone_results(query, pinecone_results, conversation_state):
     if any(keyword in query_lower for keyword in interest_keywords):
         most_relevant = pinecone_results[0]
         
-        context = (f"Tiêu đề: {most_relevant.get('title', '')}, "
-                   f"Mô tả: {most_relevant.get('description', '')}, "
-                   f"Giá: {most_relevant.get('price', '0')}, "
-                   f"Thời gian: {most_relevant.get('duration', '0')}, "
-                   f"Điểm đến: {most_relevant.get('destination', '')}, "
-                   f"Số người tối đa: {most_relevant.get('maxParticipants', '0')}")
+        context =  (f"Tiêu đề: {most_relevant.get('title', '')}, "
+                    f"Mô tả: {most_relevant.get('description', '')}, "
+                    f"Giá: {most_relevant.get('price', '0')}, "
+                    f"Thời gian: {most_relevant.get('duration', '0')}, "
+                    f"Điểm khởi hành: {most_relevant.get('departure', '')}, "
+                    f"Điểm đến: {most_relevant.get('destination', '')}, "
+                    f"Số người tối đa: {most_relevant.get('maxParticipants', '0')}")
 
         prompt = f"""Dựa trên thông tin tour sau: \n\n{context}\n\n
                       Trả lời câu hỏi sau của người dùng: '{query}'.
@@ -912,6 +1350,7 @@ def _handle_pinecone_results(query, pinecone_results, conversation_state):
             f"Mô tả: {tour.get('description', '')}, "
             f"Giá: {tour.get('price', '0')}, "
             f"Thời gian: {tour.get('duration', '0')}, "
+            f"Điểm khởi hành: {tour.get('departure', '')}, "
             f"Điểm đến: {tour.get('destination', '')}, "
             f"Số người tối đa: {tour.get('maxParticipants', '0')}"
             for tour in pinecone_results
@@ -958,12 +1397,13 @@ def _handle_follow_up_question(query, tour, conversation_state):
     
     focus = _determine_question_focus(query_lower)
     
-    tour_info = (f"Tiêu đề: {tour.get('title', '')}, "
-                 f"Mô tả: {tour.get('description', '')}, "
-                 f"Giá: {tour.get('price', '0')}, "
-                 f"Thời gian: {tour.get('duration', '0')}, "
-                 f"Điểm đến: {tour.get('destination', '')}, "
-                 f"Số người tối đa: {tour.get('maxParticipants', '0')}")
+    tour_info =(f"Tiêu đề: {tour.get('title', '')}, "
+                f"Mô tả: {tour.get('description', '')}, "
+                f"Giá: {tour.get('price', '0')}, "
+                f"Thời gian: {tour.get('duration', '0')}, "
+                f"Điểm khởi hành: {tour.get('departure', '')}, "
+                f"Điểm đến: {tour.get('destination', '')}, "
+                f"Số người tối đa: {tour.get('maxParticipants', '0')}")
 
     prompt = f"""Dựa trên thông tin tour sau: \n\n{tour_info}\n\n
     Trả lời câu hỏi sau của người dùng: '{query}'.
@@ -1041,12 +1481,13 @@ def _handle_region_question(query, conversation_state):
 
     all_tour_info = []
     for tour in all_selected_tours:
-        tour_info = (f"Tiêu đề: {tour.get('title', '')}, "
-                   f"Mô tả: {tour.get('description', '')}, "
-                   f"Giá: {tour.get('price', '0')}, "
-                   f"Thời gian: {tour.get('duration', '0')}, "
-                   f"Điểm đến: {tour.get('destination', '')}, "
-                   f"Số người tối đa: {tour.get('maxParticipants', '0')}")
+        tour_info =(f"Tiêu đề: {tour.get('title', '')}, "
+                    f"Mô tả: {tour.get('description', '')}, "
+                    f"Giá: {tour.get('price', '0')}, "
+                    f"Thời gian: {tour.get('duration', '0')}, "
+                    f"Điểm khởi hành: {tour.get('departure', '')}, "
+                    f"Điểm đến: {tour.get('destination', '')}, "
+                    f"Số người tối đa: {tour.get('maxParticipants', '0')}")
         all_tour_info.append(tour_info)
     
     context = "\n\n".join(all_tour_info)
@@ -1088,6 +1529,7 @@ def _handle_keyword_matches(query, tours, conversation_state):
                  f"Mô tả: {tour.get('description', '')}, "
                  f"Giá: {tour.get('price', '0')}, "
                  f"Thời gian: {tour.get('duration', '0')}, "
+                 f"Điểm khởi hành: {tour.get('departure', '')}, "
                  f"Điểm đến: {tour.get('destination', '')}, "
                  f"Số người tối đa: {tour.get('maxParticipants', '0')}")
         tour_contexts.append(tour_info)
@@ -1107,6 +1549,194 @@ def _handle_keyword_matches(query, tours, conversation_state):
             "status": "success",
             "message": ai_response,
             "data": {"tours": [format_tour_for_response(tour) for tour in tours]},
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": f"Lỗi khi gọi model AI: {str(e)}",
+            "message": "",
+            "data": None
+        }
+    
+def _handle_single_destination_question(query, destination, conversation_state, is_departure=False):
+    global current_tour
+
+    # Phân tích ngữ cảnh câu hỏi để xác định xem người dùng muốn "đi đến" hay "đi từ" điểm đó
+    query_lower = query.lower()
+    is_departure = False
+    
+    # Kiểm tra nếu người dùng muốn đi "từ" địa điểm này
+    departure_patterns = [
+        r"(?:đi|khởi hành|xuất phát)\s+từ\s+" + re.escape(destination.lower()),
+        r"từ\s+" + re.escape(destination.lower()) + r"\s+(?:đi|tới|đến)",
+        r"tour\s+(?:đi|khởi hành)\s+từ\s+" + re.escape(destination.lower())
+    ]
+    
+    for pattern in departure_patterns:
+        if re.search(pattern, query_lower):
+            is_departure = True
+            break
+    
+    # Tìm tour phù hợp dựa trên điểm đến hoặc điểm đi
+    relevant_tours = []
+    
+    for route in SUPPORTED_DESTINATIONS:
+        departure, dest = route.split(" - ")
+        
+        # Nếu người dùng muốn tìm tour "từ" địa điểm này đi
+        if is_departure and destination.lower() == departure.lower():
+            route_tours = _find_tours_by_destination(route)
+            for tour in route_tours:
+                tour['route'] = route
+                relevant_tours.append(tour)
+        
+        # Nếu người dùng muốn tìm tour "đến" địa điểm này (mặc định)
+        elif not is_departure and destination.lower() == dest.lower():
+            route_tours = _find_tours_by_destination(route)
+            for tour in route_tours:
+                tour['route'] = route
+                relevant_tours.append(tour)
+    
+    if not relevant_tours:
+        # Nếu không tìm thấy tour theo điều kiện ban đầu, thử tìm tất cả tour liên quan
+        # Đây là phương án dự phòng khi không phân tích được ý định chính xác
+        if not is_departure:  # Chỉ thực hiện khi ưu tiên tìm điểm đến không thành công
+            for route in SUPPORTED_DESTINATIONS:
+                departure, dest = route.split(" - ")
+                if destination.lower() == departure.lower() or destination.lower() == dest.lower():
+                    route_tours = _find_tours_by_destination(route)
+                    for tour in route_tours:
+                        tour['route'] = route
+                        tour['is_destination'] = destination.lower() == dest.lower()  # Đánh dấu nếu là điểm đến
+                        relevant_tours.append(tour)
+            
+            # Ưu tiên sắp xếp các tour có điểm đến trước
+            relevant_tours.sort(key=lambda x: x.get('is_destination', False), reverse=True)
+    
+    if not relevant_tours:
+        return {
+            "status": "warning",
+            "message": f"Không tìm thấy tour nào liên quan đến {destination}.",
+            "data": None,
+            "error": None
+        }
+    
+    # Giới hạn số lượng tour trả về
+    max_tours = min(TOUR_CONFIG["max_tours_per_destination"], len(relevant_tours))
+    min_tours = min(TOUR_CONFIG["min_tours_per_destination"], len(relevant_tours))
+    num_tours = max(min_tours, min(max_tours, len(relevant_tours)))
+    tours_to_return = relevant_tours[:num_tours]
+    
+    # Tạo context cho AI với thông tin về ý định người dùng
+    context = "\n".join([
+        f"Tiêu đề: {tour.get('title', '')}, "
+        f"Mô tả: {tour.get('description', '')}, "
+        f"Giá: {tour.get('price', '0')}, "
+        f"Thời gian: {tour.get('duration', '0')}, "
+        f"Tuyến đường: {tour.get('route', '')}, "
+        f"Điểm khởi hành: {tour.get('departure', '')}, "
+        f"Điểm đến: {tour.get('destination', '')}, "
+        f"Số người tối đa: {tour.get('maxParticipants', '0')}"
+        for tour in tours_to_return
+    ])
+
+    # Điều chỉnh nội dung prompt dựa trên ý định của người dùng
+    if is_departure:
+        intent_text = f"Người dùng đang tìm tour khởi hành từ {destination}."
+    else:
+        intent_text = f"Người dùng đang tìm tour đi đến {destination}."
+
+    prompt = f"""Dựa trên thông tin tour sau: \n\n{context}\n\n
+    Trả lời câu hỏi sau của người dùng: '{query}'.
+    {intent_text}
+    Hãy trình bày tất cả {len(tours_to_return)} tour theo định dạng sau cho mỗi tour: \n\n
+    1. [Tên Tour]\n   - Tuyến đường: [Điểm khởi hành] - [Điểm đến]\n   - Điểm đến/Hoạt động: [Mô tả ngắn gọn]\n   - Giá: [Giá] | Thời gian: [Thời gian]\n\n
+    Bắt đầu bằng một câu giới thiệu ngắn gọn về số lượng tour tìm thấy liên quan đến {destination}."""
+    
+    try:
+        ai_response = _get_ai_response(prompt)
+        
+        # Nếu chỉ có một tour, đặt làm tour hiện tại
+        if len(tours_to_return) == 1:
+            current_tour = tours_to_return[0]
+            conversation_state["last_tour_id"] = current_tour.get('code', '')
+            conversation_state["current_topic"] = "destination" 
+        
+        conversation_state["query_counter"] += 1
+        
+        return {
+            "status": "success",
+            "message": ai_response,
+            "data": {
+                "destination": destination,
+                "is_departure": is_departure,
+                "tours": [format_tour_for_response(tour) for tour in tours_to_return]
+            },
+            "error": None
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": f"Lỗi khi gọi model AI: {str(e)}",
+            "message": "",
+            "data": None
+        }
+def _handle_price_question(query, price_type, destination, conversation_state):
+
+    price_type_text = "rẻ nhất" if price_type == "min" else "đắt nhất"
+    
+    # Tìm tour theo giá
+    filtered_tours = _find_tours_by_price(price_type, destination)
+    
+    if not filtered_tours:
+        return {
+            "status": "warning",
+            "message": f"Không tìm thấy tour nào phù hợp với yêu cầu tìm tour {price_type_text}.",
+            "data": None,
+            "error": None
+        }
+    
+    # Tạo context cho AI
+    context = "\n".join([
+        f"Tiêu đề: {tour.get('title', '')}, "
+        f"Mô tả: {tour.get('description', '')}, "
+        f"Giá: {tour.get('price', '0')}, "
+        f"Thời gian: {tour.get('duration', '0')}, "
+        f"Điểm khởi hành: {tour.get('departure', '')}, "
+        f"Điểm đến: {tour.get('destination', '')}, "
+        f"Số người tối đa: {tour.get('maxParticipants', '0')}"
+        for tour in filtered_tours
+    ])
+    
+    destination_text = f"đi từ {destination.split(' - ')[0]} đến {destination.split(' - ')[1]}" if destination else ""
+    
+    prompt = f"""Dựa trên thông tin tour sau: \n\n{context}\n\n
+    Trả lời câu hỏi sau của người dùng: '{query}'.
+    Người dùng đang tìm tour {price_type_text} {destination_text}.
+    Hãy trình bày {len(filtered_tours)} tour theo giá {price_type_text} theo định dạng sau cho mỗi tour: \n\n
+    1. [Tên Tour]\n   - Tuyến đường: [Điểm đi] - [Điểm đến]\n   - Điểm đến/Hoạt động: [Mô tả ngắn gọn]\n   - Giá: [Giá] | Thời gian: [Thời gian]\n\n
+    Bắt đầu bằng một câu giới thiệu ngắn gọn về các tour {price_type_text} tìm thấy."""
+    
+    try:
+        ai_response = _get_ai_response(prompt)
+        
+        # Nếu chỉ có một tour, đặt làm tour hiện tại
+        if len(filtered_tours) == 1:
+            current_tour = filtered_tours[0]
+            conversation_state["last_tour_id"] = current_tour.get('code', '')
+            conversation_state["current_topic"] = "price" 
+        
+        conversation_state["query_counter"] += 1
+        
+        return {
+            "status": "success",
+            "message": ai_response,
+            "data": {
+                "price_type": price_type,
+                "destination": destination,
+                "tours": [format_tour_for_response(tour) for tour in filtered_tours]
+            },
             "error": None
         }
     except Exception as e:
@@ -1184,11 +1814,39 @@ def search(query):
             return _handle_keyword_matches(query, keyword_matches, conversation_state)
         else:
             return _create_warning_response(
-                f"Xin lỗi, không tìm thấy tour nào có hoạt động phù hợp với yêu cầu của bạn. Chúng tôi hiện chỉ có tour tại: {', '.join(SUPPORTED_DESTINATIONS)}."
+                f"Xin lỗi, không tìm thấy tour nào có hoạt động phù hợp với yêu cầu của bạn."
             )
+    elif query_type == "single_destination" or query_type == "single_departure":
+        destination = find_single_destination(query)
+        is_departure = (query_type == "single_departure")
+        return _handle_single_destination_question(query, destination, conversation_state, is_departure)
     elif query_type == "new_tour":
         current_tour = None
         conversation_state = _reset_conversation_state()
+
+        # Kiểm tra nếu đang tìm tour theo tuyến đường
+        destination = is_destination_related(query)
+        if destination:
+            return _handle_destination_question(query, destination, conversation_state)
+        
+        # single_dest = find_single_destination(query)
+        # if single_dest:
+        #     is_departure = any(re.search(pattern, query_lower) for pattern in [
+        #         r"(?:đi|khởi hành|xuất phát)\s+từ",
+        #         r"từ\s+\w+\s+(?:đi|khởi hành|tới|đến)",
+        #         r"tour\s+(?:đi|khởi hành)\s+từ",
+        #         r"bắt đầu\s+từ"
+        #     ])
+        #     return _handle_single_destination_question(query, single_dest, conversation_state, is_departure)
+    
+        return _create_warning_response(
+            "Xin lỗi, không tìm thấy thông tin tour phù hợp với yêu cầu của bạn."
+        )
+    elif query_type == "general_tour":
+        return _handle_general_tour_question(query, conversation_state)
+    if query_type == "price_query":
+        price_type, destination = is_price_related_query(query_lower)
+        return _handle_price_question(query, price_type, destination, conversation_state)
     elif query_type == "non_tour":
         return _create_error_response("Câu hỏi không liên quan đến tour. Vui lòng hỏi về các tour hoặc điểm đến.")
     
@@ -1202,21 +1860,37 @@ def search(query):
     if matched_tour:
         return _handle_specific_tour_question(query, matched_tour, conversation_state)
     
+    single_dest = find_single_destination(query)
+    if single_dest:
+        return _handle_single_destination_question(query, single_dest, conversation_state)
+    
     # 4.2. Tìm theo điểm đến 
     destination = is_destination_related(query)
     if destination:
         # Kiểm tra xem điểm đến có nằm trong danh sách được hỗ trợ không
         if destination not in SUPPORTED_DESTINATIONS:
-            print(f"Điểm đến {destination} không được hỗ trợ")
             return {
                 "status": "warning",
-                "message": f"Xin lỗi, hiện tại không có thông tin về tour. Chúng tôi hiện chỉ có tour tại: {', '.join(SUPPORTED_DESTINATIONS)}.",
+                "message": f"Xin lỗi, hiện tại không có thông tin về tour tuyến {destination}.",
                 "data": None,
                 "error": None
             }
+        
+        # Lấy danh sách tour theo tuyến đường
+        route_tours = _find_tours_by_destination(destination)
+        
+        if not route_tours:
+            return {
+                "status": "warning",
+                "message": f"Không tìm thấy tour nào đi tuyến {destination}.",
+                "data": None,
+                "error": None
+            }
+        
+        # Nếu tìm thấy tour, xử lý bình thường
         return _handle_destination_question(query, destination, conversation_state)
     
-    # 4.3. Tìm theo từ khóa trong mô tả (ƯU TIÊN TÌM KIẾM HOẠT ĐỘNG Ở ĐÂY)
+    # 4.3. Tìm theo từ khóa trong mô tả
     keyword_matches = _find_tour_by_keywords(query)
     if keyword_matches:
         return _handle_keyword_matches(query, keyword_matches, conversation_state)
@@ -1232,7 +1906,7 @@ def search(query):
     
     # 5. Không tìm thấy thông tin
     return _create_warning_response(
-        f"Xin lỗi, hiện tại không có thông tin về tour. Chúng tôi hiện chỉ có tour tại: {', '.join(SUPPORTED_DESTINATIONS)}."
+        "Xin lỗi, không tìm thấy thông tin tour phù hợp với yêu cầu của bạn."
     )
 def main():
     load_all_tours()
