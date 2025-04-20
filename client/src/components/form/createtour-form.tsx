@@ -364,8 +364,8 @@ const CreateNewTourForm = () => {
                             <FormLabel className="text-gray-600">Schedule
                                 <span className="text-red-500"> *</span>
                             </FormLabel>
-                            <div className=" border rounded-lg p-4 bg-white">
-                                <div className="h-[580px] overflow-y-auto space-y-4">
+                            <div className="border rounded-lg p-4 bg-white">
+                                <div className="h-[584px] overflow-y-auto space-y-4">
                                     {fields.map((field, index) => (
                                         <div key={field.id} className="relative border rounded-lg p-4 bg-white">
                                             <div className="flex justify-between items-center mb-2">
@@ -491,7 +491,7 @@ const CreateNewTourForm = () => {
                                 </FormItem>
                             )}
                         />
-                        <div className="flex justify-between gap-4 mt-6 pt-5">
+                        <div className="flex justify-between gap-4">
                             <Button
                                 variant="outline"
                                 className="border-gray-300 text-gray-600 w-full h-full"

@@ -132,7 +132,8 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
             </div>
             <Button className="rounded-full" size={"sm"} asChild>
               <Link to={`/${tourData.author.username}`} className="text-xs">
-                Get more <ArrowUpRight />
+                Contact Now
+                <ArrowUpRight />
               </Link>
             </Button>
           </CardContent>

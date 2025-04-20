@@ -1,4 +1,4 @@
-import { Calendar, ChevronDown, Loader2, LogOut, PlaneTakeoff, Settings, UserRoundPen } from "lucide-react";
+import { Calendar, ChevronDown, FileClock, Loader2, LogOut, PlaneTakeoff, Settings, UserRoundPen } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Link, useNavigate } from "react-router";
@@ -53,6 +53,14 @@ export default function UserNav() {
               Profile
             </Link>
           </DropdownMenuItem>
+          {userInfo?.role === "TRAVELER" && (
+            <DropdownMenuItem asChild>
+              <Link to="/history-booking">
+                <FileClock />
+                Booking History
+              </Link>
+            </DropdownMenuItem>
+          )}
           {userInfo?.role === "TOUR_GUIDE" && (
             <DropdownMenuItem asChild>
               <Link to="/tour-management">
