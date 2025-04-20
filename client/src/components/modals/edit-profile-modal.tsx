@@ -137,7 +137,7 @@ export function EditProfileModal({ isOpen, onClose, onSave, initialData }: EditP
                             <div className="flex flex-col items-center">
                                 <div className="relative">
                                     <Avatar className="h-24 w-24">
-                                        <AvatarImage src={avatarPreview} alt="Avatar" />
+                                        <AvatarImage src={avatarPreview} alt="Avatar" className="object-cover"/>
                                         <AvatarFallback>{form.getValues("firstName").charAt(0) || "U"}</AvatarFallback>
                                     </Avatar>
                                     <label
