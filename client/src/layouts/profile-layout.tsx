@@ -47,6 +47,15 @@ const ProfileLayout = () => {
     const [firstName, lastName] = user.fullName?.split(" ") || ["", ""];
     const isFollowing = user?.followers.map(item => item._id)?.includes(authUserInfo?._id ?? "") as boolean;
 
+    const generateRatingText = (rating: number | null | undefined): string => {
+        if (!rating) return "No Rating";
+        if (rating >= 4.5) return "Excellent";
+        else if (rating >= 4.0) return "Very Good";
+        else if (rating >= 3.0) return "Good";
+        else if (rating >= 2.0) return "Average";
+        else return "Poor";
+      };
+    
     return (
         <div className="w-full flex flex-col gap-5">
             <div className="relative w-full mt-5 px-2 pt-2 rounded-2xl bg-white">
@@ -69,7 +78,7 @@ const ProfileLayout = () => {
                 {/* <img src="https://placehold.co/1920x400" className="rounded-t-2xl" /> */}
                 <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] [16px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
-                        <AvatarImage src={user.profilePicture} />
+                        <AvatarImage src={user.profilePicture} className="object-cover"/>
                         <AvatarFallback>{user.fullName?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-col justify-items-center">
@@ -77,7 +86,7 @@ const ProfileLayout = () => {
                         {user.role === "TOUR_GUIDE" && (
                             <div className="flex items-center justify-center py-2">
                                 <Star className="w-4 h-4 mx-1 stroke-amber-400" />
-                                <p className="font-medium text-black text-sm">4.8 Excellent</p>
+                                <span className="font-medium text-black text-sm">{user.rating > 0 && user.rating} {generateRatingText(user.rating)}</span>
                             </div>
                         )}
                         <div className="flex items-center justify-center py-2">

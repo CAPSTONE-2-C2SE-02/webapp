@@ -6,9 +6,8 @@ import { Coffee, Star } from 'lucide-react';
 import { useParams } from 'react-router';
 
 const UserProfileReviewPage = () => {
-  const { username } = useParams<{ username: string }>(); // Chỉ lấy username từ URL
+  const { username } = useParams<{ username: string }>(); 
 
-  // Lấy thông tin người dùng dựa trên username
   const { data: userInfo } = useQuery({
     queryKey: ['userInfo', username],
     queryFn: () => {
@@ -34,7 +33,7 @@ const UserProfileReviewPage = () => {
   });
   const overallRating =
     reviews && reviews.length > 0
-      ? (reviews.reduce((sum: number, review: any) => sum + review.ratingForTour, 0) / reviews.length).toFixed(1)
+      ? (reviews.reduce((sum: number, review: any) => sum + review.ratingForTourGuide, 0) / reviews.length).toFixed(1)
       : "0";
 
   return (
@@ -44,7 +43,7 @@ const UserProfileReviewPage = () => {
               <div className="flex-1 border border-gray-200 rounded-lg p-4 bg-white text-center">
                 <Star className="text-yellow-400 mx-auto mb-2" fill="#FFC400" size={32} />
                 <p className="text-sm text-gray-500 uppercase">Overall Rating</p>
-                <p className="text-lg font-semibold">{overallRating}</p>
+                <span className="text-lg font-semibold">{overallRating}</span>
               </div>
               <div className="flex-1 border border-gray-200 rounded-lg p-4 bg-white text-center">
                 <Coffee className="text-teal-500 mx-auto mb-2" size={32} />
