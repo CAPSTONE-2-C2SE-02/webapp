@@ -21,118 +21,118 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const HistoryBookingPage = () => {
-    const userInfo = useAppSelector((state) => state.auth.userInfo);
-    const userId = userInfo?._id;
-    const role = userInfo?.role;
-    const queryClient = useQueryClient();
-    const [activeTab, setActiveTab] = useState("waitingForPayment");
-    const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-    const [isEditable, setIsEditable] = useState(true);
-    const [reviewData, setReviewData] = useState<Review | null>(null);
+  const userInfo = useAppSelector((state) => state.auth.userInfo);
+  const userId = userInfo?._id;
+  const role = userInfo?.role;
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("waitingForPayment");
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isEditable, setIsEditable] = useState(true);
+  const [reviewData, setReviewData] = useState<Review | null>(null);
 
-    const { data: bookings, isLoading, error } = useQuery<Booking[], Error>({
-      queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
-      queryFn: () =>
-        role === "TRAVELER" ? fetchTravelerBookings() : fetchTourGuideBookings(),
-      enabled: !!userId && !!role,
-    });
-  
-    const handleCancel = async (bookingId: string) => {
-      
-    };
-  
-    const handlePayment = async (bookingId: string) => {  
-     queryClient.setQueryData<Booking[]>(
-        [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
-        (oldBookings) => {
-          if (!oldBookings) return oldBookings;
-          return oldBookings.map((booking) =>
-            booking._id === bookingId
-              ? { ...booking, status: "PAID", paymentStatus: "PAID" }
-              : booking
-          );
-        }
-      );
-      toast.success("Payment completed successfully");
-    };
-  
-    const handleComplete = async (bookingId: string) => {
-      queryClient.setQueryData<Booking[]>(
-        [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
-        (oldBookings) => {
-          if (!oldBookings) return oldBookings;
-          return oldBookings.map((booking) =>
-            booking._id === bookingId ? { ...booking, status: "COMPLETED" } : booking
-          );
-        }
-      );
-      toast.success("Tour completed successfully");
-    };
-  
-    const handleReview = async (bookingId: string) => {
-      const booking = bookings?.find((b) => b._id === bookingId);
-      if (!booking) {
-        toast.error("Booking not found.");
-        return;
+  const { data: bookings, isLoading, error } = useQuery<Booking[], Error>({
+    queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
+    queryFn: () =>
+      role === "TRAVELER" ? fetchTravelerBookings() : fetchTourGuideBookings(),
+    enabled: !!userId && !!role,
+  });
+
+  const handleCancel = async (bookingId: string) => {
+
+  };
+
+  const handlePayment = async (bookingId: string) => {
+    queryClient.setQueryData<Booking[]>(
+      [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
+      (oldBookings) => {
+        if (!oldBookings) return oldBookings;
+        return oldBookings.map((booking) =>
+          booking._id === bookingId
+            ? { ...booking, status: "PAID", paymentStatus: "PAID" }
+            : booking
+        );
       }
+    );
+    toast.success("Payment completed successfully");
+  };
 
-      setSelectedBooking(booking);
-      console.log("Booking isReview:", booking.isReview);
-      if (booking.isReview) {
-        try {
-          const review = await fetchReviewByBookingId(booking._id);
-          console.log("Fetched Review:", review);
-          setReviewData(review);
-          setIsEditable(false);
-        } catch (error) {
-          console.error("Error fetching review:", error);
-          setReviewData(null);
-          setIsEditable(true);
-          toast.error("Failed to load review. Please try again.");
-        }
-      } else {
+  const handleComplete = async (bookingId: string) => {
+    queryClient.setQueryData<Booking[]>(
+      [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
+      (oldBookings) => {
+        if (!oldBookings) return oldBookings;
+        return oldBookings.map((booking) =>
+          booking._id === bookingId ? { ...booking, status: "COMPLETED" } : booking
+        );
+      }
+    );
+    toast.success("Tour completed successfully");
+  };
+
+  const handleReview = async (bookingId: string) => {
+    const booking = bookings?.find((b) => b._id === bookingId);
+    if (!booking) {
+      toast.error("Booking not found.");
+      return;
+    }
+
+    setSelectedBooking(booking);
+    console.log("Booking isReview:", booking.isReview);
+    if (booking.isReview) {
+      try {
+        const review = await fetchReviewByBookingId(booking._id);
+        console.log("Fetched Review:", review);
+        setReviewData(review);
+        setIsEditable(false);
+      } catch (error) {
+        console.error("Error fetching review:", error);
         setReviewData(null);
         setIsEditable(true);
+        toast.error("Failed to load review. Please try again.");
       }
-
-      setIsReviewModalOpen(true);
-    };
-  
-    if (isLoading) {
-      return <div className="text-center py-10 bg-slate-300">
-        Loading...
-      </div>;
-    }
-  
-    if (error) {
-      return (
-        <div className="text-center py-10 text-red-500">
-          Error: {(error as Error).message}
-        </div>
-      );
+    } else {
+      setReviewData(null);
+      setIsEditable(true);
     }
 
-    if (!userId) {
-      return <div className="text-center py-10">Please login to view your booking history</div>;
+    setIsReviewModalOpen(true);
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-10 bg-slate-300">
+      Loading...
+    </div>;
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10 text-red-500">
+        Error: {(error as Error).message}
+      </div>
+    );
+  }
+
+  if (!userId) {
+    return <div className="text-center py-10">Please login to view your booking history</div>;
+  }
+
+  // filter booking by tab
+  const filteredBookings = bookings?.filter((booking) => {
+    if (activeTab === "waitingForPayment") {
+      return booking.paymentStatus === "PENDING";
     }
-  
-    // filter booking by tab
-    const filteredBookings = bookings?.filter((booking) => {
-      if (activeTab === "waitingForPayment") {
-        return booking.paymentStatus === "PENDING";
-      }
-      if (activeTab === "waitingForTourCompletion") {
-        return booking.paymentStatus === "PAID" && booking.status === "PAID";
-      }
-      if (activeTab === "completed") {
-        return booking.status === "COMPLETED" ;
-      }
-      if (activeTab === "canceled") {
-        return booking.status === "CANCELED";
-      }
-      return true;
-    });
+    if (activeTab === "waitingForTourCompletion") {
+      return booking.paymentStatus === "PAID" && booking.status === "PAID";
+    }
+    if (activeTab === "completed") {
+      return booking.status === "COMPLETED";
+    }
+    if (activeTab === "canceled") {
+      return booking.status === "CANCELED";
+    }
+    return true;
+  });
   return (
     <div className="my-8 w-full flex flex-col items-start gap-3 bg-white rounded-xl pb-5 mb-5">
       <div className="pt-5 pl-5 font-semibold text-3xl">History Booking</div>

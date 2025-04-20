@@ -36,14 +36,14 @@ const routes = createBrowserRouter([
         element: <ProfileLayout />,
         path: "/:username",
         children: [
-          { index: true, element: <UserProfilePage />},
+          { index: true, element: <UserProfilePage /> },
           { path: "follow", element: <UserProfileFollowPage /> },
           { path: "photos", element: <UserProfilePhotosPage /> },
           { path: "tours", element: <UserProfileToursPage /> },
           { path: "reviews", element: <UserProfileReviewPage /> },
         ]
       },
-      
+
       // Post routes
       { path: "/:username/post/:postId", element: <PostPage /> },
       { path: "/hashtag/:tag", element: <HashtagPage /> },
@@ -61,14 +61,14 @@ const routes = createBrowserRouter([
           { path: "/payment-status", element: <PaymentStatusPage /> },
         ]
       },
-      { 
+      {
         path: "/tours/create",
         element: <ProtectedRoute allowedRoles={["TOUR_GUIDE"]} />,
         children: [
           { index: true, element: <CreateTourPage /> }
         ]
       },
-      { 
+      {
         path: "/busy-schedule",
         element: <ProtectedRoute allowedRoles={["TOUR_GUIDE"]} />,
         children: [
@@ -85,8 +85,8 @@ const routes = createBrowserRouter([
       // Ranking Route
       { path: "/ranking", element: <RankingPage /> },
       // Not found route
-      {  path: "/not-found", element: <NotFoundPage /> },
-      {  path: "*", element: <NotFoundPage /> },
+      { path: "/not-found", element: <NotFoundPage /> },
+      { path: "*", element: <NotFoundPage /> },
     ]
   },
   {

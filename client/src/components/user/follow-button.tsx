@@ -19,7 +19,7 @@ const FollowButton = ({ targetUserId, currentUserId, initialIsFollowing }: Follo
     mutationFn: () => followUser(targetUserId),
     onMutate: async () => {
       const queryKey = ["user-profile", targetUserId];
-      
+
       // Cancel pending refetch to avoid overwriting old data
       await queryClient.cancelQueries({ queryKey });
 

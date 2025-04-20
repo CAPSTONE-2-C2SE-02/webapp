@@ -114,6 +114,7 @@ export type UserInfo = {
   address: string;
   profilePicture?: string;
   coverPhoto?: string;
+  postImages: string[];
   bio?: string;
   followers: Follow[];
   followings: Follow[];
@@ -244,8 +245,8 @@ export interface Booking {
   youths: number;
   children: number;
   totalAmount: number;
-  paymentStatus: "PENDING" | "TIMEOUT" |  "FAILED" | "PAID" | "REFUNDED";
-  status: "PENDING" | "PAID"| "FAILED" | "CANCELED"| "TIMEOUT" | "COMPLETED";
+  paymentStatus: "PENDING" | "TIMEOUT" | "FAILED" | "PAID" | "REFUNDED";
+  status: "PENDING" | "PAID" | "FAILED" | "CANCELED" | "TIMEOUT" | "COMPLETED";
   isReview: boolean;
 }
 

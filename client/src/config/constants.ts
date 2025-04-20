@@ -7,9 +7,9 @@ export const API = {
     FOLLOW: (userId: string) => `/profiles/follow/${userId}`,
     USER_INFO: (username: string) => `/users/profile/${username}`,
     UPDATE_INFO: (userId: string) => `/profiles/${userId}`,
+    PHOTOS: (userId: string) => `/profiles/photos/${userId}`,
     FOLLOWERS: `/profiles/followers`,
     FOLLOWINGS: `/profiles/followings`,
-    PHOTOS: (username: string) => `/profiles/photos/${username}`
   },
   CALENDER: {
     SCHEDULE: `/calendars`,
