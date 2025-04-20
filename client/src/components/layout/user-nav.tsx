@@ -1,4 +1,4 @@
-import { Calendar, ChevronDown, Loader2, LogOut, Settings, SquarePen, UserRoundPen } from "lucide-react";
+import { Calendar, ChevronDown, Loader2, LogOut, PlaneTakeoff, Settings, UserRoundPen } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Link, useNavigate } from "react-router";
@@ -55,9 +55,9 @@ export default function UserNav() {
           </DropdownMenuItem>
           {userInfo?.role === "TOUR_GUIDE" && (
             <DropdownMenuItem asChild>
-              <Link to="/tours/create">
-                <SquarePen />
-                New Tour
+              <Link to="/tour-management">
+                <PlaneTakeoff />
+                Manage Tours
               </Link>
             </DropdownMenuItem>
           )}
@@ -65,7 +65,7 @@ export default function UserNav() {
             <DropdownMenuItem asChild>
               <Link to="/busy-schedule">
                 <Calendar />
-                Manager Schedule
+                Manage Schedules
               </Link>
             </DropdownMenuItem>
            )}

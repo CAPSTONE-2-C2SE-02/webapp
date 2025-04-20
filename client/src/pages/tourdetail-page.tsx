@@ -24,7 +24,7 @@ const TourDetailPage = () => {
   ];
 
   return (
-    <div className="my-6 space-y-5">
+    <div className="my-4 space-y-4">
       {tour?.title && <MetaData title={tour?.title} />}
       <ScrollToTopOnMount />
       <Breadcrumb items={breadcrumbItems} />

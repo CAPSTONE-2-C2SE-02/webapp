@@ -9,6 +9,14 @@ interface TourCardProps {
   type?: "grid" | "list";
 }
 
+const convertLocation = (location: string) => {
+  const locationSplit = location.split(",");
+  if (locationSplit.length > 1) {
+    return `${locationSplit[0]} - ${locationSplit[locationSplit.length - 1]}`
+  }
+  return locationSplit[0];
+}
+
 const TourCard = ({ tour, type }: TourCardProps) => {
   const auth = useAuthInfo();
 
@@ -47,7 +55,7 @@ const TourCard = ({ tour, type }: TourCardProps) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-0.5 font-semibold text-[hsla(174,100%,33%,1)]">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span className="text-xs">{tour.destination}</span>
+                  <span className="text-xs line-clamp-1">{convertLocation(tour.destination)}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1">
