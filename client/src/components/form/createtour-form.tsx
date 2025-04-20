@@ -19,10 +19,12 @@ import { useEffect, useState } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { useNavigate } from "react-router";
 import { ErrorResponse } from "@/lib/types";
+import LocationSelect from "./location-select";
 
 const CreateNewTourForm = () => {
     const [createTour, { isLoading, isError, isSuccess, error, data }] = useCreateTourMutation();
     const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+
     const form = useForm<CreateTourValues>({
         resolver: zodResolver(createTourSchema),
         defaultValues: {
@@ -78,11 +80,21 @@ const CreateNewTourForm = () => {
                     });
                 } else if (key === "schedule") {
                     formData.append("schedule", JSON.stringify(value));
+                } else if (key === "include") {
+                    const includesList = (value as string).split("\n");
+                    includesList.forEach(item => {
+                        formData.append("include", item);
+                    });
+                } else if (key === "notInclude") {
+                    const notIncludesList = (value as string).split("\n");
+                    notIncludesList.forEach(item => {
+                        formData.append("notInclude", item);
+                    });
                 } else {
                     formData.append(key, value as string | Blob);
                 }
             });
-
+            
             await createTour(formData).unwrap();
         } catch (error) {
             console.error("Tour creation failed:", error);
@@ -125,7 +137,7 @@ const CreateNewTourForm = () => {
                                         Tour name <span className="text-red-500">*</span>
                                     </FormLabel>
                                     <FormControl>
-                                        <Input placeholder="ex: Tour Hoi An - Da Nang" {...field} className="h-11" />
+                                        <Input placeholder="e.g. Tour Hoi An - Da Nang" {...field} className="h-10" />
                                     </FormControl>
                                     <FormMessage className="text-xs" />
                                 </FormItem>
@@ -142,7 +154,10 @@ const CreateNewTourForm = () => {
                                             Departure Location <span className="text-red-500">*</span>
                                         </FormLabel>
                                         <FormControl>
-                                            <Input placeholder="ex: Hoi An" {...field} className="h-11" />
+                                            <LocationSelect
+                                                onChange={field.onChange}
+                                                placeholder="e.g. Hoi An"
+                                            />
                                         </FormControl>
                                         <FormMessage className="text-xs" />
                                     </FormItem>
@@ -157,7 +172,10 @@ const CreateNewTourForm = () => {
                                             Destination <span className="text-red-500">*</span>
                                         </FormLabel>
                                         <FormControl>
-                                            <Input placeholder="ex: Da Nang" {...field} className="h-11" />
+                                            <LocationSelect
+                                                onChange={field.onChange}
+                                                placeholder="e.g. Da Nang"
+                                            />
                                         </FormControl>
                                         <FormMessage className="text-xs" />
                                     </FormItem>
@@ -177,10 +195,10 @@ const CreateNewTourForm = () => {
                                         <FormControl>
                                             <Input type="number"
                                                 min="1"
-                                                placeholder="ex: 2 days 1 night, 1 day"
+                                                placeholder="e.g. 2 (for 2 days)"
                                                 {...field}
                                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                                className="h-11"
+                                                className="h-10"
                                             />
                                         </FormControl>
                                         <FormMessage className="text-xs" />
@@ -199,10 +217,10 @@ const CreateNewTourForm = () => {
                                             <Input
                                                 type="number"
                                                 min="0"
-                                                placeholder="ex: 100$"
+                                                placeholder="e.g. 100$"
                                                 {...field}
                                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                                className="h-11"
+                                                className="h-10"
                                             />
                                         </FormControl>
                                         <FormMessage className="text-xs" />
@@ -224,10 +242,10 @@ const CreateNewTourForm = () => {
                                             <Input
                                                 type="number"
                                                 min="0"
-                                                placeholder="ex: 100$"
+                                                placeholder="e.g. 100$"
                                                 {...field}
                                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                                className="h-11"
+                                                className="h-10"
                                             />
                                         </FormControl>
                                         <FormMessage className="text-xs" />
@@ -246,10 +264,10 @@ const CreateNewTourForm = () => {
                                             <Input
                                                 type="number"
                                                 min="0"
-                                                placeholder="ex: 100$"
+                                                placeholder="e.g. 100$"
                                                 {...field}
                                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                                className="h-11"
+                                                className="h-10"
                                             />
                                         </FormControl>
                                         <FormMessage className="text-xs" />
@@ -270,10 +288,10 @@ const CreateNewTourForm = () => {
                                         <Input
                                             type="number"
                                             min="1"
-                                            placeholder="ex: 10 people"
+                                            placeholder="e.g. 10 people"
                                             {...field}
                                             onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                                            className="h-11" />
+                                            className="h-10" />
                                     </FormControl>
                                     <FormMessage className="text-xs" />
                                 </FormItem>
@@ -290,7 +308,7 @@ const CreateNewTourForm = () => {
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Enter your tour introduction......"
+                                            placeholder="e.g. This place looks so peaceful!"
                                             {...field}
                                             className="min-h-[120px] resize-none"
                                         />
@@ -310,7 +328,7 @@ const CreateNewTourForm = () => {
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Enter your tour introduction......"
+                                            placeholder="e.g. Food and drink"
                                             {...field}
                                             className="min-h-[120px] resize-none"
                                         />
@@ -330,7 +348,7 @@ const CreateNewTourForm = () => {
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Enter your tour introduction......"
+                                            placeholder="e.g. Transport"
                                             {...field}
                                             className="min-h-[120px] resize-none"
                                         />
@@ -346,8 +364,8 @@ const CreateNewTourForm = () => {
                             <FormLabel className="text-gray-600">Schedule
                                 <span className="text-red-500"> *</span>
                             </FormLabel>
-                            <div className=" border rounded-lg p-4 bg-white">
-                                <div className="h-[580px] overflow-y-auto space-y-4">
+                            <div className="border rounded-lg p-4 bg-white">
+                                <div className="h-[584px] overflow-y-auto space-y-4">
                                     {fields.map((field, index) => (
                                         <div key={field.id} className="relative border rounded-lg p-4 bg-white">
                                             <div className="flex justify-between items-center mb-2">
@@ -367,7 +385,7 @@ const CreateNewTourForm = () => {
                                                     <FormItem>
                                                         <FormLabel className="text-gray-600">Title</FormLabel>
                                                         <FormControl>
-                                                            <Input placeholder="e.g., Arrival and City Tour" {...field} className="h-11" />
+                                                            <Input placeholder="e.g., Arrival and City Tour" {...field} className="h-10" />
                                                         </FormControl>
                                                         <FormMessage className="min-h-[20px]" />
                                                     </FormItem>
@@ -473,7 +491,7 @@ const CreateNewTourForm = () => {
                                 </FormItem>
                             )}
                         />
-                        <div className="flex justify-between gap-4 mt-6 pt-5">
+                        <div className="flex justify-between gap-4">
                             <Button
                                 variant="outline"
                                 className="border-gray-300 text-gray-600 w-full h-full"

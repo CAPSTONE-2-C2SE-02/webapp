@@ -59,7 +59,7 @@ export const createTourSchema = z.object({
   priceForYoung: z.number().min(0, "Price for Young must be a positive number"),
   priceForChildren: z.number().min(0, "Price for Children must be a positive number"),
   maxParticipants: z.number().min(1, "Max number per group is required"),
-  introduction: z.string().min(1, "Introduction is required"),
+  introduction: requiredString.min(10, "Introduction must be at least 10 characters"),
   schedule: z.array(
     z.object({
       title: z.string().min(1, "Title is required"),

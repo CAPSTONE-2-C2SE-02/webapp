@@ -34,7 +34,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
 
   const showSharePost = (postId: string) => {
     const baseUrl = window.location.origin || "http://localhost:5173";
-    const shareUrl = `${baseUrl}/post/${postId}`;
+    const shareUrl = `${baseUrl}/${postData.createdBy.username}/post/${postId}`;
     setIsSharePostModelOpen(true);
     setPostUrl(shareUrl);
   };

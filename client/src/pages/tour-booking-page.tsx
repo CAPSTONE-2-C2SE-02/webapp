@@ -77,11 +77,13 @@ const TourBookingPage = () => {
       total: state.total,
       isPayLater: data.type === "reserve"
     };
-    console.log(bookingData);
     handlePaymentNow(bookingData, (bookId) => {
       setBookingId(bookId);
     });
   };
+
+  const paymentStatus = form.watch("type");
+  const isReserve = paymentStatus === "reserve";
 
   useEffect(() => {
     if (!state || !state.tour || !state.dateRange) {
@@ -91,9 +93,13 @@ const TourBookingPage = () => {
 
   useEffect(() => {
     if (paymentURL?.success && paymentURL.result) {
-      window.location.href = paymentURL.result.paymentUrl;
+      if (isReserve) {
+        navigate("/history-booking", { replace: true });
+      } else {
+        window.location.href = paymentURL.result.paymentUrl;
+      }
     }
-  }, [navigate, paymentURL?.result, paymentURL?.success]);
+  }, [navigate, paymentURL?.result, paymentURL?.success, isReserve]);
 
   return (
     <>

@@ -1,4 +1,5 @@
 import { Copy, Facebook, Linkedin, Twitter } from "lucide-react";
+import { FacebookShareButton, LinkedinShareButton, TwitterShareButton } from "react-share";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -38,27 +39,33 @@ const SharePostModal = ({ isOpen, onOpenChange, url }: SharePostModalProps) => {
         </DialogHeader>
         <div className="flex flex-col items-center gap-4">
           <div className="flex items-center gap-5">
-            <Button
-              size={"icon"}
-              variant={"outline"}
-              className="rounded-full size-10"
-            >
-              <Facebook className="size-8" />
-            </Button>
-            <Button
-              size={"icon"}
-              variant={"outline"}
-              className="rounded-full size-10"
-            >
-              <Linkedin className="size-8" />
-            </Button>
-            <Button
-              size={"icon"}
-              variant={"outline"}
-              className="rounded-full size-10"
-            >
-              <Twitter className="size-8" />
-            </Button>
+            <FacebookShareButton url={url}>
+              <Button
+                size={"icon"}
+                variant={"outline"}
+                className="rounded-full size-10"
+              >
+                  <Facebook className="size-8" />
+              </Button>
+            </FacebookShareButton>
+            <LinkedinShareButton url={url}>
+              <Button
+                size={"icon"}
+                variant={"outline"}
+                className="rounded-full size-10"
+              >
+                  <Linkedin className="size-8" />
+              </Button>
+            </LinkedinShareButton>
+            <TwitterShareButton url={url}>
+              <Button
+                size={"icon"}
+                variant={"outline"}
+                className="rounded-full size-10"
+              >
+                  <Twitter className="size-8" />
+              </Button>
+            </TwitterShareButton>
           </div>
           <div className="w-full">
             <p className="text-xs font-medium text-zinc-800 mb-2 text-left">
