@@ -9,12 +9,11 @@ from main import search, load_all_tours
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 
-# Load dữ liệu ngay khi khởi động Flask
 print("Loading tour data...")
 load_all_tours()
 print("Tour data loaded successfully!")
 
-@app.route('/process', methods=['POST'])
+@app.route('/process', methods=['GET'])
 def process():
     try:
         data = request.get_json()

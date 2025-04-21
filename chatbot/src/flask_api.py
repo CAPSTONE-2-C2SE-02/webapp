@@ -8,10 +8,9 @@ app.config['JSON_AS_ASCII'] = False
 from flask_cors import CORS
 CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 
-# Địa chỉ của process chatbot chính
 CHATBOT_SERVICE_URL = "http://localhost:5001/process"  
 
-@app.route('/flask', methods=['POST'])
+@app.route('/flask', methods=['GET'])
 def chat():
     try:
         print("Received request to /flask")
@@ -29,7 +28,7 @@ def chat():
         
         # Chuyển tiếp yêu cầu đến process chatbot chính
         print(f"Forwarding to chatbot service at {CHATBOT_SERVICE_URL}")
-        response = requests.post(CHATBOT_SERVICE_URL, json=data)
+        response = requests.get(CHATBOT_SERVICE_URL, json=data)
         print(f"Response status: {response.status_code}")
         return response.json()
         

@@ -13,7 +13,7 @@ tours = read_csv_file(txt_path)
 
 # Tạo text và vectors
 for tour in tours:
-    tour["text"] = f"Code: {tour['code']}\nTitle: {tour['title']}\nDescription: {tour['description']}\nDestination: {tour['destination']}\nPrice: {tour['price']}\nMax Participants: {tour['maxParticipants']}\nDuration: {tour['duration']}"
+    tour["text"] = f"Code: {tour['code']}\nTitle: {tour['title']}\nDescription: {tour['description']}\nDestination: {tour['destination']}\nDeparture: {tour['departure']}\nPrice: {tour['price']}\nMax Participants: {tour['maxParticipants']}\nDuration: {tour['duration']}"
 
 # Tạo vectors với ID là tour_code
 vectors = [

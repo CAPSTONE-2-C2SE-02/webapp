@@ -36,7 +36,7 @@ def upsert_to_pinecone(chunks, batch_size=10):
             continue  
 
         # Kiểm tra nếu thiếu khóa nào trong chunk
-        missing_keys = [k for k in ("code", "title", "description", "destination", "price",
+        missing_keys = [k for k in ("code", "title", "description", "destination", "departure" , "price",
                                     "maxParticipants", "duration") if k not in chunk]
         if missing_keys:
             #print(f"⚠️ Chunk {i} thiếu các khóa {missing_keys}: {chunk}")
@@ -44,7 +44,7 @@ def upsert_to_pinecone(chunks, batch_size=10):
 
         
         # Tạo text để đưa vào embedding từ thông tin của từng chunk
-        text_to_embed = f"{chunk['code']} {chunk['title']} {chunk['description']} {chunk['destination']} {chunk['price']} {chunk['maxParticipants']} {chunk['duration']}"
+        text_to_embed = f"{chunk['code']} {chunk['title']} {chunk['description']} {chunk['destination']} {chunk['departure']} {chunk['price']} {chunk['maxParticipants']} {chunk['duration']}"
 
 
         vectors.append({
@@ -54,6 +54,7 @@ def upsert_to_pinecone(chunks, batch_size=10):
                 "title": chunk["title"],
                 "description": chunk["description"],
                 "destination": chunk["destination"],
+                "departure": chunk["departure"],
                 "maxParticipants": chunk["maxParticipants"],
                 "duration": chunk["duration"],
                 "price": chunk["price"]
@@ -111,6 +112,7 @@ def query_pinecone(query_text, top_k=3, score_threshold=0.5):
                 "title": match["metadata"].get("title", "N/A"),
                 "description": match["metadata"].get("description", "N/A"),
                 "destination": match["metadata"].get("destination", "N/A"),
+                "departure": match["metadata"].get("departure", "N/A"),
                 "maxParticipants": match["metadata"].get("maxParticipants", "N/A"),
                 "duration": match["metadata"].get("duration", "N/A"),
                 "price": match["metadata"].get("price", "N/A"),
