@@ -13,6 +13,8 @@ import TourBookingPage from "@/pages/tour-booking-page";
 import HistoryBookingPage from "@/pages/history-booking-page";
 import HashtagPage from "@/pages/hashtag-page";
 import PaymentStatusPage from "@/pages/payment-status-page";
+import ChatPage from "@/pages/chat-page";
+import ChatLayout from "@/layouts/chat-layout";
 const TourManagementPage = lazy(() => import("@/pages/tour-management-page"));
 const UserProfilePage = lazy(() => import("@/pages/user-profile/userprofile-page"));
 const UserProfileToursPage = lazy(() => import("@/pages/user-profile/userprofile-tours-page"));
@@ -41,6 +43,19 @@ const routes = createBrowserRouter([
           { path: "photos", element: <UserProfilePhotosPage /> },
           { path: "tours", element: <UserProfileToursPage /> },
           { path: "reviews", element: <UserProfileReviewPage /> },
+        ]
+      },
+      // Chat routes
+      {
+        path: "/messages",
+        element: <ProtectedRoute />,
+        children: [
+          {
+            element: <ChatLayout />,
+            children: [
+              { path: ":id", element: <ChatPage /> },
+            ]
+          },
         ]
       },
 

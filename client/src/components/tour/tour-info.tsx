@@ -1,4 +1,4 @@
-import { MapPin, Clock, UsersRound, BookCheck, Check, X } from "lucide-react";
+import { MapPin, UsersRound, BookCheck, Check, X, CalendarDays } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tour } from "@/lib/types";
 import TourImageGallery from "./tour-image-gallery";
@@ -13,22 +13,22 @@ const getAbsoluteAddress = (location: string) => location.split(",")[0];
 export default function TourInfo({ tour }: TourInfoProps) {
   return (
     <div className="w-full bg-white px-6 py-5 rounded-lg shadow-sm border border-border">
-      <h1 className="text-3xl font-bold mb-4">{tour.title}</h1>
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        <div className="flex items-center gap-2 text-primary col-span-2">
-          <MapPin className="size-5" />
+      <h1 className="text-3xl font-bold mb-4 text-start text-primary">{tour.title}</h1>
+      <div className="grid grid-cols-2 gap-2 mb-4 text-sm bg-slate-50/60 p-3 rounded-md">
+        <div className="flex items-center gap-2 text-primary">
+          <MapPin className="size-4" />
           <span className="font-medium"><span className="text-teal-500">{getAbsoluteAddress(tour.destination)} - {getAbsoluteAddress(tour.departureLocation)}</span></span>
         </div>
         <div className="flex items-center gap-2 text-primary">
-          <Clock className="size-5" />
+          <CalendarDays className="size-4" />
           <span className="font-medium">Duration: <span className="text-teal-500">{tour.duration}</span> {tour.duration > 1 ? "days" : "day"}</span>
         </div>
-        <div className="flex items-center gap-2 text-primary col-span-2">
-          <UsersRound className="size-5" />
+        <div className="flex items-center gap-2 text-primary">
+          <UsersRound className="size-4" />
           <span className="font-medium">Max participants: <span className="text-teal-500">{tour.maxParticipants}</span></span>
         </div>
         <div className="flex items-center gap-2 text-primary">
-          <BookCheck className="size-5"/>
+          <BookCheck className="size-4"/>
           <span className="font-medium">Bookings: <span className="text-teal-500">{tour.totalBookings}</span></span>
         </div>
       </div>
@@ -64,7 +64,7 @@ export default function TourInfo({ tour }: TourInfoProps) {
           <ul className="list-none space-y-1">
             {tour.include.map((item, index) => (
               <li key={index} className="flex items-center gap-2">
-                <Check className="text-green-500 size-4" />
+                <Check className="text-green-500 size-4 flex-shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
@@ -74,7 +74,7 @@ export default function TourInfo({ tour }: TourInfoProps) {
           <ul className="list-none space-y-1">
             {tour.notInclude.map((item, index) => (
               <li key={index} className="flex items-center gap-2">
-                <X className="text-red-500 size-4" />
+                <X className="text-red-500 size-4 flex-shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
