@@ -1,4 +1,4 @@
-import { ApiResponse, Booking, Calendar, SetAvailabilityResponse, UserInfo } from "@/lib/types";
+import { ApiResponse, Booking, Calendar, SetAvailabilityResponse, UserInfo, UserSelectedState } from "@/lib/types";
 import { rootApi } from "../root-api";
 import { API } from "@/config/constants";
 import axiosInstance from "@/config/api";
@@ -169,4 +169,9 @@ export const fetchUserPhotos = async (username: string): Promise<string[]> => {
     throw new Error(response.data.error || "Failed to fetch user photos");
   }
   return Array.isArray(response.data.result?.postImages) ? response.data.result.postImages : [];
+};
+
+export const fetchUserById = async (userId: string): Promise<UserSelectedState> => {
+  const response = await axiosInstance.get(`/users/${userId}`);
+  return response.data.result;
 };

@@ -1,14 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification } from "@/services/notifications/notification-api";
 import { useEffect } from "react";
-import { useAppSelector } from "./redux";
-import { socketService } from "@/services/socket-service";
 import { Notification } from "@/lib/types";
 import { toast } from "sonner";
+import { useSocket } from "@/context/socket-context";
 
 export default function useNotifications() {
   const queryClient = useQueryClient();
-  const { token, userInfo } = useAppSelector(state => state.auth);
+  const socket = useSocket();
 
   // fetch notifications with infinite scroll
   const {
@@ -60,22 +59,18 @@ export default function useNotifications() {
 
   // setup socket connection and listeners
   useEffect(() => {
-    const socket = socketService.connect(token || undefined);
-
-    socket.emit("addNewUser", userInfo?._id);
-
-    socket.on("new_notification", (notification: Notification) => {
+    socket?.on("new_notification", (notification: Notification) => {
       console.log("Received new_notification event:", notification);
       queryClient.setQueryData<Notification[]>(["notifications"], (oldData = []) => [
-        notification,
         ...oldData,
+        notification,
       ]);
     });
 
     return () => {
-      socket.off("new_notification");
+      socket?.off("new_notification");
     };
-  }, [token, queryClient, userInfo]);
+  }, [queryClient, socket]);
 
   return {
     notifications,

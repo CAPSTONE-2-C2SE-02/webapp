@@ -15,6 +15,7 @@ import HashtagPage from "@/pages/hashtag-page";
 import PaymentStatusPage from "@/pages/payment-status-page";
 import ChatPage from "@/pages/chat-page";
 import ChatLayout from "@/layouts/chat-layout";
+import ChatNoneSelection from "@/components/chat/chat-none-selection";
 const TourManagementPage = lazy(() => import("@/pages/tour-management-page"));
 const UserProfilePage = lazy(() => import("@/pages/user-profile/userprofile-page"));
 const UserProfileToursPage = lazy(() => import("@/pages/user-profile/userprofile-tours-page"));
@@ -53,7 +54,8 @@ const routes = createBrowserRouter([
           {
             element: <ChatLayout />,
             children: [
-              { path: ":id", element: <ChatPage /> },
+              { path: ":userId", element: <ChatPage /> },
+              { index: true, element: <ChatNoneSelection /> },
             ]
           },
         ]

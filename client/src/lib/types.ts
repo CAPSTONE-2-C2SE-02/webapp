@@ -271,3 +271,29 @@ export interface PaymentResponse {
   amountPaid: number;
   paymentUrl: string;
 }
+
+// Message types
+export type MessageUser = Pick<UserInfo, "_id" | "username" | "fullName" | "profilePicture">;
+
+export interface Message {
+  _id: string;
+  sender: MessageUser;
+  recipient: MessageUser;
+  content: string;
+  messageType: 'TEXT' | 'IMAGE' | 'VIDEO' | 'FILE';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type LastMessage = Pick<Message, "_id" | "content" | "updatedAt">;
+
+export interface Conversation {
+  _id: string;
+  participants: MessageUser[];
+  messages?: Message[];
+  lastMessage: LastMessage;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type UserSelectedState = Pick<UserInfo, "_id" | "fullName" | "username" | "profilePicture" | "role">

@@ -71,9 +71,14 @@ const TourCard = ({ tour, type }: TourCardProps) => {
             </div>
 
             <div className="flex items-center justify-between w-full">
-              <div className="flex items-center py-1.5 px-3 bg-slate-50 rounded-full">
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                <span className="text-sm font-medium">{tour?.rating > 0 && tour.rating} {generateRatingText(tour.rating)}</span>
+              <div className="flex items-center py-1.5 px-3 bg-slate-50 rounded-full gap-1 text-primary">
+                {tour?.rating > 0 && (
+                  <>
+                    <span className="text-sm font-medium">{tour?.rating > 0 && tour.rating}</span>
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  </>
+                )}
+                <span className="text-xs font-semibold">{generateRatingText(tour.rating)}</span>
               </div>
               <span className="text-primary text-base font-semibold">
                 ${tour.priceForAdult}

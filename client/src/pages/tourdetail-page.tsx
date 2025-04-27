@@ -4,7 +4,6 @@ import TourReviewsSection from "@/components/tour/tour-review-section";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import MetaData from "@/components/utils/meta-data";
 import ScrollToTopOnMount from "@/components/utils/scroll-to-top-mount";
-import { tourData } from "@/lib/mock-data";
 import { fetchTourById } from "@/services/tours/tour-api";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router";
@@ -29,10 +28,10 @@ const TourDetailPage = () => {
       <ScrollToTopOnMount />
       <Breadcrumb items={breadcrumbItems} />
       {!isLoading && tour && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="col-span-1 lg:col-span-2">
             <TourInfo tour={tour} />
-            <TourReviewsSection tourGuideId={tourData.author._id} />
+            <TourReviewsSection tourId={tourId} />
           </div>
           <TourBookingSection tourData={tour} />
         </div>

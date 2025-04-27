@@ -1,69 +1,37 @@
 import { cn } from "@/lib/utils";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Avatar } from "../ui/avatar";
-import useAuthInfo from "@/hooks/useAuth";
 import { Button } from "../ui/button";
 import { Mic, PanelRight, Send } from "lucide-react";
 import { ScrollArea } from "../ui/scroll-area";
-import { format } from "date-fns";
 import { Input } from "../ui/input";
-
-type Message = {
-  id: string;
-  content: string;
-  sender: "user" | "friend";
-  timestamp: Date;
-};
+import useMessage from "@/hooks/useMessage";
+import MessageGroup from "./message-group";
+import { UserSelectedState } from "@/lib/types";
+import { Link } from "react-router";
+import { useSendMessageMutation } from "@/services/messages/mutation";
 
 interface ChatContainerProps {
+  user: UserSelectedState | undefined;
   onShowInformation: (show: boolean) => void;
   showInformation: boolean;
 }
 
-const ChatContainer = ({ onShowInformation, showInformation }: ChatContainerProps) => {
-  const auth = useAuthInfo();
+const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContainerProps) => {
+  const { messages: messagesData, isMessagesLoading } = useMessage(user?._id as string);
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "Hello! How can I help you today?",
-      sender: "friend",
-      timestamp: new Date(),
-    },
-  ]);
-  const [inputValue, setInputValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [inputValue, setInputValue] = useState("");
 
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, []);
-
+  const sendMessageMutation = useSendMessageMutation(user?._id as string);
+  
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    messagesEndRef.current?.scrollIntoView();
+  }, [user?._id, messagesData]);
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: inputValue,
-      sender: "user",
-      timestamp: new Date(),
-    };
-
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: `I received your message: "${inputValue}"`,
-        sender: "friend",
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
-    }, 1500);
-
-    setMessages((prev) => [...prev, userMessage]);
+    sendMessageMutation.mutate(inputValue);
     setInputValue("");
   };
 
@@ -77,19 +45,20 @@ const ChatContainer = ({ onShowInformation, showInformation }: ChatContainerProp
       {/* header */}
       <div className="p-4 pb-0">
         <div className="flex items-center justify-between bg-sky-200/30 backdrop-blur-sm border border-sky-200/70 py-2 px-3 sticky rounded-sm top-0">
-          <div className="flex items-center">
-            <Avatar className="h-10 w-10 mr-3">
+          <div className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 border border-teal-400">
               <img
-                src={auth?.profilePicture}
-                alt={auth?.fullName}
+                src={user?.profilePicture}
+                alt={user?.fullName}
                 className="h-full w-full object-cover"
               />
             </Avatar>
-            <div>
-              <h2 className="font-semibold">{auth?.fullName}</h2>
-              <p className="text-xs text-muted-foreground capitalize">
-                {auth?.role}
-              </p>
+            <div className="flex flex-col items-start gap-1">
+              <span className="capitalize bg-teal-500 px-1 rounded text-xs font-medium text-white">{user?.role.split("_").join(" ").toLowerCase()}</span>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-center text-primary text-base leading-none">{user?.fullName}</h3>
+                <Link to={`/${user?.username}`} className="text-xs font-medium text-slate-500 underline">{user?.username}</Link>
+              </div>
             </div>
           </div>
           <Button
@@ -103,42 +72,20 @@ const ChatContainer = ({ onShowInformation, showInformation }: ChatContainerProp
       </div>
 
       {/* messages */}
-      <ScrollArea className="flex-1 px-4 py-2">
-        <div className="space-y-1">
-          {/* message */}
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={cn(
-                "flex",
-                message.sender === "user" ? "justify-end" : "justify-start"
-              )}
-            >
-              <div
-                className={cn(
-                  "max-w-[60%] rounded-xl px-4 py-2",
-                  message.sender === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-none"
-                    : "bg-muted rounded-bl-none"
-                )}
-              >
-                <p className="text-sm">{message.content}</p>
-                <div
-                  className={cn(
-                    "text-[10px] mt-0.5",
-                    message.sender === "user"
-                      ? "text-primary-foreground/70"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {format(message.timestamp, "p")}
-                </div>
-              </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+      {isMessagesLoading && (
+        <div className="bg-white flex-1 px-4 py-2 flex items-center justify-center rounded-xl">
+          <p className="text-center text-slate-500">Loading...</p>
         </div>
-      </ScrollArea>
+      )}
+      {!isMessagesLoading && messagesData && (
+        <ScrollArea className="flex-1 px-4 py-2">
+          <div className="space-y-1">
+            {/* message */}
+            <MessageGroup messages={messagesData} />
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+      )}
 
       {/* input box */}
       <div className="p-4 border-t">

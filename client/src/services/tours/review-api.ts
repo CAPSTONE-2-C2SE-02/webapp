@@ -1,10 +1,13 @@
 import axiosInstance from "@/config/api";
 import { API } from "@/config/constants";
+import publicApi from "@/config/public.api";
 import { ApiResponse, Review } from "@/lib/types";
 import { CreateReviewValues } from "@/lib/validations";
 import { AxiosError } from "axios";
 
-export const createReview = async (data: CreateReviewValues & { bookingId: string }) => {
+export const createReview = async (
+  data: CreateReviewValues & { bookingId: string }
+) => {
   const formData = new FormData();
   formData.append("bookingId", data.bookingId);
   formData.append("ratingForTour", data.ratingForTour.toString());
@@ -15,14 +18,21 @@ export const createReview = async (data: CreateReviewValues & { bookingId: strin
     formData.append("images", file);
   });
 
-  const response = await axiosInstance.post<ApiResponse<Review>>("/reviews", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const response = await axiosInstance.post<ApiResponse<Review>>(
+    "/reviews",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
   return response.data;
 };
- export const fetchReviewByBookingId = async (bookingId: string) : Promise<Review | null> => {
+
+export const fetchReviewByBookingId = async (
+  bookingId: string
+): Promise<Review | null> => {
   if (!bookingId) {
     throw new Error("Booking ID is required");
   }
@@ -39,13 +49,29 @@ export const createReview = async (data: CreateReviewValues & { bookingId: strin
       if (error.response?.status === 404) {
         return null;
       }
-      throw new Error(`Failed to fetch review: ${error.response?.data?.error || error.message}`);
+      throw new Error(
+        `Failed to fetch review: ${
+          error.response?.data?.error || error.message
+        }`
+      );
     }
     throw new Error(`Failed to fetch review: ${(error as Error).message}`);
   }
- }
+};
 
- export const fetchReviewByTourGuideId = async (tourGuideId: string) : Promise <Review[]>  => {
-  const response = await axiosInstance.get(API.REVIEW.REVIEW_TOURGUIDE(tourGuideId));
+export const fetchReviewByTourGuideId = async (
+  tourGuideId: string
+): Promise<Review[]> => {
+  const response = await axiosInstance.get(
+    API.REVIEW.REVIEW_TOURGUIDE(tourGuideId)
+  );
   return response.data.result;
- }
+};
+
+// get reivews by tour id
+export const fetchReviewsByTourId = async (
+  tourId: string
+): Promise<ApiResponse<Review[]>> => {
+  const response = await publicApi.get(API.REVIEW.TOUR(tourId));
+  return response.data;
+};

@@ -8,6 +8,7 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { PersistGate } from 'redux-persist/integration/react';
 import { Toaster } from './components/ui/sonner.tsx';
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { SocketProvider } from './context/socket-context.tsx';
 
 const queryClient = new QueryClient();
 
@@ -17,7 +18,9 @@ createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
-            <AppRoutes />
+            <SocketProvider>
+              <AppRoutes />
+            </SocketProvider>
             <Toaster position="top-right" duration={2000} />
           </PersistGate>
         </Provider>
