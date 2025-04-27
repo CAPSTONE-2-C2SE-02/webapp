@@ -47,7 +47,7 @@ async function processPayment() {
 
                 const vnp_Params = await vnpay.buildPaymentUrl({
                     vnp_Version: "2.1.0",
-                    vnp_Amount: booking.depositAmount,
+                    vnp_Amount: booking.totalAmount,
                     vnp_IpAddr: "127.0.0.1",
                     vnp_TxnRef: transactionId,
                     vnp_OrderInfo: `Payment for booking ${bookingId}`,
@@ -66,7 +66,7 @@ async function processPayment() {
                     userId,
                     transactionId,
                     typePayment: "VNPAY",
-                    amountPaid: booking.depositAmount,
+                    amountPaid: booking.totalAmount,
                     status: "PENDING",
                     paymentUrl: vnp_Params
                 });
@@ -156,18 +156,50 @@ async function processVnpayCallback(vnpParams, res) {
 
             // Send mail
             const subject = "Xác nhận đặt tour thành công!";
+            // Send mail
             const html = `
-            <h2>Xin chào ${traveler.fullName},</h2>
-            <p>Bạn đã đặt tour thành công. Dưới đây là thông tin booking của bạn:</p>
-            <ul>
-                <li><strong>Tour:</strong> ${tour.title}</li>
-                <li><strong>Ngày bắt đầu:</strong> ${booking.startDate}</li>
-                <li><strong>Ngày kết thúc:</strong> ${booking.endDate}</li>
-                <li><strong>Số người:</strong> ${booking.adults + booking.youths + booking.children}</li>
-                <li><strong>Tổng tiền:</strong> ${booking.totalAmount} VND</li>
-            </ul>
-            <p>Cảm ơn bạn đã tin tưởng sử dụng dịch vụ!</p>
-            `;
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+            <div style="background-color: #4CAF50; color: #fff; padding: 20px; text-align: center;">
+                <h1 style="margin: 0; font-size: 24px;">Xác nhận đặt tour thành công!</h1>
+            </div>
+            <div style="padding: 20px;">
+                <h2 style="font-size: 20px; color: #4CAF50;">Xin chào ${traveler.fullName},</h2>
+                <p style="font-size: 16px;">Cảm ơn bạn đã đặt tour với chúng tôi. Dưới đây là thông tin chi tiết về booking của bạn:</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Tour:</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${tour.title}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Ngày bắt đầu:</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${booking.startDate}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Ngày kết thúc:</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${booking.endDate}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Số người:</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${booking.adults + booking.youths + booking.children}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Tổng tiền:</td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">${booking.totalAmount.toLocaleString("vi-VN")} VND</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Mã hủy:</td>
+                        <td style="padding: 10px; border: 1px solid #ddd; color: #d0011b; font-weight: bold;">${booking.secretKey}</td>
+                    </tr>
+                </table>
+            <p style="margin-top: 20px; font-size: 16px; color: #d0011b;">Lưu ý: Không chia sẻ mã hủy này với bất kỳ ai!</p>
+            <p style="margin-top: 20px; font-size: 16px;">Nếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ với chúng tôi qua email hoặc số điện thoại hỗ trợ.</p>
+        </div>
+        <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 14px; color: #555;">
+            <p style="margin: 0;">Cảm ơn bạn đã tin tưởng sử dụng dịch vụ của chúng tôi!</p>
+            <p style="margin: 0;">&copy; 2025 Công ty Du lịch Tripconnect</p>
+        </div>
+    </div>
+`;
 
             await sendEmail(traveler.email, subject, html);
 
