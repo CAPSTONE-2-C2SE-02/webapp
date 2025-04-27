@@ -86,6 +86,9 @@ const bookingSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    secretKey: {
+        type: String,
+    },
 },
     { timestamps: true, versionKey: false }
 )

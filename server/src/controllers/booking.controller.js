@@ -8,6 +8,7 @@ import Tour from "../models/tour.model.js";
 import User from "../models/user.model.js";
 import { isDateBusy, releaseBookedDates, setBookedDates } from "../services/calendar.service.js";
 import { sendToQueue } from "../services/queue.service.js";
+import crypto from "crypto";
 
 class BookingController {
 
@@ -53,8 +54,10 @@ class BookingController {
             const totalAmount = (adults * tour.priceForAdult) +
                 (youths * tour.priceForYoung) +
                 (children * tour.priceForChildren);
-            const depositAmount = totalAmount * 0.3;
             const timeoutAt = isPayLater ? null : addMinutes(new Date(), 3);
+
+            // Generate secretKey
+            const secretKey = crypto.randomBytes(8).toString("hex");
 
             const newBooking = await Booking.create({
                 travelerId,
@@ -66,7 +69,6 @@ class BookingController {
                 youths,
                 children,
                 totalAmount,
-                depositAmount,
                 timeoutAt,
                 isPayLater,
                 fullName,
@@ -76,7 +78,8 @@ class BookingController {
                 email,
                 phoneNumber,
                 note,
-                paymentStatus: "PENDING"
+                paymentStatus: "PENDING",
+                secretKey,
             });
 
             await sendToQueue("BOOKING_CREATED", { bookingId: newBooking._id });
@@ -246,11 +249,26 @@ class BookingController {
         try {
             const bookingId = req.params.id;
             const userId = req.user.userId;
-            const { reason } = req.body;
+            const { reason, secretKey, fullName, email, phoneNumber } = req.body;
 
             const booking = await Booking.findById(bookingId);
             if (!booking) {
                 return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Booking not found" });
+            }
+
+            // Kiểm tra secretKey
+            if (!secretKey || booking.secretKey !== secretKey) {
+                return res.status(StatusCodes.FORBIDDEN).json({ success: false, error: "Invalid or missing secret key" });
+            }
+
+            // Kiểm tra fullName, email, phoneNumber
+            if (
+                !fullName || !email || !phoneNumber ||
+                booking.fullName !== fullName ||
+                booking.email !== email ||
+                booking.phoneNumber !== phoneNumber
+            ) {
+                return res.status(StatusCodes.FORBIDDEN).json({ success: false, error: "Incorrect authentication information" });
             }
 
             const isTraveler = booking.travelerId.toString() === userId;
