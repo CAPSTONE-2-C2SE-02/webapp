@@ -1,92 +1,158 @@
 import Message from "../models/message.model.js";
 import { StatusCodes } from "http-status-codes";
-import mongoose from "mongoose";
 import Conversation from "../models/conversation.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
 import User from "../models/user.model.js";
+import { io } from "../server.js";
 
+class ChatMessage {
+  // [POST] /messages
+  async sendMessage(req, res) {
+    try {
+      const { recipient, content } = req.body;
+      const sender = req.user.userId;
 
+      if (!content && !content.trim()) {
+        return res.status(StatusCodes.BAD_REQUEST).json({
+          success: false,
+          error: "Content is required.",
+        });
+      }
 
-class MessageContent {
+      const [recipientExists, conversation] = await Promise.all([
+        User.findById(recipient).select("_id"),
+        Conversation.findOne({ participants: { $all: [sender, recipient] } })
+      ]);
+
+      // Check if the recipient exists
+      if (!recipientExists) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+          success: false,
+          error: "Recipient does not exist.",
+        });
+      }
+
+      const message = new Message({
+        sender,
+        recipient,
+        messageType: "text",
+        content: content.trim(),
+      });
+
+      let conversationToUpdate = conversation;
+      // check if the conversation exists
+      // not exists => create new conversation
+      if (!conversationToUpdate) {
+        conversationToUpdate = new Conversation({
+          participants: [sender, recipient],
+          messages: [message._id],
+          lastMessage: message._id,
+        });
+      } else {
+        // exists => push new message into messages property and update last message
+        conversationToUpdate.lastMessage = message._id;
+        conversationToUpdate.messages.push(message._id);
+      }
+
+      await Promise.all([
+        message.save(),
+        conversationToUpdate.save()
+      ]);
+
+      const populatedMessage = await Message.findById(message._id)
+        .populate("sender", "username fullName profilePicture")
+        .populate("recipient", "username fullName profilePicture");
+      
+      const userSocket = global.oneLineUses.find(user => user.userId === recipient);
+      if (userSocket) {
+        io.to(userSocket.socketId).emit("newMessage", populatedMessage);
+        console.log("🗨️ Sent message to:", userSocket);
+      }
+      
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: "Message sent successfully",
+        result: populatedMessage,
+      });
+    } catch (error) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
   async getMessages(req, res) {
     try {
-      const { chatId } = req.params;
+      const { id: recipientId } = req.params;
+      const senderId = req.user.userId;
 
-      //Check if chatId and senderId are valid ObjectIds
-      if (!mongoose.Types.ObjectId.isValid(chatId) || !mongoose.Types.ObjectId.isValid(senderId)) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
+      const conversation = await Conversation.findOne({
+        participants: { $all: [senderId, recipientId] },
+      })
+        .populate({
+          path: "messages",
+          populate: [
+            { path: "sender", select: "username fullName profilePicture" },
+            { path: "recipient", select: "username fullName profilePicture" },
+          ],
+          options: { sort: { createdAt: 1 } },
+        })
+        .populate("participants", "username fullName profilePicture");
+
+      if (!conversation) {
+        return res.status(StatusCodes.NOT_FOUND).json({
           success: false,
-          error: "Invalid chatID.",
+          error: "Conversation not found",
         });
       }
 
-      const messages = await Message.find({ chatId })
+      const messages = conversation.messages;
 
-      res.status(StatusCodes.OK).json({
+      return res.status(StatusCodes.OK).json({
         success: true,
-        data: messages
+        message: "Messages retrieved successfully",
+        result: messages,
       });
     } catch (error) {
-      console.error("Error fetching messages:", error);
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: "Error retrieving messages"
+        error: error.message,
       });
     }
   };
 
-  async createMessage(req, res) {
+  async getConversations(req, res) {
     try {
-      const { chatId, senderId, content } = req.body;
+      const userId = req.user.userId;
 
-      const imageUrls = req.files ? await uploadImages(req.files) : [];
+      const conversations = await Conversation.find({
+        participants: userId,
+      })
+        .select("participants lastMessage")
+        .populate({
+          path: "participants",
+          select: "username fullName profilePicture",
+          match: { _id: { $ne: userId } },
+        })
+        .populate({
+          path: "lastMessage",
+          select: "content updatedAt",
+        })
+        .sort({ updatedAt: -1 });
 
-      //Check if chatId and senderId are valid ObjectIds
-      if (!mongoose.Types.ObjectId.isValid(chatId) || !mongoose.Types.ObjectId.isValid(senderId)) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-          success: false,
-          error: "Invalid chatID or senderId.",
-        });
-      }
-
-      // Check conversation is already exist or not
-      const chatExists = await Conversation.findById(chatId);
-      if (!chatExists) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-          success: false,
-          error: "ConversationId does not exist.",
-        });
-      }
-
-      // Check if the sender exists
-      const senderExists = await User.findById(senderId);
-      if (!senderExists) {
-        return res.status(StatusCodes.NOT_FOUND).json({
-          success: false,
-          error: "SenderId does not exist.",
-        });
-      }
-
-      const message = new Message({ chatId, senderId, content, imageUrls });
-      await message.save();
-
-      await Conversation.findByIdAndUpdate(chatId, { lastMessage: message._id });
-
-
-      res.status(StatusCodes.OK).json({
+      return res.status(StatusCodes.OK).json({
         success: true,
-        data: message
+        message: "Conversations retrieved successfully",
+        result: conversations,
       });
     } catch (error) {
-      console.error("Error creating/getting message:", error);
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
         success: false,
-        error: "Internal server error"
+        error: error.message,
       });
     }
   };
-
-
 }
-export default new MessageContent;
+export default new ChatMessage;
 

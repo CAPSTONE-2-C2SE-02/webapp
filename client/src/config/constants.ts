@@ -21,6 +21,7 @@ export const API = {
     TOURGUIDE_BOOKING: `/bookings/tour-guide`,
   },
   REVIEW: {
+    TOUR: (tourId: string) => `/reviews/tour/${tourId}`,
     REVIEW_INFO: (bookingId: string) => `/reviews/booking/${bookingId}`,
     REVIEW_TOURGUIDE: (tourGuideId: string) => `reviews/tour-guide/${tourGuideId}`,
   }

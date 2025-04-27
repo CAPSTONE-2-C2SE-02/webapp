@@ -19,7 +19,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 const server = http.createServer(app);
-const io = new Server(server, {
+export const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGINS,
     methods: ["GET", "POST"],
@@ -73,25 +73,15 @@ const startServer = () => {
       io.emit("getUsers", global.oneLineUses);
     });
 
-    // Notification
-    socket.on("sendNotification", ({ receiverId, notification }) => {
-      const recipient = oneLineUses.find(user => user.userId === receiverId);
-
-      if (recipient) {
-        io.to(recipient.socketId).emit("new_notification", notification);
-        console.log("🔔 Sent notification to:", receiverId);
-      }
-    });
-
-    //Listen event client send message
+    // Listen event client send message
     socket.on("sendMessage", (message) => {
-      const user = oneLineUses.find(user => user.userId === message.recipientId);
+      const user = oneLineUses.find(user => user.userId === message.recipient);
 
       if (user) {
         console.log("📩 Message sent and notification");
-        io.to(user.socketId).emit("getMessage", message);
+        io.to(user.socketId).emit("newMessage", message);
         io.to(user.socketId).emit("notification", {
-          senderId: message.senderId,
+          sender: message.sender,
           isRead: false,
           date: new Date(),
         });

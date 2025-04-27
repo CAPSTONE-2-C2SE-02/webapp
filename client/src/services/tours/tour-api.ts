@@ -61,7 +61,6 @@ export const fetchAllSearchTours = async (destination: string): Promise<ApiRespo
   return response.data;
 };
 
-
 // get tour by id
 export const fetchTourById = async (id: string): Promise<Tour> => {
   const response = await axios.get(`${BASE_API_URL}/tours/${id}`);

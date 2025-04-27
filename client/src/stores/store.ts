@@ -3,6 +3,7 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import { FLUSH, PAUSE, PERSIST, persistReducer, persistStore, PURGE, REGISTER, REHYDRATE } from "redux-persist";
 import storage from 'redux-persist/lib/storage';
 import authReducer from "./slices/auth-slice";
+import chatReducer from "./slices/chat-slice";
 import { rootApi } from "@/services/root-api";
 import { logOuMiddleware } from "./middlewares";
 
@@ -16,6 +17,7 @@ const persistedReducer = persistReducer(
   persistConfig,
   combineReducers({
     auth: authReducer,
+    chat: chatReducer,
     [rootApi.reducerPath]: rootApi.reducer,
   })
 );

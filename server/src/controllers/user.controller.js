@@ -252,7 +252,7 @@ class UserController {
     async findUserById(req, res) {
         try {
             const id = req.params.id;
-            const user = await User.findOne({ _id: id }).select("-password");
+            const user = await User.findOne({ _id: id }).select("username fullName profilePicture role").populate("role", "name");
 
             if (!user)
                 return res.status(StatusCodes.NOT_FOUND).json({
@@ -262,7 +262,7 @@ class UserController {
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                result: user,
+                result: { ...user._doc, role: user.role.name },
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
