@@ -50,7 +50,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
         ratingForTourGuide: reviewData.ratingForTourGuide,
         reviewTour: reviewData.reviewTour,
         reviewTourGuide: reviewData.reviewTourGuide,
-        imageUrls: reviewData.imageUrls || [] ,
+        imageUrls: reviewData.imageUrls || [],
       });
     } else {
       form.reset({
@@ -102,9 +102,12 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
     }
     onOpenChange(open);
   };
+  const handleCloseDialog = () => {
+    onOpenChange(false);
+};
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={handleCloseDialog}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-xl">Review</DialogTitle>
