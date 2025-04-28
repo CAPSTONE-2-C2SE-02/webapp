@@ -7,8 +7,8 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Input } from "../ui/input";
 import useMessage from "@/hooks/useMessage";
 import MessageGroup from "./message-group";
-import { UserSelectedState } from "@/lib/types";
-import { Link } from "react-router";
+import { Tour, UserSelectedState } from "@/lib/types";
+import { Link, useLocation } from "react-router";
 import { useSendMessageMutation } from "@/services/messages/mutation";
 
 interface ChatContainerProps {
@@ -18,20 +18,32 @@ interface ChatContainerProps {
 }
 
 const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContainerProps) => {
-  const { messages: messagesData, isMessagesLoading } = useMessage(user?._id as string);
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState("");
+  const hasSentTourRef = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const { messages: messagesData, isMessagesLoading } = useMessage(user?._id as string);
   const sendMessageMutation = useSendMessageMutation(user?._id as string);
   
+  const location = useLocation();
+  const tour = location.state?.tour as Tour;
+  const sendTourImmediately = location.state?.sendTourImmediately;
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView();
   }, [user?._id, messagesData]);
 
+  useEffect(() => {
+    if (tour && sendTourImmediately && !hasSentTourRef.current) {
+      sendMessageMutation.mutate({ content: "", tourId: tour?._id });
+      hasSentTourRef.current = true;
+      window.history.replaceState({}, document.title);
+    }
+  }, [tour, sendTourImmediately, sendMessageMutation]);
+
   const handleSendMessage = () => {
     if (inputValue.trim() === "") return;
-    sendMessageMutation.mutate(inputValue);
+    sendMessageMutation.mutate({ content: inputValue });
     setInputValue("");
   };
 
@@ -77,7 +89,7 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
           <p className="text-center text-slate-500">Loading...</p>
         </div>
       )}
-      {!isMessagesLoading && messagesData && (
+      {!isMessagesLoading && (
         <ScrollArea className="flex-1 px-4 py-2">
           <div className="space-y-1">
             {/* message */}

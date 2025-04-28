@@ -1,8 +1,8 @@
 import axiosInstance from "@/config/api";
 import { ApiResponse, Conversation, Message } from "@/lib/types";
 
-export const sendMessage = async ({ recipient, content }: { recipient: string; content: string }): Promise<ApiResponse<Message>> => {
-  const response = await axiosInstance.post("/messages", { recipient, content });
+export const sendMessage = async ({ recipient, content, tour }: { recipient: string; content?: string, tour?: string }): Promise<ApiResponse<Message>> => {
+  const response = await axiosInstance.post("/messages", { recipient, content, tour });
   return response.data;
 };
 

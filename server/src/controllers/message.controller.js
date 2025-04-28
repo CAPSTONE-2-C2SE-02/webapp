@@ -9,10 +9,13 @@ class ChatMessage {
   // [POST] /messages
   async sendMessage(req, res) {
     try {
-      const { recipient, content } = req.body;
+      const { recipient, content, tour } = req.body;
+      const imageUrls = req.files ? await uploadImages(req.files) : [];
       const sender = req.user.userId;
+      
+      const messageType = content ? "text" : tour ? "tour" : imageUrls ? "inmage" : "text";
 
-      if (!content && !content.trim()) {
+      if (messageType === "text" && !content && !content.trim()) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           success: false,
           error: "Content is required.",
@@ -35,8 +38,10 @@ class ChatMessage {
       const message = new Message({
         sender,
         recipient,
-        messageType: "text",
-        content: content.trim(),
+        messageType,
+        content: content ? content.trim() : "",
+        imageUrls: imageUrls ? imageUrls : null,
+        tour: tour ? tour : null,
       });
 
       let conversationToUpdate = conversation;
@@ -61,7 +66,8 @@ class ChatMessage {
 
       const populatedMessage = await Message.findById(message._id)
         .populate("sender", "username fullName profilePicture")
-        .populate("recipient", "username fullName profilePicture");
+        .populate("recipient", "username fullName profilePicture")
+        .populate("tour", "title imageUrls introduction priceForAdult duration destination departureLocation");
       
       const userSocket = global.oneLineUses.find(user => user.userId === recipient);
       if (userSocket) {
@@ -95,6 +101,7 @@ class ChatMessage {
           populate: [
             { path: "sender", select: "username fullName profilePicture" },
             { path: "recipient", select: "username fullName profilePicture" },
+            { path: "tour", select: "title imageUrls introduction priceForAdult duration destination departureLocation" }
           ],
           options: { sort: { createdAt: 1 } },
         })
@@ -129,7 +136,7 @@ class ChatMessage {
       const conversations = await Conversation.find({
         participants: userId,
       })
-        .select("participants lastMessage")
+        .select("participants lastMessage updatedAt")
         .populate({
           path: "participants",
           select: "username fullName profilePicture",
@@ -137,7 +144,11 @@ class ChatMessage {
         })
         .populate({
           path: "lastMessage",
-          select: "content updatedAt",
+          select: "content tour",
+          populate: {
+            path: "tour",
+            select: "title",
+          }
         })
         .sort({ updatedAt: -1 });
 

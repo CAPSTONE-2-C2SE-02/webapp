@@ -1,5 +1,6 @@
 import ChatContainer from "@/components/chat/chat-container";
 import ChatInformation from "@/components/chat/chat-information";
+import MetaData from "@/components/utils/meta-data";
 import { fetchUserById } from "@/services/users/user-api";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -16,6 +17,7 @@ const ChatPage = () => {
 
   return (
     <>
+      <MetaData title={`${selectedUser?.fullName} - Chat`} />
       {/* chat interface */}
       <ChatContainer
         user={selectedUser}
