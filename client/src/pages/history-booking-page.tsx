@@ -1,4 +1,5 @@
 
+import CancelTourModal from "@/components/modals/cancel-tour-modal";
 import ReviewTourModal from "@/components/modals/review-tour-modal";
 import TourCardSkeleton from "@/components/skeleton/tour-card-skeleton";
 import TourBookingInfoCard from "@/components/tour/tour-booking-info-card"
@@ -16,7 +17,7 @@ import { useAppSelector } from "@/hooks/redux";
 import { Booking, Review } from "@/lib/types";
 import { fetchReviewByBookingId } from "@/services/tours/review-api";
 import { fetchTourGuideBookings, fetchTravelerBookings } from "@/services/users/user-api";
-import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -28,8 +29,10 @@ const HistoryBookingPage = () => {
   const [activeTab, setActiveTab] = useState("waitingForPayment");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-  const [isEditable, setIsEditable] = useState(true);
   const [reviewData, setReviewData] = useState<Review | null>(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [cancelBooking, setCancelBooking] = useState<Booking | null>(null);
+  const [isEditable, setIsEditable] = useState(true);
 
   const { data: bookings, isLoading, error } = useQuery<Booking[], Error>({
     queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
@@ -39,7 +42,13 @@ const HistoryBookingPage = () => {
   });
 
   const handleCancel = async (bookingId: string) => {
-
+    const booking = bookings?.find((b) => b._id === bookingId);
+    if (!booking) {
+      toast.error("Booking not found.");
+      return;
+    }
+    setCancelBooking(booking);
+    setIsCancelModalOpen(true);
   };
 
   const handlePayment = async (bookingId: string) => {
@@ -223,6 +232,17 @@ const HistoryBookingPage = () => {
           }}
           reviewData={reviewData}
           isEditable={isEditable}
+        />
+      )}
+      {cancelBooking && (
+        <CancelTourModal
+          booking={cancelBooking}
+          open={isCancelModalOpen}
+          onOpenChange={(open) => {
+            setIsCancelModalOpen(open);
+            if (!open) setCancelBooking(null);
+          }}
+          isEditable={true}
         />
       )}
     </div>

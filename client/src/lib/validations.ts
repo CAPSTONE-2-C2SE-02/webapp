@@ -1,4 +1,5 @@
 import { differenceInYears, isFuture, isValid } from "date-fns";
+import { Phone } from "lucide-react";
 import { z } from "zod";
 
 const requiredString = z.string().trim().min(1, "This field is required.");
@@ -119,3 +120,13 @@ export const createReviewSchema = z.object({
 });
 
 export type CreateReviewValues = z.infer<typeof createReviewSchema>;
+
+export const cancelTourValues = z.object({
+  bookingCode: z.string().min(1, "Booking code must be at least 1").max(10, "booking cannot exceed 10"),
+  fullName: z.string().min(1, "Rating must be at least 1").max(5, "Rating cannot exceed 5"),
+  email: z.string().min(1, "Tour review cannot exceed 500 characters"),
+  phone: z.string().min(1, "Tour review cannot exceed 500 characters"),
+  reason: z.string().max(500, "Guide review cannot exceed 500 characters"),
+});
+
+export type CancelTourValues = z.infer<typeof cancelTourValues>;
