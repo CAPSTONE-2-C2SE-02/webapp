@@ -61,6 +61,8 @@ class PostController {
                 ranking.totalScore = attendanceScore + completionScore + postScore + reviewScore;
                 await ranking.save();
             }
+            // Cập nhật điểm ranking cho tour guide
+            await updateTourGuideRankingAndRating(user._id);
 
             const post = await Post.findById(createdPost._id)
                 .populate("createdBy", "_id username fullName profilePicture")

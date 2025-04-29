@@ -11,7 +11,8 @@ import { swaggerSpec, swaggerUi } from "./config/swagger.config.js";
 import connectMongoDB from "./config/db.config.js";
 import routes from "./routes/index.js";
 
-import checkExpiredBookings from "./jobs/cron.job.js";
+import {checkExpiredBookings, updateTourGuideRanking} from "./jobs/cron.job.js";
+
 import { consumeNotifications } from "./consumers/notification.consumer.js";
 
 dotenv.config();
@@ -55,7 +56,8 @@ const startServer = () => {
 
   // Cron Jobs
   checkExpiredBookings();
-
+  updateTourGuideRanking();
+  
   // Consumer notification
   // consumeNotifications().catch(console.error);
   consumeNotifications(io).catch(console.error);

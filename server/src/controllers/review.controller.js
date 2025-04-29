@@ -80,7 +80,9 @@ class ReviewController {
             } = ranking;
 
             ranking.totalScore = attendanceScore + completionScore + postScore + reviewScore;
-
+            // Cập nhật tổng điểm cho tour guide
+            await updateTourGuideRankingAndRating(booking.tourGuideId);
+            
             await ranking.save();
 
             // Cập nhật rating trung bình cho tour
