@@ -13,6 +13,7 @@ const ChatPage = () => {
   const { data: selectedUser } = useQuery({
     queryKey: ["userSelected", userId],
     queryFn: () => fetchUserById(userId),
+    staleTime: 1000 * 60 * 5,
   });
 
   return (

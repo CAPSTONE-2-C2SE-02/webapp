@@ -43,11 +43,7 @@ export default function useMessage(userId?: string) {
           if (conversation.participants[0]._id === message.sender._id) {
             return {
               ...conversation,
-              lastMessage: {
-                _id: message._id,
-                content: message.content,
-                updatedAt: message.updatedAt,
-              },
+              lastMessage: message,
             };
           }
           return conversation;

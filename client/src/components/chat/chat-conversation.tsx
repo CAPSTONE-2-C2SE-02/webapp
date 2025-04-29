@@ -22,7 +22,13 @@ const ChatConversation = ({
     if (lastMessage.content) {
       return lastMessage.content;
     }
-    return lastMessage.imageUrls ? "Sent image" : "No messages yet";
+    if (lastMessage.imageUrls) {
+      if (lastMessage.content) return lastMessage.content;
+      return lastMessage.imageUrls.length > 1
+        ? `Sent ${lastMessage.imageUrls.length} images`
+        : "Sent an image";
+    }
+    return "No messages yet";
   }
   return (
     <NavLink

@@ -24,7 +24,7 @@ const MessageItem = ({
       return (
         <div
           className={cn(
-            "rounded-xl px-4 py-2 text-sm",
+            "rounded-xl px-3 py-2 text-sm",
             isCurrentUser ? "bg-primary text-primary-foreground rounded-br-none" : "bg-muted rounded-bl-none",
           )}
         >
@@ -35,7 +35,7 @@ const MessageItem = ({
     if (message.messageType === "tour") {
       return (
         <Link to={`/tours/${message.tour?._id}`} target="_blank" className="w-full">
-          <div className="flex gap-3 shadow-sm p-3 border border-border rounded-lg bg-white">
+          <div className="flex gap-3 shadow-sm p-3 border border-primary/40 rounded-lg bg-white">
             <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md">
               <img src={message.tour?.imageUrls[0]} alt={message.tour?.title} className="h-full w-full object-cover" />
             </div>
@@ -52,6 +52,27 @@ const MessageItem = ({
             </div>
           </div>
         </Link>
+      )
+    }
+    if (message.messageType === "image") {
+      return (
+        <>
+          <div className={cn("flex flex-wrap gap-2", isCurrentUser ? "justify-end" : "justify-start")}>
+            {message.imageUrls.map(url => (
+              <img key={url} src={url} className="min-h-40 max-w-64 object-cover rounded" />
+            ))}
+          </div>
+          {message?.content && (
+            <div
+              className={cn(
+                "rounded-xl px-3 py-2 text-sm mt-1",
+                isCurrentUser ? "bg-primary text-primary-foreground rounded-br-none" : "bg-muted rounded-bl-none",
+              )}
+            >
+              {message.content}
+            </div>
+          )}
+        </>
       )
     }
   }

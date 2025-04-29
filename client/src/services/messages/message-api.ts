@@ -1,8 +1,20 @@
 import axiosInstance from "@/config/api";
 import { ApiResponse, Conversation, Message } from "@/lib/types";
 
-export const sendMessage = async ({ recipient, content, tour }: { recipient: string; content?: string, tour?: string }): Promise<ApiResponse<Message>> => {
-  const response = await axiosInstance.post("/messages", { recipient, content, tour });
+export const sendMessage = async (opts: {
+  recipient: string;
+  content?: string;
+  tour?: string;
+  images?: File[];
+}): Promise<ApiResponse<Message>> => {
+  const fd = new FormData();
+  fd.append("recipient", opts.recipient);
+  if (opts.content) fd.append("content", opts.content);
+  if (opts.tour) fd.append("tour", opts.tour);
+  opts.images?.forEach(file => fd.append("images", file));
+  const response = await axiosInstance.post("/messages", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return response.data;
 };
 

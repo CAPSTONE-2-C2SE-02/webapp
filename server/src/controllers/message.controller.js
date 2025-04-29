@@ -10,12 +10,12 @@ class ChatMessage {
   async sendMessage(req, res) {
     try {
       const { recipient, content, tour } = req.body;
-      const imageUrls = req.files ? await uploadImages(req.files) : [];
+      const imageUrls = req.files?.length ? await uploadImages(req.files) : [];
       const sender = req.user.userId;
       
-      const messageType = content ? "text" : tour ? "tour" : imageUrls ? "inmage" : "text";
+      const messageType = imageUrls.length ? "image" : tour ? "tour" : "text";
 
-      if (messageType === "text" && !content && !content.trim()) {
+      if (messageType === "text" && (!content && !content.trim())) {
         return res.status(StatusCodes.BAD_REQUEST).json({
           success: false,
           error: "Content is required.",
@@ -40,8 +40,8 @@ class ChatMessage {
         recipient,
         messageType,
         content: content ? content.trim() : "",
-        imageUrls: imageUrls ? imageUrls : null,
-        tour: tour ? tour : null,
+        imageUrls: imageUrls.length ? imageUrls : undefined,
+        tour: tour || undefined,
       });
 
       let conversationToUpdate = conversation;
@@ -144,7 +144,7 @@ class ChatMessage {
         })
         .populate({
           path: "lastMessage",
-          select: "content tour",
+          select: "content tour imageUrls",
           populate: {
             path: "tour",
             select: "title",

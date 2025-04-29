@@ -8,9 +8,9 @@ export function useSendMessageMutation(recipientId: string) {
   const auth = useAuthInfo();
 
   return useMutation({
-    mutationFn: async ({ content, tourId }: { content?: string, tourId?: string }) => {
+    mutationFn: async ({ content, tourId, images }: { content?: string, tourId?: string; images?: File[] }) => {
       if (!recipientId) throw new Error("Recipient ID is required");
-      const res = await sendMessage({ recipient: recipientId, content, tour: tourId });
+      const res = await sendMessage({ recipient: recipientId, content, tour: tourId, images });
       if (!res.result) throw new Error("Failed to send message");
       return res.result as Message;
     },
