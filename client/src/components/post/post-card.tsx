@@ -20,14 +20,14 @@ import useAuthInfo from "@/hooks/useAuth";
 import { useLikePostMutation } from "@/services/posts/mutation";
 import CommentPostModal from "../modals/comment-post-modal";
 import ImagesLightbox from "../utils/images-lightbox";
+import useLightBox from "@/hooks/useLightBox";
 
 const PostCard = ({ postData }: { postData: Post }) => {
   const auth = useAuthInfo();
   const likePostMutation = useLikePostMutation();
 
   const [isSave, setIsSave] = useState(false);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { isLightboxOpen, currentImageIndex, setCurrentImageIndex, openLightbox, closeLightbox } = useLightBox();
   const [isSharePostModelOpen, setIsSharePostModelOpen] = useState(false);
   const [isCommentModelOpen, setIsCommentPostModelOpen] = useState(false);
   const [postUrl, setPostUrl] = useState<string>("");
@@ -48,15 +48,6 @@ const PostCard = ({ postData }: { postData: Post }) => {
 
   const handleSavePost = () => {
     setIsSave((prev) => !prev);
-  };
-
-  const openLightbox = (index: number) => {
-    setCurrentImageIndex(index);
-    setIsLightboxOpen(true);
-  };
-
-  const closeLightbox = () => {
-    setIsLightboxOpen(false);
   };
 
   const postImages = useMemo(

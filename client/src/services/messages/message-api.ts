@@ -1,5 +1,5 @@
 import axiosInstance from "@/config/api";
-import { ApiResponse, Conversation, Message } from "@/lib/types";
+import { ApiResponse, Conversation, ConversationMedia, Message } from "@/lib/types";
 
 export const sendMessage = async (opts: {
   recipient: string;
@@ -27,3 +27,8 @@ export const getConversationsSidebar = async (): Promise<Conversation[]> => {
   const response = await axiosInstance.get("/messages/conversations/sidebar");
   return response.data.result;
 };
+
+export const getConversationMedia = async (userId: string): Promise<ConversationMedia> => {
+  const response = await axiosInstance.get(`/messages/${userId}/media`);
+  return response.data.result;
+}

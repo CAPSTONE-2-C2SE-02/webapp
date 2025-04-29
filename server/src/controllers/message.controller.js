@@ -164,6 +164,55 @@ class ChatMessage {
       });
     }
   };
+
+  // [GET] /messages/:id/media
+  async getMediaAndTour(req, res) {
+    try {
+      const { id: recipientId } = req.params;
+      const senderId = req.user.userId;
+
+      const conversation = await Conversation.findOne({
+        participants: { $all: [senderId, recipientId] },
+      }).populate({
+        path: "messages",
+        match: { messageType: { $in: ["image", "tour"] } },
+        select: "messageType imageUrls tour",
+        populate: { path: "tour", select: "title" },
+        options: { sort: { createdAt: 1 } },
+      });
+
+      if (!conversation) {
+        return res.status(StatusCodes.NOT_FOUND).json({
+          success: false,
+          error: "Conversation not found",
+        });
+      }
+
+      const images = [];
+      const tours = [];
+
+      for (const msg of conversation.messages) {
+        if (msg.messageType === "image" && Array.isArray(msg.imageUrls)) {
+          images.push(...msg.imageUrls);
+        }
+        if (msg.messageType === "tour" && msg.tour) {
+          let tourObj = { _id: msg.tour._id, title: msg.tour.title };
+          tours.push(tourObj);
+        }
+      }
+
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: "Media retrieved successfully",
+        result: { images, tours },
+      });
+    } catch (error) {
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
 }
 export default new ChatMessage;
 

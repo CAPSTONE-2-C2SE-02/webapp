@@ -7,6 +7,7 @@ interface ImagesLightboxProps {
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
   onClose: () => void;
+  type?: "button" | "image";
 }
 
 const ImagesLightbox = ({
@@ -14,6 +15,7 @@ const ImagesLightbox = ({
   currentIndex,
   setCurrentIndex,
   onClose,
+  type = "button",
 }: ImagesLightboxProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -104,16 +106,30 @@ const ImagesLightbox = ({
           )}
         </div>
         
-        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              className={`h-1 w-8 rounded-full ${index === currentIndex ? "bg-white" : "bg-white/50"}`}
-              onClick={() => setCurrentIndex(index)}
-            />
-          ))}
-        </div>
-
+        {type === "button" && (
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                className={`h-1 w-8 rounded-full ${index === currentIndex ? "bg-white" : "bg-white/50"}`}
+                onClick={() => setCurrentIndex(index)}
+              />
+            ))}
+          </div>
+        )}
+        {type === "image" && (
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+            {images.map((_, index) => (
+              <img
+                key={index}
+                className={`h-12 w-12 rounded-lg object-cover ${index === currentIndex ? "opacity-100" : "opacity-50"}`}
+                onClick={() => setCurrentIndex(index)}
+                src={images[index]}
+                alt="image thumbnail"
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

@@ -26,7 +26,7 @@ const ChatPage = () => {
         onShowInformation={setShowInformation}
       />
       {/* chat information */}
-      <ChatInformation isShow={isShowInformation} />
+      <ChatInformation isShow={isShowInformation} userId={userId} />
     </>
   );
 };

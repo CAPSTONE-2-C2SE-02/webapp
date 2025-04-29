@@ -4,8 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { format } from "date-fns";
 import { Link } from "react-router";
 import { getAbsoluteAddress } from "../utils/convert";
-import { useState } from "react";
 import ImagesLightbox from "../utils/images-lightbox";
+import useLightBox from "@/hooks/useLightBox";
 
 interface MessageItemProps {
   message: Message;
@@ -18,20 +18,10 @@ const MessageItem = ({
   isFirstInGroup,
   currentUserId,
 }: MessageItemProps) => {
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { isLightboxOpen, currentImageIndex, setCurrentImageIndex, openLightbox, closeLightbox } = useLightBox();
   
   const sender = message.sender;
   const isCurrentUser = message.sender._id === currentUserId;
-
-  const openLightbox = (index: number) => {
-    setCurrentImageIndex(index);
-    setIsLightboxOpen(true);
-  };
-
-  const closeLightbox = () => {
-    setIsLightboxOpen(false);
-  };
 
   const renderMessage = () => {
     if (message.messageType === "text") {
@@ -49,7 +39,7 @@ const MessageItem = ({
     if (message.messageType === "tour") {
       return (
         <Link to={`/tours/${message.tour?._id}`} target="_blank" className="w-full">
-          <div className="flex gap-3 shadow-sm p-3 border border-primary/40 rounded-lg bg-white">
+          <div className="flex gap-3 shadow-sm p-3 border border-primary/20 rounded-lg bg-white">
             <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md">
               <img src={message.tour?.imageUrls[0]} alt={message.tour?.title} className="h-full w-full object-cover" />
             </div>
@@ -92,6 +82,7 @@ const MessageItem = ({
               currentIndex={currentImageIndex}
               setCurrentIndex={setCurrentImageIndex}
               onClose={closeLightbox}
+              type="image"
             />
           )}
         </>

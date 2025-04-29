@@ -299,3 +299,11 @@ export interface Conversation {
 }
 
 export type UserSelectedState = Pick<UserInfo, "_id" | "fullName" | "username" | "profilePicture" | "role">
+
+export interface ConversationMedia {
+  images: string[];
+  tours: {
+    _id: string;
+    title: string;
+  }[]
+}

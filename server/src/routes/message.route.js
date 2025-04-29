@@ -11,4 +11,6 @@ router.get("/:id", authenticated, ChatMessage.getMessages);
 
 router.get("/conversations/sidebar", authenticated, ChatMessage.getConversations);
 
+router.get("/:id/media", authenticated, ChatMessage.getMediaAndTour);
+
 export default router;
