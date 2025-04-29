@@ -33,6 +33,9 @@ class CheckinController {
 
             await ranking.save();
 
+            // Cập nhật lại điểm số cho tour guide
+            await updateTourGuideRankingAndRating(tourGuideId);
+
             const updatedRanking = await Ranking.findOne({ tourGuideId });
 
             res.status(StatusCodes.CREATED).json({
