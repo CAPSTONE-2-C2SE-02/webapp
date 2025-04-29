@@ -279,13 +279,15 @@ export interface Message {
   _id: string;
   sender: MessageUser;
   recipient: MessageUser;
+  messageType: "text" | "image" | "tour";
   content: string;
-  messageType: 'TEXT' | 'IMAGE' | 'VIDEO' | 'FILE';
+  tour?: Tour;
+  imageUrls: string[];
   createdAt: string;
   updatedAt: string;
 }
 
-export type LastMessage = Pick<Message, "_id" | "content" | "updatedAt">;
+export type LastMessage = Pick<Message, "_id" | "content" | "tour" | "imageUrls" | "updatedAt">;
 
 export interface Conversation {
   _id: string;
@@ -297,3 +299,11 @@ export interface Conversation {
 }
 
 export type UserSelectedState = Pick<UserInfo, "_id" | "fullName" | "username" | "profilePicture" | "role">
+
+export interface ConversationMedia {
+  images: string[];
+  tours: {
+    _id: string;
+    title: string;
+  }[]
+}

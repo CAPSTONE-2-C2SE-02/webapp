@@ -3,12 +3,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tour } from "@/lib/types";
 import TourImageGallery from "./tour-image-gallery";
 import { Separator } from "../ui/separator";
+import { getAbsoluteAddress } from "../utils/convert";
 
 interface TourInfoProps {
   tour: Tour;
 }
-
-const getAbsoluteAddress = (location: string) => location.split(",")[0];
 
 export default function TourInfo({ tour }: TourInfoProps) {
   return (
@@ -17,7 +16,7 @@ export default function TourInfo({ tour }: TourInfoProps) {
       <div className="grid grid-cols-2 gap-2 mb-4 text-sm bg-slate-50/60 p-3 rounded-md">
         <div className="flex items-center gap-2 text-primary">
           <MapPin className="size-4" />
-          <span className="font-medium"><span className="text-teal-500">{getAbsoluteAddress(tour.destination)} - {getAbsoluteAddress(tour.departureLocation)}</span></span>
+          <span className="font-medium"><span className="text-teal-500">{getAbsoluteAddress(tour.destination, tour.departureLocation)}</span></span>
         </div>
         <div className="flex items-center gap-2 text-primary">
           <CalendarDays className="size-4" />

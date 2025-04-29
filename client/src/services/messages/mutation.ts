@@ -8,9 +8,9 @@ export function useSendMessageMutation(recipientId: string) {
   const auth = useAuthInfo();
 
   return useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({ content, tourId, images }: { content?: string, tourId?: string; images?: File[] }) => {
       if (!recipientId) throw new Error("Recipient ID is required");
-      const res = await sendMessage({ recipient: recipientId, content });
+      const res = await sendMessage({ recipient: recipientId, content, tour: tourId, images });
       if (!res.result) throw new Error("Failed to send message");
       return res.result as Message;
     },
@@ -22,19 +22,32 @@ export function useSendMessageMutation(recipientId: string) {
 
       queryClient.setQueryData<Conversation[]>(
         ["conversations", auth?._id],
-        (oldConversations = []) =>
-          oldConversations.map((conv) =>
+        (oldConversations = []) => {
+          const exists = oldConversations.some((conv) =>
             conv.participants.some((p) => p._id === recipientId)
+          );
+          if (exists) {
+            return oldConversations.map((conv) =>
+              conv.participants.some((p) => p._id === recipientId)
               ? {
-                  ...conv,
-                  lastMessage: {
-                    _id: message._id,
-                    content: message.content,
-                    updatedAt: message.updatedAt,
-                  },
-                }
+                ...conv,
+                lastMessage: message,
+              }
               : conv
-          )
+            )
+          }
+          return [
+            {
+              _id: `${Date.now()}-${Math.floor(Math.random() * 100000)}`,
+              participants: [message.recipient],
+              messages: [message],
+              lastMessage: message,
+              updatedAt: message.updatedAt,
+              createdAt: `${Date.now()}`,
+            },
+            ...oldConversations,
+          ];
+        }
       );
     }
   })

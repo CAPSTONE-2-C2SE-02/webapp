@@ -112,6 +112,8 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange, setError, clearErrors, totalParticipants, tourData.maxParticipants]);
 
+  const isCurrentUser = auth?._id === tourData.author._id;
+
   return (
     <div className="lg:col-span-1">
       <div className="sticky top-[88px] space-y-4">
@@ -131,8 +133,8 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
               </div>
             </div>
             <Button className="rounded-full" size={"sm"} asChild>
-              <Link to={`/${tourData.author.username}`} className="text-xs">
-                Contact Now
+              <Link to={isCurrentUser ? `/${tourData.author.username}` : `/messages/${tourData.author._id}`} className="text-xs" state={{ tour: tourData, sendTourImmediately: true }}>
+                {isCurrentUser ? "View Profile" : "Contact Now"}
                 <ArrowUpRight />
               </Link>
             </Button>

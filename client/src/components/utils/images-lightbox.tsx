@@ -1,20 +1,31 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "../ui/button";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-interface PostImagesLightboxProps {
+interface ImagesLightboxProps {
   images: string[];
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
   onClose: () => void;
+  type?: "button" | "image";
 }
 
-const PostImagesLightbox = ({
+const ImagesLightbox = ({
   images,
   currentIndex,
   setCurrentIndex,
   onClose,
-}: PostImagesLightboxProps) => {
+  type = "button",
+}: ImagesLightboxProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Check if the click is on the overlay and not on the content
+    if (e.target === containerRef.current) {
+      onClose();
+    }
+  };
+
   // go to previous image
   const goToPrevious = () => {
     const newIndex = (currentIndex - 1 + images.length) % images.length;
@@ -54,8 +65,8 @@ const PostImagesLightbox = ({
   }, [])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative h-full w-full" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={handleOverlayClick}>
+      <div className="relative h-full w-full">
         <Button
           variant="ghost"
           size="icon"
@@ -66,10 +77,10 @@ const PostImagesLightbox = ({
         </Button>
 
         {/* gallery */}
-        <div className="flex items-center justify-center relative h-full w-full">
+        <div className="flex items-center justify-center relative h-full w-full" ref={containerRef}>
           <div className="max-h-[80vh] max-w-[60vw] h-full w-full rounded-md overflow-hidden">
             <div className="h-full w-full object-contain">
-              <img src={images[currentIndex]} alt="image gallery" className="h-full mx-auto rounded-sm" />
+              <img src={images[currentIndex]} alt="image gallery" className="h-full mx-auto rounded-sm object-contain" />
             </div>
           </div>
 
@@ -95,19 +106,33 @@ const PostImagesLightbox = ({
           )}
         </div>
         
-        <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              className={`h-1 w-8 rounded-full ${index === currentIndex ? "bg-white" : "bg-white/50"}`}
-              onClick={() => setCurrentIndex(index)}
-            />
-          ))}
-        </div>
-
+        {type === "button" && (
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                className={`h-1 w-8 rounded-full ${index === currentIndex ? "bg-white" : "bg-white/50"}`}
+                onClick={() => setCurrentIndex(index)}
+              />
+            ))}
+          </div>
+        )}
+        {type === "image" && (
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+            {images.map((_, index) => (
+              <img
+                key={index}
+                className={`h-12 w-12 rounded-lg object-cover ${index === currentIndex ? "opacity-100" : "opacity-50"}`}
+                onClick={() => setCurrentIndex(index)}
+                src={images[index]}
+                alt="image thumbnail"
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-export default PostImagesLightbox
+export default ImagesLightbox

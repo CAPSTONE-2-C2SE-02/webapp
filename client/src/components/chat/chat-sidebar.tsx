@@ -32,7 +32,7 @@ const ChatSidebar = ({ className }: ChatSidebarProps) => {
             <ChatConversation
               key={conversation._id}
               userSender={conversation?.participants[0]}
-              lastMessage={conversation?.lastMessage}
+              conversation={conversation}
             />
           ))}
         </div>

@@ -1,31 +1,38 @@
-import { useAppDispatch } from "@/hooks/redux";
-import { LastMessage, MessageUser } from "@/lib/types";
+import { Conversation, MessageUser } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { setUserSelected } from "@/stores/slices/chat-slice";
 import { formatDistanceToNow } from "date-fns";
 import { NavLink } from "react-router";
 
 interface ChatConversationProps {
   className?: string;
   userSender: MessageUser;
-  lastMessage: LastMessage;
+  conversation: Conversation;
 }
 
 const ChatConversation = ({
   className,
   userSender,
-  lastMessage,
+  conversation
 }: ChatConversationProps) => {
-  const dispatch = useAppDispatch();
-
-  const handleClick = () => {
-    dispatch(setUserSelected(userSender));
-  };
-
+  const renderLastMessage = () => {
+    const lastMessage = conversation.lastMessage
+    if (lastMessage.tour) {
+      return `Sent a tour: ${lastMessage.tour.title}`;
+    }
+    if (lastMessage.content) {
+      return lastMessage.content;
+    }
+    if (lastMessage.imageUrls) {
+      if (lastMessage.content) return lastMessage.content;
+      return lastMessage.imageUrls.length > 1
+        ? `Sent ${lastMessage.imageUrls.length} images`
+        : "Sent an image";
+    }
+    return "No messages yet";
+  }
   return (
     <NavLink
       to={`/messages/${userSender._id}`}
-      onClick={handleClick}
       className={({ isActive }) =>
         cn(
           "w-full p-2 rounded-md hover:bg-accent",
@@ -48,13 +55,13 @@ const ChatConversation = ({
               {userSender.fullName.split(" ").slice(0, 2).join(" ")}
             </span>
             <span className="text-xs text-gray-400">
-              {formatDistanceToNow(new Date(lastMessage?.updatedAt), {
+              {formatDistanceToNow(new Date(conversation.updatedAt), {
                 addSuffix: true,
               })}
             </span>
           </div>
-          <p className="text-sm line-clamp-1 text-slate-600">
-            {lastMessage.content}
+          <p className="text-xs line-clamp-1 text-slate-600">
+            {renderLastMessage()}
           </p>
         </div>
       </div>
