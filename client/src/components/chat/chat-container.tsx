@@ -34,7 +34,7 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView();
-  }, [user?._id, messagesData, sendMessageMutation.isPending]);
+  }, [user?._id, messagesData]);
 
   useEffect(() => {
     if (user?._id && tour && sendTourImmediately && !hasSentTourRef.current) {

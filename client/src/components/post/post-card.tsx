@@ -16,10 +16,10 @@ import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { Post } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
 import PostCardAction from "./post-card-action";
-import PostImagesLightbox from "./post-images-lightbox";
 import useAuthInfo from "@/hooks/useAuth";
 import { useLikePostMutation } from "@/services/posts/mutation";
 import CommentPostModal from "../modals/comment-post-modal";
+import ImagesLightbox from "../utils/images-lightbox";
 
 const PostCard = ({ postData }: { postData: Post }) => {
   const auth = useAuthInfo();
@@ -74,7 +74,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
 
   return (
     <>
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden shadow-sm">
         <CardHeader className="flex-row items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full overflow-hidden">
@@ -226,7 +226,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
       />
       
       {isLightboxOpen && (
-        <PostImagesLightbox
+        <ImagesLightbox
           images={postData.imageUrls}
           currentIndex={currentImageIndex}
           setCurrentIndex={setCurrentImageIndex}

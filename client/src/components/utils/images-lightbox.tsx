@@ -1,20 +1,29 @@
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "../ui/button";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-interface PostImagesLightboxProps {
+interface ImagesLightboxProps {
   images: string[];
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
   onClose: () => void;
 }
 
-const PostImagesLightbox = ({
+const ImagesLightbox = ({
   images,
   currentIndex,
   setCurrentIndex,
   onClose,
-}: PostImagesLightboxProps) => {
+}: ImagesLightboxProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    // Check if the click is on the overlay and not on the content
+    if (e.target === containerRef.current) {
+      onClose();
+    }
+  };
+
   // go to previous image
   const goToPrevious = () => {
     const newIndex = (currentIndex - 1 + images.length) % images.length;
@@ -54,8 +63,8 @@ const PostImagesLightbox = ({
   }, [])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative h-full w-full" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={handleOverlayClick}>
+      <div className="relative h-full w-full">
         <Button
           variant="ghost"
           size="icon"
@@ -66,10 +75,10 @@ const PostImagesLightbox = ({
         </Button>
 
         {/* gallery */}
-        <div className="flex items-center justify-center relative h-full w-full">
+        <div className="flex items-center justify-center relative h-full w-full" ref={containerRef}>
           <div className="max-h-[80vh] max-w-[60vw] h-full w-full rounded-md overflow-hidden">
             <div className="h-full w-full object-contain">
-              <img src={images[currentIndex]} alt="image gallery" className="h-full mx-auto rounded-sm" />
+              <img src={images[currentIndex]} alt="image gallery" className="h-full mx-auto rounded-sm object-contain" />
             </div>
           </div>
 
@@ -110,4 +119,4 @@ const PostImagesLightbox = ({
   )
 }
 
-export default PostImagesLightbox
+export default ImagesLightbox

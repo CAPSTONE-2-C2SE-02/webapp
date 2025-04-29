@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { format } from "date-fns";
 import { Link } from "react-router";
 import { getAbsoluteAddress } from "../utils/convert";
+import { useState } from "react";
+import ImagesLightbox from "../utils/images-lightbox";
 
 interface MessageItemProps {
   message: Message;
@@ -16,8 +18,20 @@ const MessageItem = ({
   isFirstInGroup,
   currentUserId,
 }: MessageItemProps) => {
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
   const sender = message.sender;
   const isCurrentUser = message.sender._id === currentUserId;
+
+  const openLightbox = (index: number) => {
+    setCurrentImageIndex(index);
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+  };
 
   const renderMessage = () => {
     if (message.messageType === "text") {
@@ -58,8 +72,8 @@ const MessageItem = ({
       return (
         <>
           <div className={cn("flex flex-wrap gap-2", isCurrentUser ? "justify-end" : "justify-start")}>
-            {message.imageUrls.map(url => (
-              <img key={url} src={url} className="min-h-40 max-w-64 object-cover rounded" />
+            {message.imageUrls.map((url, index) => (
+              <img key={url} src={url} className="min-h-40 max-w-64 object-cover rounded" onClick={() => openLightbox(index)} />
             ))}
           </div>
           {message?.content && (
@@ -71,6 +85,14 @@ const MessageItem = ({
             >
               {message.content}
             </div>
+          )}
+          {isLightboxOpen && (
+            <ImagesLightbox
+              images={message.imageUrls}
+              currentIndex={currentImageIndex}
+              setCurrentIndex={setCurrentImageIndex}
+              onClose={closeLightbox}
+            />
           )}
         </>
       )
