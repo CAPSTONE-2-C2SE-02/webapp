@@ -1,3 +1,5 @@
+import { CANCELLED } from "dns";
+
 export const API = {
   POST: {
     LIKE: '/posts/like',

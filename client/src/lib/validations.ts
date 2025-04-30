@@ -122,11 +122,11 @@ export const createReviewSchema = z.object({
 export type CreateReviewValues = z.infer<typeof createReviewSchema>;
 
 export const cancelTourValues = z.object({
-  bookingCode: z.string().min(1, "Booking code must be at least 1").max(10, "booking cannot exceed 10"),
-  fullName: z.string().min(1, "Rating must be at least 1").max(5, "Rating cannot exceed 5"),
-  email: z.string().min(1, "Tour review cannot exceed 500 characters"),
-  phone: z.string().min(1, "Tour review cannot exceed 500 characters"),
-  reason: z.string().max(500, "Guide review cannot exceed 500 characters"),
+  secretKey: z.string().min(1, "Booking code must be at least 1").max(20, "booking cannot exceed 10"),
+  fullName: z.string().min(1, "Full Name must be at least 1").max(125, "Full name cannot exceed 125"),
+  email: z.string().min(1, "email not true"),
+  phoneNumber: z.string().min(1, "phonenumber not true"),
+  reason: z.string().max(500, "reason cannot exceed 500 characters"),
 });
 
 export type CancelTourValues = z.infer<typeof cancelTourValues>;

@@ -16,6 +16,10 @@ import {
 } from "@/components/ui/form";
 import { cancelTourValues, CancelTourValues } from "@/lib/validations";
 import { Input } from "../ui/input";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createCancel } from "@/services/bookings/booking-api";
+import { toast } from "sonner";
+import { useEffect } from "react";
 
 interface CancelTourProps {
   booking: Booking;
@@ -24,23 +28,61 @@ interface CancelTourProps {
   isEditable: boolean; 
 }
 
-const CancelTourModal = ({ booking, open, onOpenChange }: CancelTourProps) => {
+const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTourProps) => {
+    const queryClient = useQueryClient();
     const form = useForm<CancelTourValues>({
       resolver: zodResolver(cancelTourValues),
       defaultValues: {
-        bookingCode: "",
+        secretKey: "",
         fullName: "",
         email: "",
-        phone: "",
+        phoneNumber: "",
         reason: "",
       },
     });
+    useEffect(() => {
+        if (booking) {
+          form.reset({
+            secretKey: booking.secretKey,
+            fullName: booking.fullName,
+            email: booking.email,
+            phoneNumber: booking.phoneNumber,
+            reason: booking.cancellationReason || "",
+          });
+        }
+      }, [booking, form]);
+
+    const { mutate: createCancelMutation} = useMutation({
+        mutationFn: createCancel,
+        onSuccess: (data) => {
+          if (data.success) {
+            toast.success("Cancel tour created successfully");
+            queryClient.invalidateQueries({ queryKey: ["CancelBooking"] });
+            // queryClient.setQueryData<Booking[]>(
+            //     bookingsQueryKey,
+            //     (old) =>
+            //       old?.map((b) =>
+            //         b._id === booking._id ? { ...b, status: "CANCELED" } : b
+            //       )
+            //   );
+            onOpenChange(false);
+          }
+        },
+        onError: (error: any) => {
+          toast.error(error?.response?.data?.error || "Failed to cancel tour. Please try again.");
+        },
+      });
+
     const totalPeople = booking.adults + booking.youths + booking.children;
     const handleClose = () => {
         onOpenChange(false);
     };
 
-    const onSubmit = async () => {
+    const onSubmit = async (values: CancelTourValues) => {
+        createCancelMutation({
+            ...values,
+            bookingId: booking._id,
+        })
     };
 
     return (
@@ -93,14 +135,14 @@ const CancelTourModal = ({ booking, open, onOpenChange }: CancelTourProps) => {
                 <div className="grid grid-cols-2 gap-4">
                     <FormField
                     control={form.control}
-                    name="bookingCode"
+                    name="secretKey"
                     render={({ field }) => (
                         <FormItem className="space-y-1">
                         <FormLabel className="text-gray-700">
                             Booking Code <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                            <Input placeholder="SM-123456" {...field} />
+                            <Input disabled={!isEditable} placeholder="SM-123456" {...field} />
                         </FormControl>
                         <FormMessage className="text-xs" />
                         </FormItem>
@@ -111,11 +153,11 @@ const CancelTourModal = ({ booking, open, onOpenChange }: CancelTourProps) => {
                     name="fullName"
                     render={({ field }) => (
                         <FormItem className="space-y-1">
-                        <FormLabel className="text-gray-700">
+                        <FormLabel className="text-gray-700" >
                             Full Name <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
-                            <Input placeholder="Ngoc Anh" {...field} />
+                            <Input disabled={!isEditable} placeholder="Ngoc Anh" {...field}/>
                         </FormControl>
                         <FormMessage className="text-xs" />
                         </FormItem>
@@ -132,7 +174,7 @@ const CancelTourModal = ({ booking, open, onOpenChange }: CancelTourProps) => {
                                     Email <span className="text-red-500">*</span>
                                 </FormLabel>
                             <FormControl>
-                                <Input placeholder="pans@gmail.com" {...field} />
+                                <Input disabled={!isEditable} placeholder="pans@gmail.com" {...field} />
                             </FormControl>
                             <FormMessage className="text-xs" />
                         </FormItem>
@@ -140,14 +182,14 @@ const CancelTourModal = ({ booking, open, onOpenChange }: CancelTourProps) => {
                     />
                     <FormField
                         control={form.control}
-                        name="phone"
+                        name="phoneNumber"
                         render={({ field }) => (
                         <FormItem className="space-y-1">
                             <FormLabel className="text-gray-700">
                                 Phone Number <span className="text-red-500">*</span>
                             </FormLabel>
                             <FormControl>
-                                <Input placeholder="+84 356 998 " {...field} />
+                                <Input disabled={!isEditable} placeholder="+84 356 998 " {...field} />
                             </FormControl>
                             <FormMessage className="text-xs" />
                         </FormItem>
@@ -165,23 +207,28 @@ const CancelTourModal = ({ booking, open, onOpenChange }: CancelTourProps) => {
                                 placeholder="Type your message here."
                                 {...field}
                                 className="min-h-[100px]"
+                                disabled={!isEditable}
                             />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
                     )}
                 />
-                 <div>
-                    <p className="italic font-light"> 
-                        <span className="text-red-500">* </span> 
-                        Note: phone number and email must match booking information 
-                    </p>
-                </div>
-                <div className="flex justify-end mt-4">
-                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                    Send
-                    </Button>
-                </div>
+                {isEditable && (
+                    <div>
+                        <p className="italic font-light"> 
+                            <span className="text-red-500">* </span> 
+                            Note: phone number and email must match booking information 
+                        </p>
+                    </div>
+                )}
+                {isEditable && (
+                    <div className="flex justify-end mt-4">
+                        <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                        Send
+                        </Button>
+                    </div>
+                )}
                
             </form>
             </Form>

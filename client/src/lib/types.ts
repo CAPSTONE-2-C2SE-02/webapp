@@ -246,8 +246,13 @@ export interface Booking {
   children: number;
   totalAmount: number;
   paymentStatus: "PENDING" | "TIMEOUT" | "FAILED" | "PAID" | "REFUNDED";
-  status: "PENDING" | "PAID" | "FAILED" | "CANCELED" | "TIMEOUT" | "COMPLETED";
+  status: "PENDING" | "PAID" | "FAILED" | "CANCELED" | "TIMEOUT" | "COMPLETED" | "WAITING_CONFIRM";
   isReview: boolean;
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  secretKey: string;
+  cancellationReason: string;
 }
 
 export interface TourBookingInfoCardProps {

@@ -2,10 +2,9 @@ import { MapPin, Clock, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Booking } from "@/lib/types"
 import { format } from "date-fns";
-import { useState } from "react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { useAppSelector } from "@/hooks/redux";
-import ReviewTourModal from "../modals/review-tour-modal";
+import { Link } from "react-router";
 
 export interface TourBookingInfoCardProps {
   booking: Booking;
@@ -13,6 +12,7 @@ export interface TourBookingInfoCardProps {
   onPayment: (bookingId: string) => void;
   onComplete: (bookingId: string) => void;
   onReview: (bookingId: string) => void;
+  onViewCancel: (Booking: string) => void;
 }
 
 const TourBookingInfoCard = ({
@@ -21,17 +21,16 @@ const TourBookingInfoCard = ({
   onPayment,
   onComplete,
   onReview,
+  onViewCancel,
 }: TourBookingInfoCardProps) => {
   const totalPeople = booking.adults + booking.youths + booking.children;
   const isPending = booking.paymentStatus === "PENDING";
-  const isPaid = booking.paymentStatus === "PAID" && booking.status === "PAID";
+  const isPaid = booking.paymentStatus === "PAID" && booking.status === "PAID" || booking.status === "WAITING_CONFIRM";
   const isCompleted = booking.status === "COMPLETED";
   const isCanceled = booking.status === "CANCELED";
-  const [isShowCancelReasonOpen, setIsShowCancelReasonOpen] = useState(false);
-  const [reviewTourOpen, setReviewTourOpen] = useState(false)
   const userInfo = useAppSelector((state) => state.auth.userInfo);
   const role = userInfo?.role; 
-  
+
   return (
     <div className="border rounded-lg overflow-hidden flex bg-white shadow-sm">
       <div className="w-56 p-2 ">
@@ -44,7 +43,12 @@ const TourBookingInfoCard = ({
 
       <div className="flex-1 p-4 flex flex-col justify-between gap-3">
         <div>
-          <h2 className="font-medium text-sm">{booking.tourId.title}</h2>
+          <Link
+                to={`/tours/${booking.tourId._id}`}
+                className="hover:underline font-medium text-sm"
+              >
+                {booking.tourId.title}
+            </Link>
           <p className="text-xs text-primary font-semibold mt-1">
             {format(new Date(booking.startDate), "dd/MM/yyyy")} -{" "}
             {format(new Date(booking.endDate), "dd/MM/yyyy")}
@@ -91,12 +95,31 @@ const TourBookingInfoCard = ({
 
           {isPaid && (
             <>
-              <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => onCancel(booking._id)}>
-                Cancel
-              </Button>
-              <Button size="sm" variant="default" className="text-xs h-8" onClick={() => onComplete(booking._id)}>
-                Complete Tour
-              </Button>
+             {role === "TOUR_GUIDE" && booking.status === "WAITING_CONFIRM" ? (
+                <Button size="sm" variant="default" className="text-xs h-8">
+                  Waiting traveler confirm complete tour
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-8"
+                    onClick={() => onCancel(booking._id)}
+                  >
+                    Cancel
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="text-xs h-8"
+                    onClick={() => onComplete(booking._id)}
+                  >
+                    Complete Tour
+                  </Button>
+                </>
+              )}
             </>
           )}
 
@@ -124,7 +147,7 @@ const TourBookingInfoCard = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
-                  <Button variant="outline" className="text-red-500 font-semibold" onClick={() => setIsShowCancelReasonOpen(true)}>
+                  <Button variant="outline" className="text-red-500 font-semibold" onClick={() => onViewCancel(booking._id)}>
                     Canceled
                   </Button>
                 </TooltipTrigger>
