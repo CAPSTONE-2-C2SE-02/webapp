@@ -82,7 +82,7 @@ class ReviewController {
             ranking.totalScore = attendanceScore + completionScore + postScore + reviewScore;
             // Cập nhật tổng điểm cho tour guide
             await updateTourGuideRankingAndRating(booking.tourGuideId);
-            
+
             await ranking.save();
 
             // Cập nhật rating trung bình cho tour
@@ -228,6 +228,78 @@ class ReviewController {
         }
     }
 
+    // [PUT] /api/v1/reviews/:reviewId
+    async updateReview(req, res) {
+        try {
+            const { reviewId } = req.params;
+            const { ratingForTour, ratingForTourGuide, reviewTour, reviewTourGuide } = req.body;
+
+            const review = await Review.findById(reviewId);
+
+            if (!review) {
+                return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Review not found" });
+            }
+
+            if (review.travelerId.toString() !== req.user.userId) {
+                return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, error: "You are not allowed to update this review" });
+            }
+
+            if (ratingForTour !== undefined) review.ratingForTour = ratingForTour;
+            if (ratingForTourGuide !== undefined) review.ratingForTourGuide = ratingForTourGuide;
+            if (reviewTour !== undefined) review.reviewTour = reviewTour;
+            if (reviewTourGuide !== undefined) review.reviewTourGuide = reviewTourGuide;
+
+            if (req.files) {
+                const imageUrls = await uploadImages(req.files);
+                review.imageUrls = imageUrls;
+            }
+
+            await review.save();
+
+            // Cập nhật lại ranking và rating cho tour guide và tour
+            const booking = await Booking.findById(review.bookingId);
+
+            // Cập nhật điểm ranking cho tour guide
+            const reviewsForTourGuide = await Review.find({ tourGuideId: review.tourGuideId });
+            let weightedRatingSum = 0;
+            reviewsForTourGuide.forEach((r) => {
+                const weight = 0.5 + r.ratingForTourGuide * 0.1;
+                weightedRatingSum += r.ratingForTourGuide * weight;
+            });
+
+            const ranking = await Ranking.findOneAndUpdate(
+                { tourGuideId: review.tourGuideId },
+                { reviewScore: weightedRatingSum },
+                { upsert: true, new: true }
+            );
+
+            const {
+                attendanceScore = 0,
+                completionScore = 0,
+                postScore = 0,
+                reviewScore = 0
+            } = ranking;
+
+            ranking.totalScore = attendanceScore + completionScore + postScore + reviewScore;
+            await updateTourGuideRankingAndRating(review.tourGuideId);
+            await ranking.save();
+
+            // Cập nhật rating trung bình cho tour
+            const reviewsForTour = await Review.find({ tourId: review.tourId });
+            const totalRatingForTour = reviewsForTour.reduce((sum, r) => sum + r.ratingForTour, 0);
+            const averageRatingForTour = totalRatingForTour / reviewsForTour.length;
+
+            await Tour.findByIdAndUpdate(
+                review.tourId,
+                { rating: averageRatingForTour },
+                { new: true }
+            );
+
+            return res.status(StatusCodes.OK).json({ success: true, result: review, message: "Review updated successfully" });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message || "Internal server error" });
+        }
+    }
 }
 
 export default new ReviewController();
