@@ -3,6 +3,7 @@ import { ArrowRight, Heart, MapPin, Star, Clock, UsersRound, CircleDollarSign, C
 import { Button } from "../ui/button";
 import { Link } from "react-router";
 import useAuthInfo from "@/hooks/useAuth";
+import { generateRatingText } from "../utils/convert";
 
 interface TourCardProps {
   tour: Tour;
@@ -19,15 +20,6 @@ const convertLocation = (location: string) => {
 
 const TourCard = ({ tour, type }: TourCardProps) => {
   const auth = useAuthInfo();
-
-  const generateRatingText = (rating: number | null | undefined): string => {
-    if (!rating) return "No Rating";
-    if (rating >= 4.5) return "Excellent";
-    else if (rating >= 4.0) return "Very Good";
-    else if (rating >= 3.0) return "Good";
-    else if (rating >= 2.0) return "Average";
-    else return "Poor";
-  };
 
   return (
     <>

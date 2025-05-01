@@ -56,6 +56,25 @@ export const authenticated = async (req, res, next) => {
     }
 };
 
+export const optionalAuth = async (req, res, next) => {
+    try {
+      const authHeader = req.header("Authorization");
+      const token = authHeader?.split(" ")[1];
+      if (!token) {
+        // no token → just continue without req.user
+        return next();
+      }
+      const decoded = await verifyToken(token);
+      if (decoded) {
+        req.user = decoded;
+      }
+      return next();
+    } catch (error) {
+      // on error (invalid/expired token) ignore and proceed anonymously
+      return next();
+    }
+};
+
 export const checkOwnerUserId = async (req, res, next) => {
     try {
         if (req.user.role === "ADMIN") {

@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import { StatusCodes } from "http-status-codes";
 import Checkin from "../models/checkin.model.js";
 import Ranking from "../models/ranking.model.js";
+import { updateTourGuideRankingAndRating } from '../services/ranking.service.js';
 
 class CheckinController {
     // [POST] /api/v1/checkin
