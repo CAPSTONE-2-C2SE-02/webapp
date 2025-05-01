@@ -2,6 +2,10 @@ import { StatusCodes } from "http-status-codes";
 import Tour from "../models/tour.model.js";
 import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
+import Interactions from "../models/interactions.model.js";
+import axios from "axios";
+
+const RECOMMENDATION_API = process.env.RECOMMENDATION_API_URL;
 
 class TourController {
 
@@ -101,6 +105,26 @@ class TourController {
                     success: false,
                     error: "Tour not found",
                 });
+            }
+
+            if (req.user?.userId) {
+                const userId = req.user?.userId;
+                const interaction = await Interactions.findOne({
+                    userId,
+                    tourId: id,
+                    interaction_type: "VIEW"
+                });
+                if (!interaction) {
+                    const newInteraction = new Interactions({
+                        userId,
+                        tourId: id,
+                        interaction_type: "VIEW"
+                    });
+                    await newInteraction.save();
+                    axios.post(`http://127.0.0.1:8020/retrain`)
+                        .then(() => console.log("Retrain queued"))
+                        .catch(err => console.error("Retrain error:", err.message));
+                }
             }
 
             return res.status(StatusCodes.OK).json({

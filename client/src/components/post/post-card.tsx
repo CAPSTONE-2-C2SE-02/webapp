@@ -27,7 +27,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
   const likePostMutation = useLikePostMutation();
 
   const [isSave, setIsSave] = useState(false);
-  const { isLightboxOpen, currentImageIndex, setCurrentImageIndex, openLightbox, closeLightbox } = useLightBox();
+  const { isLightboxOpen, setIsLightboxOpen, currentImageIndex, setCurrentImageIndex, openLightbox, closeLightbox } = useLightBox();
   const [isSharePostModelOpen, setIsSharePostModelOpen] = useState(false);
   const [isCommentModelOpen, setIsCommentPostModelOpen] = useState(false);
   const [postUrl, setPostUrl] = useState<string>("");

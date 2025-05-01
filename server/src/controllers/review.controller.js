@@ -5,6 +5,7 @@ import Ranking from "../models/ranking.model.js";
 import Review from "../models/review.model.js";
 import Tour from "../models/tour.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
+import { updateTourGuideRankingAndRating } from '../services/ranking.service.js';
 
 class ReviewController {
     // [POST] /api/v1/reviews

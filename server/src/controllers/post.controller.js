@@ -6,6 +6,7 @@ import Post from "../models/post.model.js";
 import Ranking from "../models/ranking.model.js";
 import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
+import { updateTourGuideRankingAndRating } from '../services/ranking.service.js';
 
 class PostController {
 
