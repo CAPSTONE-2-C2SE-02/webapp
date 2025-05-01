@@ -15,6 +15,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/hooks/redux";
 import { Booking, Review } from "@/lib/types";
+import { confirmCompleteTourByTourGuide, confirmCompleteTourByTraveler } from "@/services/bookings/booking-api";
 import { fetchReviewByBookingId } from "@/services/tours/review-api";
 import { fetchTourGuideBookings, fetchTravelerBookings } from "@/services/users/user-api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -50,6 +51,15 @@ const HistoryBookingPage = () => {
     setCancelBooking(booking);
     setIsCancelModalOpen(true);
   };
+  const handleViewCancel = (bookingId: string) => {
+    const booking = bookings?.find((b) => b._id === bookingId);
+    if (!booking) {
+      toast.error("Booking not found.");
+      return;
+    }
+    setCancelBooking(booking);
+    setIsCancelModalOpen(true);
+  };
 
   const handlePayment = async (bookingId: string) => {
     queryClient.setQueryData<Booking[]>(
@@ -67,16 +77,33 @@ const HistoryBookingPage = () => {
   };
 
   const handleComplete = async (bookingId: string) => {
-    queryClient.setQueryData<Booking[]>(
-      [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
-      (oldBookings) => {
-        if (!oldBookings) return oldBookings;
-        return oldBookings.map((booking) =>
-          booking._id === bookingId ? { ...booking, status: "COMPLETED" } : booking
-        );
+    // queryClient.setQueryData<Booking[]>(
+    //   [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
+    //   (oldBookings) => {
+    //     if (!oldBookings) return oldBookings;
+    //     return oldBookings.map((booking) =>
+    //       booking._id === bookingId ? { ...booking, status: "COMPLETED" } : booking
+    //     );
+    //   }
+    // );
+    // toast.success("Tour completed successfully");
+    try {
+      if (role === "TRAVELER") {
+        await confirmCompleteTourByTraveler(bookingId);
+      } else {
+        await confirmCompleteTourByTourGuide(bookingId);
       }
-    );
-    toast.success("Tour completed successfully");
+  
+      toast.success("Tour marked as completed");
+  
+      queryClient.invalidateQueries({
+        queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
+      });
+    } catch (error: any) {
+      const msg = error?.response?.data?.error || "Failed to complete tour";
+      toast.error(msg);
+      console.error("Confirm complete error:", error);
+    }
   };
 
   const handleReview = async (bookingId: string) => {
@@ -132,13 +159,13 @@ const HistoryBookingPage = () => {
       return booking.paymentStatus === "PENDING";
     }
     if (activeTab === "waitingForTourCompletion") {
-      return booking.paymentStatus === "PAID" && booking.status === "PAID";
+      return booking.paymentStatus === "PAID" && booking.status === "PAID" || booking.status === "WAITING_CONFIRM";
     }
     if (activeTab === "completed") {
-      return booking.status === "COMPLETED";
+      return booking.status === "COMPLETED" ;
     }
     if (activeTab === "canceled") {
-      return booking.status === "CANCELED";
+      return booking.status === "CANCELED" ;
     }
     return true;
   });
@@ -185,6 +212,7 @@ const HistoryBookingPage = () => {
                     onPayment={handlePayment}
                     onComplete={handleComplete}
                     onReview={handleReview}
+                    onViewCancel={handleViewCancel}
                   />
                 ))
               ) : (
@@ -245,6 +273,18 @@ const HistoryBookingPage = () => {
           isEditable={true}
         />
       )}
+      {/* view cancel booking
+      {cancelBooking && (
+        <CancelTourModal
+          booking={cancelBooking}
+          open={isCancelModalOpen}
+          onOpenChange={(open) => {
+            setIsCancelModalOpen(open);
+            if (!open) setCancelBooking(null);
+          }}
+          isEditable={false}   
+        />
+      )} */}
     </div>
   )
 }

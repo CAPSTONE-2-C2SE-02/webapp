@@ -19,7 +19,7 @@ import { createReviewSchema, CreateReviewValues } from "@/lib/validations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createReview } from "@/services/tours/review-api";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface ReviewTourProps {
   booking: Booking;
@@ -31,6 +31,7 @@ interface ReviewTourProps {
 
 const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }: ReviewTourProps) => {
   const queryClient = useQueryClient();
+  const [editable, setEditable] = useState(isEditable);
   const form = useForm<CreateReviewValues>({
     resolver: zodResolver(createReviewSchema),
     defaultValues: {
@@ -41,6 +42,10 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
       imageUrls: [],
     },
   });
+
+  useEffect(() => {
+    setEditable(isEditable);
+  }, [isEditable, open]);
 
   useEffect(() => {
     console.log("Review Data in Modal:", reviewData);
@@ -165,7 +170,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                           key={star}
                           type="button"
                           onClick={() => field.onChange(star)}
-                          disabled={!isEditable}
+                          disabled={!editable }
                           className="text-2xl text-yellow-400 focus:outline-none"
                         >
                           <Star
@@ -188,7 +193,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                   <FormLabel className="font-medium">Tour Review</FormLabel>
                   <FormControl>
                     <Textarea
-                      disabled={!isEditable}
+                      disabled={!editable }
                       placeholder="Type your message here."
                       {...field}
                       className="min-h-[100px]"
@@ -212,7 +217,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                           key={star}
                           type="button"
                           onClick={() => field.onChange(star)}
-                          disabled={!isEditable}
+                          disabled={!editable }
                           className="text-2xl text-yellow-400 focus:outline-none"
                         >
                           <Star
@@ -235,7 +240,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                   <FormLabel className="font-medium">Tour Guide Review</FormLabel>
                   <FormControl>
                     <Textarea
-                      disabled={!isEditable}
+                      disabled={!editable }
                       placeholder="Type your message here."
                       {...field}
                       className="min-h-[100px]"
@@ -266,7 +271,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                           type="file"
                           className="hidden"
                           accept="image/*"
-                          disabled={!isEditable}
+                          disabled={!editable}
                           multiple
                           onChange={(e) => {
                             const files = Array.from(e.target.files || []);
@@ -292,7 +297,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                                     return (
                                       <CarouselItem key={index} className="basis-auto">
                                         <div className="relative w-[120px] h-[120px] overflow-hidden rounded-md border">
-                                          {isEditable && (
+                                          {editable && (
                                             <Button
                                               type="button"
                                               variant="destructive"
@@ -326,14 +331,19 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                     />
 
             <div className="flex justify-end mt-4">
-              {isEditable ? (
+              {editable ? (
                 <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
                   Send
                 </Button>
               ) : (
+                <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setEditable(true)}>
+                  Edit
+                </Button>
                 <Button variant="destructive" onClick={handleDelete}>
                   Delete
                 </Button>
+                </div>
               )}
             </div>
           </form>

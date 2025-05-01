@@ -43,3 +43,28 @@ export const vnpReturn = async (params: Record<string, string>) => {
   const response = await publicApi.get("/payments/vnp-return", { params });
   return response.data;
 };
+
+export const createCancel = async ({
+  bookingId,
+  ...cancelData
+}: {
+  bookingId: string;
+  secretKey: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  reason: string;
+}) => {
+  const response = await axiosInstance.post(`/bookings/${bookingId}/cancel`, cancelData);
+  return response.data;
+};
+
+export const confirmCompleteTourByTourGuide = async (bookingId: string) => {
+  const response = await axiosInstance.post(`/bookings/${bookingId}/confirm/tour-guide`);
+  return response.data;
+};
+
+export const confirmCompleteTourByTraveler = async (bookingId: string) => {
+  const response = await axiosInstance.post(`/bookings/${bookingId}/confirm/traveler`);
+  return response.data;
+};
