@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/form";
 import { createReviewSchema, CreateReviewValues } from "@/lib/validations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createReview } from "@/services/tours/review-api";
+import { createReview, updateReview } from "@/services/tours/review-api";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 
@@ -82,13 +82,33 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
     },
   });
 
+  const { mutate: updateReviewMutation } = useMutation({
+    mutationFn: updateReview,
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success("Review updated successfully");
+        queryClient.invalidateQueries({ queryKey: ["travelerBookings"] });
+        onOpenChange(false);
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.error || "Failed to update review.");
+    },
+  });
+
   const totalPeople = booking.adults + booking.youths + booking.children;
 
   const onSubmit = async (values: CreateReviewValues) => {
-    createReviewMutation({
+    const payload = {
       ...values,
       bookingId: booking._id,
-    });
+    };
+  
+    if (reviewData && reviewData._id) {
+      updateReviewMutation({ ...payload, reviewId: reviewData._id });
+    } else {
+      createReviewMutation(payload);
+    }
   };
 
   const handleDelete = () => {

@@ -75,3 +75,8 @@ export const fetchReviewsByTourId = async (
   const response = await publicApi.get(API.REVIEW.TOUR(tourId));
   return response.data;
 };
+
+export const updateReview = async (data: any) => {
+  const response = await axiosInstance.put(`/reviews/${data.reviewId}`, data).then((res) => res.data);
+  return response.data;
+};
