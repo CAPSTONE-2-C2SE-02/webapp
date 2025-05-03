@@ -7,6 +7,8 @@ import Ranking from "../models/ranking.model.js";
 import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
 import { updateTourGuideRankingAndRating } from '../services/ranking.service.js';
+import { moderatePostContent } from "../utils/contentModeration.util.js";
+
 
 class PostController {
 
@@ -21,6 +23,18 @@ class PostController {
                 });
             }
             const request = req.body;
+
+            // Kiểm duyệt nội dung trước khi tạo bài đăng
+            const moderationResult = moderatePostContent(request);
+            
+            if (moderationResult.isInappropriate) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    message: `Bài đăng của bạn chứa từ ngữ không phù hợp trong phần ${moderationResult.source}`,
+                    inappropriateWords: moderationResult.inappropriateWords,
+                    error: "Inappropriate content detected"
+                });
+            }
 
             const imageUrls = req.files ? await uploadImages(req.files) : [];
 
