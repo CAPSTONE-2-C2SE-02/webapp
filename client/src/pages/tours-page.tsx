@@ -33,7 +33,7 @@ const ToursPage = () => {
           {/* banner */}
           <div className="w-full h-[320px] rounded-[20px] overflow-hidden border-[5px] border-white relative flex items-center justify-center">
             <img src="https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" className="w-full h-full object-cover" />
-            <div className="absolute top-1/4 text-5xl font-madimi text-primary font-bold leading-tight bg-white/10 px-5 py-3 rounded-2xl backdrop-blur-sm">
+            <div className="absolute top-1/4 text-5xl font-madimi text-primary font-bold leading-tight bg-white/30 px-10 py-3 rounded-2xl backdrop-blur-sm text-center border border-white/50">
               <h1 className="tracking-wider">Live You <span className="text-[hsla(63,69%,85%,1)]">ADVENTURE</span></h1>
               <h1 className="tracking-wider">Travel and Enjoy you <span className="text-white">Life !</span></h1>
             </div>

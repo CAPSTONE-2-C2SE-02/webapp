@@ -70,6 +70,16 @@ const tourSchema = new mongoose.Schema({
 
 tourSchema.plugin(mongooseDelete, { deletedAt: true, overrideMethods: true });
 
+tourSchema.virtual("bookmarks", {
+    ref: 'Bookmark',
+    localField: '_id',
+    foreignField: 'itemId',
+    match: { itemType: 'tour' }
+});
+
+tourSchema.set('toJSON', { virtuals: true });
+tourSchema.set('toObject', { virtuals: true });
+
 const Tour = mongoose.model("Tour", tourSchema);
 
 export default Tour;

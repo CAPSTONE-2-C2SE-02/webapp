@@ -1,5 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NavLink, Outlet, useParams } from "react-router";
+import { Link, NavLink, Outlet, useParams } from "react-router";
 import { Cake, MessageSquare, UserRound, Star, UserRoundCheck, Mail, Phone, MapPin, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,7 @@ import { useUserInfoQuery, useUpdateUserProfileMutation, handleSaveProfile } fro
 import { EditProfileData } from "@/lib/types";
 import FollowButton from "@/components/user/follow-button";
 import { format } from "date-fns";
+import { generateRatingText } from "@/components/utils/convert";
 
 const ProfileLayout = () => {
     const { isAuthenticated, userInfo: authUserInfo } = useAppSelector((state) => state.auth) as {
@@ -46,15 +47,6 @@ const ProfileLayout = () => {
 
     const [firstName, lastName] = user.fullName?.split(" ") || ["", ""];
     const isFollowing = user?.followers.map(item => item._id)?.includes(authUserInfo?._id ?? "") as boolean;
-
-    const generateRatingText = (rating: number | null | undefined): string => {
-        if (!rating) return "No Rating";
-        if (rating >= 4.5) return "Excellent";
-        else if (rating >= 4.0) return "Very Good";
-        else if (rating >= 3.0) return "Good";
-        else if (rating >= 2.0) return "Average";
-        else return "Poor";
-      };
     
     return (
         <div className="w-full flex flex-col gap-5">
@@ -70,9 +62,11 @@ const ProfileLayout = () => {
                 {isAuthenticated && user && authUserInfo?.username !== username && (
                     <div className="absolute space-x-1 right-7 top-[44%]">
                         <FollowButton currentUserId={authUserInfo?._id || ""} targetUserId={user?._id} initialIsFollowing={isFollowing} />
-                        <Button size={"sm"}>
-                            <MessageSquare /> Message
-                        </Button>
+                        <Link to={`/messages/${user._id}`}>
+                            <Button size={"sm"}>
+                                <MessageSquare /> Message
+                            </Button>
+                        </Link>
                     </div>
                 )}
                 {/* <img src="https://placehold.co/1920x400" className="rounded-t-2xl" /> */}
@@ -82,10 +76,10 @@ const ProfileLayout = () => {
                         <AvatarFallback>{user.fullName?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-col justify-items-center">
-                        <p className="font-bold text-2xl my-1 justify-center truncate max-w-44 pt-2 text-center">{user.fullName}</p>
+                        <p className="font-bold text-2xl my-1 justify-center truncate max-w-44 pt-2 text-center" title={user.fullName}>{user.fullName}</p>
                         {user.role === "TOUR_GUIDE" && (
                             <div className="flex items-center justify-center py-2">
-                                <Star className="w-4 h-4 mx-1 stroke-amber-400" />
+                                <Star className="w-4 h-4 mx-1 stroke-amber-400 fill-amber-400" />
                                 <span className="font-medium text-black text-sm">{user.rating > 0 && user.rating} {generateRatingText(user.rating)}</span>
                             </div>
                         )}
@@ -126,10 +120,11 @@ const ProfileLayout = () => {
                         )}
                     </div>
                     <div className="my-2 mx-14 h-36 flex flex-col justify-items-start gap-2">
-                        <p className="font-medium text-slate-600 text-sm">Introduction</p>
+                        <p className="font-medium text-primary text-sm">Bio</p>
                         <textarea
                             name="bio"
-                            value={user.bio || "No introduction available"}
+                            value={user.bio || "No bio available yet."}
+                            readOnly
                             disabled
                             className="w-[630px] h-[94px] text-sm resize-none py-2 px-3 bg-slate-200 rounded-b-xl rounded-r-xl"
                         />

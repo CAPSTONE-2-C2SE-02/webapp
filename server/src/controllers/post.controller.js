@@ -83,6 +83,7 @@ class PostController {
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("bookmarks", "user -itemId")
                 .sort({ "createdAt": -1 })
                 .exec();
 
@@ -110,6 +111,7 @@ class PostController {
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("bookmarks", "user -itemId")
                 .sort({ "createdAt": -1 })
                 .exec();
 
@@ -141,6 +143,7 @@ class PostController {
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("bookmarks", "user -itemId")
                 .exec();
 
 
@@ -206,7 +209,6 @@ class PostController {
             });
         }
     }
-
 
     // [DELETE] /api/v1/posts
     async deletePost(req, res) {
@@ -365,6 +367,8 @@ class PostController {
             const posts = await Post.find({ createdBy: user._id })
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("bookmarks", "user -itemId")
+
             if (!posts) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -449,7 +453,8 @@ class PostController {
                 .sort({ score: { $meta: "textScore" } })
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
-                .populate("tourAttachment", "_id title destination introduction imageUrls");
+                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("bookmarks", "user -itemId");
 
             if (posts.length === 0) {
                 posts = await Post.find({
@@ -503,6 +508,7 @@ class PostController {
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("bookmarks", "user -itemId")
                 .sort({ "createdAt": -1 })
 
             if (!posts) {
@@ -549,6 +555,7 @@ class PostController {
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("bookmarks", "user -itemId")
                 .sort({ createdAt: -1 });
 
             if (posts.length === 0) {
@@ -561,6 +568,31 @@ class PostController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 result: posts,
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/posts/hashtags/top
+    async getTopHashtags(req, res) {
+        try {
+            const limit = parseInt(req.query.limit) || 10;
+            const topHashtags = await Post.aggregate([
+                { $match: { hashtag: { $exists: true, $ne: null, $ne: "" } } },
+                { $unwind: "$hashtag" },
+                { $group: { _id: "$hashtag", count: { $sum: 1 } } },
+                { $sort: { count: -1 } },
+                { $limit: limit },
+                { $project: { _id: 0, hashtag: "$_id", count: 1 } }
+            ]);
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: topHashtags,
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

@@ -1,24 +1,17 @@
 import { Tour } from "@/lib/types";
-import { ArrowRight, Heart, MapPin, Star, Clock, UsersRound, CircleDollarSign, CalendarClock } from "lucide-react";
+import { ArrowRight, MapPin, Star, UsersRound, CircleDollarSign, CalendarClock } from "lucide-react";
 import { Button } from "../ui/button";
 import { Link } from "react-router";
 import useAuthInfo from "@/hooks/useAuth";
-import { generateRatingText } from "../utils/convert";
+import { generateRatingText, getAbsoluteAddress } from "../utils/convert";
+import BookMarkButton from "@/components/utils/book-mark-button";
 
 interface TourCardProps {
   tour: Tour;
   type?: "grid" | "list";
 }
 
-const convertLocation = (location: string) => {
-  const locationSplit = location.split(",");
-  if (locationSplit.length > 1) {
-    return `${locationSplit[0]} - ${locationSplit[locationSplit.length - 1]}`
-  }
-  return locationSplit[0];
-}
-
-const TourCard = ({ tour, type }: TourCardProps) => {
+const TourCard = ({ tour, type = "grid" }: TourCardProps) => {
   const auth = useAuthInfo();
 
   return (
@@ -32,9 +25,14 @@ const TourCard = ({ tour, type }: TourCardProps) => {
               alt={tour.title}
               className="w-full h-full object-cover"
             />
-            <button className="absolute top-3 right-3 bg-white p-1.5 rounded-full shadow transition-colors duration-300 hover:bg-gray-100">
-              <Heart className="h-5 w-5 text-gray-400 hover:text-red-500 transition-colors duration-300" />
-            </button>
+            <BookMarkButton
+              className="absolute top-3 right-3"
+              itemType="tour"
+              itemId={tour?._id}
+              initialState={{
+                isBookmarkedByUser: tour.bookmarks.some(bookmark => bookmark.user === auth?._id),
+              }}
+            />
           </div>
 
           {/* content */}
@@ -47,12 +45,16 @@ const TourCard = ({ tour, type }: TourCardProps) => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-0.5 font-semibold text-[hsla(174,100%,33%,1)]">
                   <MapPin className="h-4 w-4 mr-1" />
-                  <span className="text-xs line-clamp-1">{convertLocation(tour.destination)}</span>
+                  <span className="text-xs line-clamp-1">
+                    {getAbsoluteAddress(tour.destination, tour.departureLocation)}
+                  </span>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1">
                     <UsersRound className="h-[18px] w-[18px] text-primary" />
-                    <span className="text-xs font-medium">{tour.maxParticipants}</span>
+                    <span className="text-xs font-medium">
+                      {tour.maxParticipants}
+                    </span>
                   </div>
                   <div className="flex items-center gap-1">
                     <CalendarClock className="h-[18px] w-[18px] text-primary" />
@@ -66,21 +68,29 @@ const TourCard = ({ tour, type }: TourCardProps) => {
               <div className="flex items-center py-1.5 px-3 bg-slate-50 rounded-full gap-1 text-primary">
                 {tour?.rating > 0 && (
                   <>
-                    <span className="text-sm font-medium">{tour?.rating > 0 && tour.rating}</span>
+                    <span className="text-sm font-medium">
+                      {tour?.rating > 0 && tour.rating}
+                    </span>
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                   </>
                 )}
-                <span className="text-xs font-semibold">{generateRatingText(tour.rating)}</span>
+                <span className="text-xs font-semibold">
+                  {generateRatingText(tour.rating)}
+                </span>
               </div>
               <span className="text-primary text-base font-semibold">
                 ${tour.priceForAdult}
               </span>
             </div>
-              <Button className="absolute bottom-0 w-full justify-between rounded-full opacity-0 translate-y-3 invisible transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible" asChild>
-                <Link to={`/tours/${tour._id}`}>
-                  {auth?.role === "TRAVELER" ? "Book now" : "View detail"} <ArrowRight className="size-4" />
-                </Link>
-              </Button>
+            <Button
+              className="absolute bottom-0 w-full justify-between rounded-full opacity-0 translate-y-3 invisible transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 group-hover:visible"
+              asChild
+            >
+              <Link to={`/tours/${tour._id}`}>
+                {auth?.role === "TRAVELER" ? "Book now" : "View detail"}{" "}
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       ) : (
@@ -92,9 +102,14 @@ const TourCard = ({ tour, type }: TourCardProps) => {
               alt={tour.title}
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
-            <button className="absolute top-3 right-3 bg-white p-1.5 rounded-full shadow transition-colors duration-300 hover:bg-gray-100">
-              <Heart className="h-5 w-5 text-gray-400 hover:text-red-500 transition-colors duration-300" />
-            </button>
+            <BookMarkButton
+              className="absolute top-3 right-3"
+              itemType="tour"
+              itemId={tour?._id}
+              initialState={{
+                isBookmarkedByUser: tour.bookmarks.some(bookmark => bookmark.user === auth?._id),
+              }}
+            />
           </div>
           {/* content */}
           <div className="flex-1 p-2 flex items-start justify-between flex-col">
@@ -105,28 +120,41 @@ const TourCard = ({ tour, type }: TourCardProps) => {
               <p className="line-clamp-2 text-xs">{tour.introduction}</p>
               <div className="flex items-center gap-0.5 font-semibold text-[hsla(174,100%,33%,1)]">
                 <MapPin className="h-4 w-4 mr-1" />
-                <span className="text-xs">{tour.destination}</span>
+                <span className="text-xs">{getAbsoluteAddress(tour.destination, tour.departureLocation)}</span>
               </div>
             </div>
 
             <div className="flex justify-between items-center w-full">
               <div className="flex items-center gap-8">
-                <div className="flex items-center py-1.5 px-3 bg-slate-50 rounded-full">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
-                  <span className="text-sm font-medium">{tour.rating} Good</span>
+                <div className="flex items-center py-1.5 px-3 bg-slate-50 rounded-full gap-1 text-primary">
+                  {tour?.rating > 0 && (
+                    <>
+                      <span className="text-sm font-medium">
+                        {tour?.rating > 0 && tour.rating}
+                      </span>
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    </>
+                  )}
+                  <span className="text-xs font-semibold">
+                    {generateRatingText(tour.rating)}
+                  </span>
                 </div>
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-[18px] w-[18px] text-primary" />
+                    <CalendarClock className="h-[18px] w-[18px] text-primary" />
                     <span className="text-xs font-medium">{tour.duration}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <UsersRound className="h-[18px] w-[18px] text-primary" />
-                    <span className="text-xs font-medium">{tour.maxParticipants}</span>
+                    <span className="text-xs font-medium">
+                      {tour.maxParticipants}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <CircleDollarSign className="h-[18px] w-[18px] text-primary" />
-                    <span className="text-xs font-medium">{tour.priceForAdult}</span>
+                    <span className="text-xs font-medium">
+                      {tour.priceForAdult}
+                    </span>
                   </div>
                 </div>
               </div>
