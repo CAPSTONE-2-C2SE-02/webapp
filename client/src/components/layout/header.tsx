@@ -32,7 +32,7 @@ const NAV_ITEMS = [
 ]
 
 const Header = () => {
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   return (
     <header className="border-b sticky top-0 right-0 left-0 bg-white z-50">
       <div className="container mx-auto flex items-center justify-between px-8 py-4">
@@ -71,9 +71,11 @@ const Header = () => {
           {isAuthenticated ? (
             <>
               <NotificationSheet />
-              <Button variant="outline" className="rounded-xl size-10">
-                <Bookmark className="size-5" />
-              </Button>
+              <Link to="/bookmarks">
+                <Button variant="outline" className="rounded-xl size-10">
+                  <Bookmark className="size-5" />
+                </Button>
+              </Link>
               <UserNav />
             </>
           ) : (

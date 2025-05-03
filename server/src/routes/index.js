@@ -16,8 +16,7 @@ import checkinRouter from "./checkin.route.js";
 import reviewsRouter from "./review.route.js";
 import rankingsRouter from "./ranking.route.js";
 import exportRouter from "./export.route.js";
-
-
+import bookmarkRouter from "./bookmark.route.js";
 
 const router = express.Router();
 
@@ -37,6 +36,6 @@ router.use('/checkin', checkinRouter);
 router.use('/reviews', reviewsRouter);
 router.use('/rankings', rankingsRouter);
 router.use('/chatbot', exportRouter);
-
+router.use('/bookmarks', bookmarkRouter);
 
 export default router;

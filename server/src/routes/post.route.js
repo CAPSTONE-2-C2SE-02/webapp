@@ -285,6 +285,7 @@ router.post("/", authenticated, upload.array("images"), postController.createPos
 router.get("/", postController.getAllPosts);
 router.get("/search", postController.searchPost);
 router.get("/hashtag", postController.getPostsByHashtag);
+router.get("/hashtags/top", postController.getTopHashtags);
 router.get("/profile/:username", postController.getAllPostsByUsername);
 router.get("/:id", postController.getPostById);
 router.put("/:id", authenticated, upload.array("images"), checkOwnerPost, postController.updatePost);
