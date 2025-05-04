@@ -75,3 +75,41 @@ export const fetchReviewsByTourId = async (
   const response = await publicApi.get(API.REVIEW.TOUR(tourId));
   return response.data;
 };
+
+interface UpdateReviewResponse {
+  success: boolean;
+  result: any;
+  message: string;
+}
+
+export const updateReview = async (reviewId: string, data: Partial<CreateReviewValues>) => {
+  const formData = new FormData();
+
+  if (data.ratingForTour !== undefined) {
+    formData.append("ratingForTour", data.ratingForTour.toString());
+  }
+  if (data.ratingForTourGuide !== undefined) {
+    formData.append("ratingForTourGuide", data.ratingForTourGuide.toString());
+  }
+  if (data.reviewTour !== undefined) {
+    formData.append("reviewTour", data.reviewTour);
+  }
+  if (data.reviewTourGuide !== undefined) {
+    formData.append("reviewTourGuide", data.reviewTourGuide);
+  }
+
+  if (data.imageUrls && data.imageUrls.length > 0) {
+    const images = data.imageUrls.filter(file => !(typeof file === 'string'));
+    images.forEach((file) => {
+      formData.append("images", file);
+    })
+  }
+
+  const response = await axiosInstance.put<UpdateReviewResponse>(`/reviews/${reviewId}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return response.data;
+}

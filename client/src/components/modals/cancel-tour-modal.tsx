@@ -222,13 +222,12 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
                         </p>
                     </div>
                 )}
-                {isEditable && (
-                    <div className="flex justify-end mt-4">
-                        <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+
+                <div className="flex justify-end mt-4">
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
                         Send
-                        </Button>
-                    </div>
-                )}
+                    </Button>
+                </div>
                
             </form>
             </Form>

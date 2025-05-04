@@ -17,9 +17,10 @@ import {
 } from "@/components/ui/form";
 import { createReviewSchema, CreateReviewValues } from "@/lib/validations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createReview } from "@/services/tours/review-api";
+import { createReview, updateReview } from "@/services/tours/review-api";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
+import { AxiosError } from "axios";
 
 interface ReviewTourProps {
   booking: Booking;
@@ -82,13 +83,45 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
     },
   });
 
+  const { mutate: updateReviewMutation } = useMutation({
+    mutationFn: ({ reviewId, data }: { reviewId: string; data: Partial<CreateReviewValues> }) => updateReview(reviewId, data),
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success("Review updated successfully");
+        queryClient.invalidateQueries({ queryKey: ["travelerBookings"] });
+        queryClient.invalidateQueries({ queryKey: ["reviews", booking.tourId._id ] });
+        queryClient.invalidateQueries({ queryKey: ["review", reviewData?._id ] });
+        onOpenChange(false);
+      }
+    },
+    onError: (error) => {
+      console.error("Update review error:", error);
+      if (error instanceof AxiosError) {
+        toast.error(error?.response?.data?.error || "Failed to update review.");
+      }
+    },
+  });
+
   const totalPeople = booking.adults + booking.youths + booking.children;
 
   const onSubmit = async (values: CreateReviewValues) => {
-    createReviewMutation({
+    const files = values.imageUrls.filter((item) => item instanceof File);
+    const existingUrls = values.imageUrls.filter((item) => typeof item === "string");
+    const payload = {
       ...values,
+      imageUrls: [...existingUrls, ...files],
       bookingId: booking._id,
-    });
+    };
+  
+    if (reviewData && reviewData._id) {
+      console.log("Update payload:", payload);
+      updateReviewMutation({
+        reviewId: reviewData._id,
+        data: {...values, imageUrls: [...existingUrls, ...files]},
+      });
+    } else {
+      createReviewMutation(payload);
+    }
   };
 
   const handleDelete = () => {
@@ -96,20 +129,9 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
     onOpenChange(false);
   };
 
-  const handleClose = (open: boolean) => {
-    if (!open) {
-      const images = form.getValues("imageUrls") || [];
-      images.forEach((image) => {
-        const url = URL.createObjectURL(image);
-        URL.revokeObjectURL(url);
-      });
-      form.reset();
-    }
-    onOpenChange(open);
-  };
   const handleCloseDialog = () => {
     onOpenChange(false);
-};
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleCloseDialog}>
@@ -261,7 +283,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                   </FormLabel>
                   <FormControl>
                     <div className="flex flex-wrap gap-2">
-                    {isEditable && (
+                    {editable && (
                       <label className="w-[120px] h-[120px] border-2 border-dashed rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
                         <ImagePlus className="h-6 w-6 text-gray-400" />
                         <span className="text-xs text-gray-500 text-center mt-1">
