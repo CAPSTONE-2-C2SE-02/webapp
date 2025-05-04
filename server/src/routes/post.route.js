@@ -2,6 +2,8 @@ import express from "express";
 import postController from "../controllers/post.controller.js";
 import { authenticated, authorize, checkOwnerPost } from "../middlewares/authorize.middleware.js";
 import upload from "../middlewares/multer.middleware.js";
+import {contentModerationMiddleware} from "../middlewares/contentModerationMiddleware.js";
+
 
 const router = express.Router();
 
@@ -281,10 +283,11 @@ const router = express.Router();
  */
 
 // Routes
-router.post("/", authenticated, upload.array("images"), postController.createPost);
+router.post("/", authenticated, upload.array("images"), contentModerationMiddleware, postController.createPost);
 router.get("/", postController.getAllPosts);
 router.get("/search", postController.searchPost);
 router.get("/hashtag", postController.getPostsByHashtag);
+router.get("/hashtags/top", postController.getTopHashtags);
 router.get("/profile/:username", postController.getAllPostsByUsername);
 router.get("/:id", postController.getPostById);
 router.put("/:id", authenticated, upload.array("images"), checkOwnerPost, postController.updatePost);

@@ -72,7 +72,8 @@ class TourController {
                 .sort(sortOptions)
                 .skip(skip)
                 .limit(limit)
-                .populate("author", "_id username fullName profilePicture ranking rating");
+                .populate("author", "_id username fullName profilePicture ranking rating")
+                .populate("bookmarks", "user -itemId");
 
             const totalTours = await Tour.countDocuments();
 
@@ -82,7 +83,7 @@ class TourController {
                     totalTours,
                     totalPage: Math.ceil(totalTours / limit),
                     currentPage: page,
-                    data: tours
+                    data: tours,
                 },
             });
         } catch (error) {
@@ -98,7 +99,8 @@ class TourController {
         try {
             const id = req.params.id;
             const tour = await Tour.findById(id)
-                .populate("author", "_id username fullName profilePicture ranking rating");
+                .populate("author", "_id username fullName profilePicture ranking rating")
+                .populate("bookmarks", "user -itemId");
 
             if (!tour) {
                 return res.status(StatusCodes.NOT_FOUND).json({
@@ -216,7 +218,7 @@ class TourController {
                 });
             }
 
-            const tours = await Tour.find({ author: user._id });
+            const tours = await Tour.find({ author: user._id }).populate("bookmarks", "user -itemId");
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -289,7 +291,9 @@ class TourController {
             }
 
             const tours = await Tour.find({ author: user._id })
-                .populate("author", "_id username fullName profilePicture ranking rating");
+                .populate("author", "_id username fullName profilePicture ranking rating")
+                .populate("bookmarks", "user -itemId")
+                .sort({ createdAt: -1 });
 
             return res.status(StatusCodes.OK).json({
                 success: true,

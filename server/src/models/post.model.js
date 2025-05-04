@@ -48,6 +48,16 @@ const postSchema = new mongoose.Schema({
 
 postSchema.plugin(mongooseDelete, { deletedAt: true, overrideMethods: true });
 
+postSchema.virtual("bookmarks", {
+    ref: 'Bookmark',
+    localField: '_id',
+    foreignField: 'itemId',
+    match: { itemType: 'post' }
+});
+
+postSchema.set('toJSON', { virtuals: true });
+postSchema.set('toObject', { virtuals: true });
+
 const Post = mongoose.model("Post", postSchema);
 
 export default Post;

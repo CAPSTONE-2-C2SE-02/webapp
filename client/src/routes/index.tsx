@@ -16,6 +16,7 @@ import PaymentStatusPage from "@/pages/payment-status-page";
 import ChatPage from "@/pages/chat-page";
 import ChatLayout from "@/layouts/chat-layout";
 import ChatNoneSelection from "@/components/chat/chat-none-selection";
+import BookmarkPage from "@/pages/bookmark-page";
 const TourManagementPage = lazy(() => import("@/pages/tour-management-page"));
 const UserProfilePage = lazy(() => import("@/pages/user-profile/userprofile-page"));
 const UserProfileToursPage = lazy(() => import("@/pages/user-profile/userprofile-tours-page"));
@@ -76,6 +77,8 @@ const routes = createBrowserRouter([
           { path: "/history-booking", element: <HistoryBookingPage /> },
           // Payment Status
           { path: "/payment-status", element: <PaymentStatusPage /> },
+          // Bookmarks Route
+          { path: "/bookmarks", element: <BookmarkPage /> },
         ]
       },
       {

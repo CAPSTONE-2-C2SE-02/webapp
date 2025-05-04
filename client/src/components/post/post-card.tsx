@@ -1,7 +1,6 @@
 import { Link } from "react-router";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import {
-  Bookmark,
   Clock,
   Forward,
   Heart,
@@ -21,12 +20,12 @@ import { useLikePostMutation } from "@/services/posts/mutation";
 import CommentPostModal from "../modals/comment-post-modal";
 import ImagesLightbox from "../utils/images-lightbox";
 import useLightBox from "@/hooks/useLightBox";
+import BookMarkButton from "@/components/utils/book-mark-button";
 
 const PostCard = ({ postData }: { postData: Post }) => {
   const auth = useAuthInfo();
   const likePostMutation = useLikePostMutation();
 
-  const [isSave, setIsSave] = useState(false);
   const { isLightboxOpen, setIsLightboxOpen, currentImageIndex, setCurrentImageIndex, openLightbox, closeLightbox } = useLightBox();
   const [isSharePostModelOpen, setIsSharePostModelOpen] = useState(false);
   const [isCommentModelOpen, setIsCommentPostModelOpen] = useState(false);
@@ -44,10 +43,6 @@ const PostCard = ({ postData }: { postData: Post }) => {
 
   const handleLikePost = () => {
     likePostMutation.mutate(postData._id);
-  };
-
-  const handleSavePost = () => {
-    setIsSave((prev) => !prev);
   };
 
   const postImages = useMemo(
@@ -94,39 +89,41 @@ const PostCard = ({ postData }: { postData: Post }) => {
             </div>
           </div>
           <div className="text-primary">
-            <Button variant={"ghost"} size={"icon"} onClick={handleSavePost} className="hover:text-primary">
-              {isSave ? (
-                <Bookmark className="size-4" fill="hsl(202, 80%, 24%)" />
-              ) : (
-                <Bookmark className="size-4" />
-              )}
-            </Button>
+            <BookMarkButton
+              itemId={postData._id}
+              itemType="post"
+              initialState={{
+                isBookmarkedByUser: postData.bookmarks.some(bookmark => bookmark.user === auth?._id),
+              }}
+            />
             <PostCardAction id={postData._id} author={postData.createdBy} />
           </div>
         </CardHeader>
-        <CardContent className="px-4 pb-3">
+        <CardContent className="px-4 pb-3 space-y-3">
           {/* Text Content */}
-          <div>
-            {postData?.content.length > 0 && postData.content.map((content, index) => (
-              <p key={`${content}+${index}`} className="text-black text-sm font-normal">{content}</p>
-            ))}
-            {/* Hashtag */}
-            <div className="flex items-center gap-1 mt-1">
-              {postData?.hashtag?.length > 0 && postData.hashtag.map(tag => (
-                <Link
-                  to={`/hashtag/${tag}`}
-                  className="hover:underline text-sm text-primary"
-                  key={tag}
-                >
-                  #{tag}
-                </Link>
+          {(postData?.content || postData?.hashtag) && (
+            <div>
+              {postData?.content.length > 0 && postData.content.map((content, index) => (
+                <p key={`${content}+${index}`} className="text-black text-sm font-normal">{content}</p>
               ))}
+              {/* Hashtag */}
+              <div className="flex items-center gap-1 mt-1">
+                {postData?.hashtag?.length > 0 && postData.hashtag.map(tag => (
+                  <Link
+                    to={`/hashtag/${tag}`}
+                    className="hover:underline text-sm text-primary"
+                    key={tag}
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Photos Content */}
           {postData?.imageUrls.length > 0 && (
-            <div className="mt-3">
+            <div>
               {postData?.imageUrls.length === 1 ? (
                 <div className="max-w-full overflow-hidden w-full h-full rounded-lg border border-zinc-300" onClick={() => setIsLightboxOpen(true)}>
                   <img src={postData?.imageUrls[0]} alt="" className="max-h-[420px] w-full object-cover" />
@@ -145,7 +142,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
             <TourAttachment tour={postData?.tourAttachment} />
           )}
           {/* Post Action */}
-          <div className="w-full flex items-center justify-between px-10 mt-3 rounded-md">
+          <div className="w-full flex items-center justify-between px-10 rounded-md">
             <Button
               variant={"ghost"}
               className={cn(

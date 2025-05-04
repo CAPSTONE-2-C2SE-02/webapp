@@ -11,6 +11,7 @@ export type Post = {
   imageUrls: string[];
   likes: Pick<UserInfo, | "_id" | "username" | "fullName">[];
   tourAttachment?: TourAttachment;
+  bookmarks: BookmarkUser[];
   createdAt: string;
   updatedAt: string;
 }
@@ -78,6 +79,7 @@ export type Tour = {
     profilePicture: string,
     busyDates: Date[]
   };
+  bookmarks: BookmarkUser[];
 }
 
 export type TourList = {
@@ -86,8 +88,6 @@ export type TourList = {
   currentPage: number;
   data: Tour[];
 }
-
-
 
 export type Review = {
   _id: string;
@@ -311,4 +311,13 @@ export interface ConversationMedia {
     _id: string;
     title: string;
   }[]
+}
+
+export interface BookmarkInfo {
+  isBookmarkedByUser: boolean;
+}
+
+export interface BookmarkUser {
+  _id: string;
+  user: string;
 }
