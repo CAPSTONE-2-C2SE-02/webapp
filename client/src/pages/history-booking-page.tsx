@@ -273,18 +273,6 @@ const HistoryBookingPage = () => {
           isEditable={true}
         />
       )}
-      {/* view cancel booking
-      {cancelBooking && (
-        <CancelTourModal
-          booking={cancelBooking}
-          open={isCancelModalOpen}
-          onOpenChange={(open) => {
-            setIsCancelModalOpen(open);
-            if (!open) setCancelBooking(null);
-          }}
-          isEditable={false}   
-        />
-      )} */}
     </div>
   )
 }
