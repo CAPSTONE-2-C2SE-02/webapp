@@ -33,9 +33,9 @@ export const setBookedDates = async (tourGuideId, startDate, endDate) => {
     for (const day of daysToBook) {
         const existing = calendar.dates.find(d => d.date.toISOString().slice(0, 10) === day.toISOString().slice(0, 10));
         if (existing) {
-            existing.status = "BOOKED";
+            existing.status = "UNAVAILABLE";
         } else {
-            calendar.dates.push({ date: day, status: "BOOKED" });
+            calendar.dates.push({ date: day, status: "UNAVAILABLE" });
         }
     }
 
@@ -52,7 +52,7 @@ export const releaseBookedDates = async (tourGuideId, startDate, endDate) => {
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const isoDate = d.toISOString().slice(0, 10);
         const entry = calendar.dates.find(d => d.date.toISOString().slice(0, 10) === isoDate);
-        if (entry && entry.status === "BOOKED") {
+        if (entry && entry.status === "UNAVAILABLE") {
             entry.status = "AVAILABLE";
         }
     }
