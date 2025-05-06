@@ -1,11 +1,13 @@
 import { StatusCodes } from "http-status-codes";
 import mongoose from "mongoose";
+import notificationController from "../controllers/notification.controller.js";
 import Booking from "../models/booking.model.js";
 import Ranking from "../models/ranking.model.js";
 import Review from "../models/review.model.js";
 import Tour from "../models/tour.model.js";
-import { uploadImages } from "../utils/uploadImage.util.js";
+import User from "../models/user.model.js";
 import { updateTourGuideRankingAndRating } from '../services/ranking.service.js';
+import { uploadImages } from "../utils/uploadImage.util.js";
 
 class ReviewController {
     // [POST] /api/v1/reviews
@@ -97,6 +99,24 @@ class ReviewController {
                 { rating: averageRatingForTour },
                 { new: true }
             );
+
+            // Gửi thông báo cho tour guide
+            const traveler = await User.findById(req.user.userId);
+
+            await notificationController.sendNotification({
+                body: {
+                    type: "REVIEW",
+                    senderId: req.user.userId,
+                    receiverId: booking.tourGuideId,
+                    relatedId: booking._id,
+                    relatedModel: "Booking",
+                    message: `You have received a new review from ${traveler?.fullName || traveler?.username || "a traveler"}.`,
+                },
+            }, {
+                status: () => ({
+                    json: () => { },
+                }),
+            });
 
             return res.status(StatusCodes.CREATED).json({ success: true, result: savedReview, message: 'Review created successfully' });
         } catch (error) {
@@ -241,6 +261,18 @@ class ReviewController {
                 return res.status(StatusCodes.NOT_FOUND).json({ success: false, error: "Review not found" });
             }
 
+            // Chỉ cho phép update trong vòng 3 ngày kể từ khi tạo review
+            const now = new Date();
+            const createdAt = new Date(review.createdAt);
+            const diffMs = now - createdAt;
+            const diffDays = diffMs / (1000 * 60 * 60 * 24);
+            if (diffDays > 3) {
+                return res.status(StatusCodes.FORBIDDEN).json({
+                    success: false,
+                    error: "You can only update your review within 3 days after creation."
+                });
+            }
+
             if (review.travelerId.toString() !== req.user.userId) {
                 return res.status(StatusCodes.UNAUTHORIZED).json({ success: false, error: "You are not allowed to update this review" });
             }
@@ -295,6 +327,24 @@ class ReviewController {
                 { rating: averageRatingForTour },
                 { new: true }
             );
+
+            // Gửi thông báo cho tour guide
+            const traveler = await User.findById(req.user.userId);
+
+            await notificationController.sendNotification({
+                body: {
+                    type: "REVIEW",
+                    senderId: req.user.userId,
+                    receiverId: review.tourGuideId,
+                    relatedId: review.bookingId,
+                    relatedModel: "Booking",
+                    message: `A review from ${traveler?.fullName || traveler?.username || "a traveler"} has been updated.`,
+                },
+            }, {
+                status: () => ({
+                    json: () => { },
+                }),
+            });
 
             return res.status(StatusCodes.OK).json({ success: true, result: review, message: "Review updated successfully" });
         } catch (error) {
