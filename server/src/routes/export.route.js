@@ -23,8 +23,8 @@ router.get("/export", async (req, res) => {
     res.json({ success: true, file: filePath });
 
   } catch (error) {
-    console.error("Lỗi khi export dữ liệu:", error);
-    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Lỗi khi export dữ liệu" });
+    console.error("Error when exporting data:", error);
+    res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ error: "Error when exporting data" });
   }
 });
 
