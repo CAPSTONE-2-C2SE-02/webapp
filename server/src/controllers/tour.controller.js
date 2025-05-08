@@ -4,6 +4,8 @@ import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
 import Interactions from "../models/interactions.model.js";
 import axios from "axios";
+import Bookmark from "../models/bookmark.model.js";
+import Notification from "../models/notification.model.js";
 
 const RECOMMENDATION_API = process.env.RECOMMENDATION_API_URL;
 
@@ -195,6 +197,11 @@ class TourController {
 
             await Tour.deleteOne({ _id: id });
 
+            // remove all notifications related to this post
+            await Notification.deleteMany({ relatedId: id, relatedModel: "Tour" });
+            // remove all bookmarks of this post
+            await Bookmark.deleteMany({ itemId: id, itemType: "tour" });
+
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: "Tour has been deleted",
@@ -218,7 +225,10 @@ class TourController {
                 });
             }
 
-            const tours = await Tour.find({ author: user._id }).populate("bookmarks", "user -itemId");
+            const tours = await Tour.find({ author: user._id })
+                .populate("author", "_id username fullName profilePicture ranking rating")
+                .populate("bookmarks", "user -itemId")
+                .sort({ createdAt: -1 });
 
             return res.status(StatusCodes.OK).json({
                 success: true,

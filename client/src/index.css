@@ -86,6 +86,10 @@
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--primary)) transparent;
   }
+
+  ::selection {
+    @apply bg-teal-100 text-teal-700;
+  }
 }
 
 @layer utilities {

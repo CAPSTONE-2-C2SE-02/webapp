@@ -133,6 +133,10 @@ class BookmarkController {
             {
               path: "bookmarks",
               select: "user -itemId",
+            },
+            {
+              path: "tourAttachment",
+              select: "title introduction imageUrls destination departureLocation author",
             }
           ]
         });

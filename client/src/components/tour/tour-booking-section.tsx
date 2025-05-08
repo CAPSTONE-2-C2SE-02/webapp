@@ -33,6 +33,7 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
   
   // get busy date
   const { data: datesBusy } = useGetBusyDates(tourData.author._id);
+  console.log(datesBusy?.dates)
 
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
@@ -46,11 +47,15 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
       children: 0,
     }
   });
-
+  
   useEffect(() => {
     // Update busy dates for the selected tour
     if (!datesBusy?.dates) return;
-    const busyDates = datesBusy?.dates.map((date) => new Date(date.date));
+    const busyDates = datesBusy?.dates.map((date) => {
+      if (date.status === "UNAVAILABLE") {
+        return new Date(date.date);
+      }
+    }).filter((date) => date !== undefined);
     setBusyDates(busyDates);
     setDateAvailability({ available: true });
   }, [datesBusy?.dates]);

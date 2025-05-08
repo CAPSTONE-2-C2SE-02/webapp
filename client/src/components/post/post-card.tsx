@@ -96,7 +96,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
                 isBookmarkedByUser: postData.bookmarks.some(bookmark => bookmark.user === auth?._id),
               }}
             />
-            <PostCardAction id={postData._id} author={postData.createdBy} />
+            <PostCardAction postData={postData} />
           </div>
         </CardHeader>
         <CardContent className="px-4 pb-3 space-y-3">

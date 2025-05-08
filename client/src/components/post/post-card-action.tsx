@@ -1,24 +1,21 @@
-import { EllipsisVertical, Flag, Loader2, Share2, Trash } from "lucide-react"
+import { EllipsisVertical, Flag, Loader2, Pencil, Share2, Trash } from "lucide-react"
 import { Button } from "../ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { useAppSelector } from "@/hooks/redux";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useState } from "react";
 import { useDeletePostMutation } from "@/services/posts/mutation";
+import CreateNewPostModal from "../modals/create-post-modal";
+import { Post } from "@/lib/types";
 
 interface PostCardActionProps {
-  id: string;
-  author: {
-    _id: string;
-    username: string;
-    fullName: string;
-    profilePicture: string;
-  }
+  postData: Post;
 }
 
-const PostCardAction = ({ id, author }: PostCardActionProps) => {
+const PostCardAction = ({ postData }: PostCardActionProps) => {
   const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const mutation = useDeletePostMutation();
 
@@ -35,14 +32,23 @@ const PostCardAction = ({ id, author }: PostCardActionProps) => {
             Share
             <Share2 className="size-4 text-muted-foreground" />
           </DropdownMenuItem>
+          {isAuthenticated && userInfo?.username === postData.createdBy.username && (
+            <DropdownMenuItem 
+              className="justify-between font-medium"
+              onClick={() => setShowEditModal(true)}
+            >
+              Edit
+              <Pencil className="size-4 text-muted-foreground" />
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
-          {isAuthenticated && userInfo?.username !== author.username && (
+          {isAuthenticated && userInfo?.username !== postData.createdBy.username && (
             <DropdownMenuItem className="justify-between font-medium">
               Report
               <Flag className="size-4 text-muted-foreground font-medium" />
             </DropdownMenuItem>
           )}
-          {isAuthenticated && userInfo?.username === author.username && (
+          {isAuthenticated && userInfo?.username === postData.createdBy.username && (
             <DropdownMenuItem 
               className="justify-between font-medium"
               onClick={() => setShowDeleteDialog(true)}
@@ -53,7 +59,7 @@ const PostCardAction = ({ id, author }: PostCardActionProps) => {
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-      <Dialog open={showDeleteDialog} onOpenChange={() => setShowDeleteDialog(true)}>
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete post?</DialogTitle>
@@ -65,7 +71,7 @@ const PostCardAction = ({ id, author }: PostCardActionProps) => {
           <DialogFooter>
             <Button
               variant="destructive"
-              onClick={() => mutation.mutate(id, { onSuccess: () => setShowDeleteDialog(false) })}
+              onClick={() => mutation.mutate(postData._id, { onSuccess: () => setShowDeleteDialog(false) })}
               disabled={mutation.isPending}
             >
               {mutation.isPending && <Loader2 className="animate-spin size-4" />}
@@ -81,6 +87,12 @@ const PostCardAction = ({ id, author }: PostCardActionProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <CreateNewPostModal 
+        isOpen={showEditModal}
+        onOpenChange={setShowEditModal}
+        postData={postData}
+        mode="update"
+      />
     </>
   )
 }

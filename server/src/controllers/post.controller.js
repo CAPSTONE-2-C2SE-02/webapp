@@ -8,7 +8,8 @@ import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
 import { updateTourGuideRankingAndRating } from '../services/ranking.service.js';
 import { moderatePostContent } from "../utils/contentModeration.util.js";
-
+import Bookmark from "../models/bookmark.model.js";
+import Comment from "../models/comment.model.js";
 
 class PostController {
 
@@ -183,7 +184,8 @@ class PostController {
 
             let imageUrls = post.imageUrls;
             if (req.files && req.files.length > 0) {
-                imageUrls = await uploadImages(req.files);
+                const newImageUrls = await uploadImages(req.files);
+                imageUrls = [...imageUrls, ...newImageUrls];
             }
 
             const updatedPost = await Post.findByIdAndUpdate(
@@ -200,6 +202,7 @@ class PostController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: "Post has been updated",
+                result: updatedPost,
             });
 
         } catch (error) {
@@ -225,8 +228,12 @@ class PostController {
 
             const postDeleted = await Post.findOneAndDelete({ _id: id });
 
-            // Xóa tất cả thông báo liên quan đến bài viết
+            // remove all notifications related to this post
             await Notification.deleteMany({ relatedId: id, relatedModel: "Post" });
+            // remove all bookmarks of this post
+            await Bookmark.deleteMany({ itemId: id, itemType: "post" });
+            // remove all comments of this post
+            await Comment.deleteMany({ postId: id });
 
             return res.status(StatusCodes.OK).json({
                 success: true,

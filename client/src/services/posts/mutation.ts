@@ -1,5 +1,5 @@
 import { InfiniteData, QueryFilters, QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createNewPost, deletePost, likePost } from "./post-api";
+import { createNewPost, deletePost, likePost, updatePost } from "./post-api";
 import { Post, PostsNewFeed } from "@/lib/types";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router";
@@ -93,6 +93,22 @@ export function useDeletePostMutation() {
 
   return mutation;
 };
+
+// update post mutation
+export function useUpdatePostMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ postId, formData }: { postId: string; formData: FormData }) => updatePost(postId, formData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error("Failed to update post. Please try again.");
+    }
+  });
+}
 
 // like post mutation
 export function useLikePostMutation() {

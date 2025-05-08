@@ -1,8 +1,8 @@
 import { StatusCodes } from "http-status-codes";
-import Comment from "../models/comment.model.js";
 import Post from "../models/post.model.js";
 import User from "../models/user.model.js";
 import NotificationController from "./notification.controller.js";
+import Comment from "../models/comment.model.js";
 
 class CommentController {
     // [POST] /api/v1/comments

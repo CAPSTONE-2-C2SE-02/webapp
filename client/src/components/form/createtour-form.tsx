@@ -118,7 +118,7 @@ const CreateNewTourForm = () => {
     return (
         <div className="max-w-[1080px] mx-auto my-6 bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center mb-6">
-                <button className="text-gray-500 hover:text-gray-700">
+                <button className="text-gray-500 hover:text-gray-700" onClick={() => navigate(-1)}>
                     <ArrowLeft size={20} />
                 </button>
                 <h1 className="text-2xl font-bold mx-auto">Create New Tour</h1>
