@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import TopUserRanking from "./top-user-ranking";
 import { Link } from "react-router";
 import { useRankingTop } from "@/hooks/useRanking";
@@ -28,17 +28,7 @@ const TourguidesRanking = () => {
     }
   }, [isError]);
 
-  const reorderedTopGuides = useMemo(() => {
-    if (topThreeRank) {
-      return [
-        topThreeRank[1], // 2nd place
-        topThreeRank[0], // 1st place
-        topThreeRank[2], // 3rd place
-      ]
-    } else {
-      return [];
-    }
-  }, [topThreeRank]);
+  const reorderedTopGuides = topThreeRank ? [ topThreeRank[1], topThreeRank[0], topThreeRank[2] ] : [];
   
   return (
     <div className="relative">

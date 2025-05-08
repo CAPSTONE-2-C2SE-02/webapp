@@ -82,29 +82,15 @@ const routes = createBrowserRouter([
         ]
       },
       {
-        path: "/tours/create",
         element: <ProtectedRoute allowedRoles={["TOUR_GUIDE"]} />,
         children: [
-          { index: true, element: <CreateTourPage /> }
-        ]
-      },
-      {
-        path: "/busy-schedule",
-        element: <ProtectedRoute allowedRoles={["TOUR_GUIDE"]} />,
-        children: [
-          { index: true, element: <SetBusySchedulePage /> }
-        ]
-      },
-      {
-        path: "/tour-management",
-        element: <ProtectedRoute allowedRoles={["TOUR_GUIDE"]} />,
-        children: [
-          { index: true, element: <TourManagementPage /> }
+          { path: "/tours/create", element: <CreateTourPage /> },
+          { path: "/busy-schedule", element: <SetBusySchedulePage /> },
+          { path: "/tour-management", element: <TourManagementPage /> }
         ]
       },
       // Ranking Route
       { path: "/ranking", element: <RankingPage /> },
-      // Not found route
       { path: "/not-found", element: <NotFoundPage /> },
       { path: "*", element: <NotFoundPage /> },
     ]

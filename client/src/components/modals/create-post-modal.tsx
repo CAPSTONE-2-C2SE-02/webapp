@@ -15,10 +15,10 @@ import { TagsInput } from "../ui/tags-input";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import TourAttachment from "../tour/tour-attachment";
 import TourAttachmentSelector from "../tour/tour-attachment-selector";
-import { Tour } from "@/lib/types";
+import { Post, TourAttachment as TourPostType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useCreatePostMutation } from "@/services/posts/mutation";
+import { useCreatePostMutation, useUpdatePostMutation } from "@/services/posts/mutation";
 import useAuthInfo from "@/hooks/useAuth";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { EmojiPicker, EmojiPickerContent, EmojiPickerSearch } from "../ui/emoji-picker";
@@ -26,14 +26,19 @@ import { EmojiPicker, EmojiPickerContent, EmojiPickerSearch } from "../ui/emoji-
 interface CreateNewPostModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  postData?: Post;
+  mode?: 'create' | 'update';
 }
 
 const CreateNewPostModal = ({
   isOpen,
   onOpenChange,
+  postData,
+  mode = 'create'
 }: CreateNewPostModalProps) => {
   const auth = useAuthInfo();  
   const createPostMutation = useCreatePostMutation();
+  const updatePostMutation = useUpdatePostMutation();
 
   const [isShowTagInput, setIsShowTagInput] = useState(false);
   const [showTourSelector, setShowTourSelector] = useState(false);
@@ -41,10 +46,31 @@ const CreateNewPostModal = ({
 
   const [tags, setTags] = useState<string[]>([]);
   const [content, setContent] = useState<string>("");
-  const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
+  const [selectedTour, setSelectedTour] = useState<TourPostType | null>(null);
   const [images, setImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // Initialize form with post data if in update mode
+  useEffect(() => {
+    if (mode === 'update' && postData) {
+      setTags(postData.hashtag || []);
+      setContent(postData.content.join('\n'));
+      setExistingImages(postData.imageUrls || []);
+      if (postData.tourAttachment) {
+        setSelectedTour(postData.tourAttachment);
+      }
+      if (contentRef.current) {
+        contentRef.current.innerText = postData.content.join('\n');
+      }
+      // Show tag input if there are existing tags
+      if (postData.hashtag && postData.hashtag.length > 0) {
+        setIsShowTagInput(true);
+      }
+    }
+  }, [mode, postData]);
 
   // reset all form fields when modal is closed
   useEffect(() => {
@@ -55,7 +81,9 @@ const CreateNewPostModal = ({
       setContent("");
       setSelectedTour(null);
       setImages([]);
-      if (contentRef.current) contentRef.current.innerHTML = "";
+      setExistingImages([]);
+      setRemovedImages([]);
+      if (contentRef.current) contentRef.current.innerText = "";
     }
   }, [isOpen]);
 
@@ -75,11 +103,17 @@ const CreateNewPostModal = ({
     }
   };
 
-  const handleRemoveImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveImage = (index: number, isExisting: boolean = false) => {
+    if (isExisting) {
+      const imageToRemove = existingImages[index];
+      setExistingImages(prev => prev.filter((_, i) => i !== index));
+      setRemovedImages(prev => [...prev, imageToRemove]);
+    } else {
+      setImages(prev => prev.filter((_, i) => i !== index));
+    }
   };
 
-  // create new post
+  // create or update post
   const handleSubmit = async () => {
     try {
       const formData = new FormData();
@@ -97,28 +131,51 @@ const CreateNewPostModal = ({
         formData.append('tourAttachment', selectedTour._id);
       }
 
-      // Append images
+      // Append new images
       images.forEach((image) => {
         formData.append('images', image);
       });
 
-      // const response = await createPost(formData).unwrap();
-      createPostMutation.mutate(
-        formData,
-        {
-          onSuccess: () => {
-            onOpenChange(false);
-          },
-          onError: () => {
-            return;
+      // Append existing images that weren't removed
+      existingImages.forEach((imageUrl) => {
+        formData.append('existingImages', imageUrl);
+      });
+
+      // Append removed images
+      removedImages.forEach((imageUrl) => {
+        formData.append('removedImages', imageUrl);
+      });
+
+      if (mode === 'create') {
+        createPostMutation.mutate(
+          formData,
+          {
+            onSuccess: () => {
+              onOpenChange(false);
+            },
+            onError: () => {
+              return;
+            }
           }
-        }
-      )
+        );
+      } else if (mode === 'update' && postData) {
+        updatePostMutation.mutate(
+          { postId: postData._id, formData },
+          {
+            onSuccess: () => {
+              onOpenChange(false);
+            },
+            onError: () => {
+              return;
+            }
+          }
+        );
+      }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error(error);
-      toast.error(error?.data?.error || "Error when creating post");
+      toast.error(error?.data?.error || `Error when ${mode === 'create' ? 'creating' : 'updating'} post`);
     }
   };
 
@@ -134,7 +191,9 @@ const CreateNewPostModal = ({
             )}
           >
             <DialogHeader className="space-y-0">
-              <DialogTitle className="text-lg text-center text-primary">Create new post</DialogTitle>
+              <DialogTitle className="text-lg text-center text-primary">
+                {mode === 'create' ? 'Create new post' : 'Edit post'}
+              </DialogTitle>
               <Description className="text-center text-xs">Let's share your feelings!</Description>
             </DialogHeader>
             {/* Form */}
@@ -177,11 +236,28 @@ const CreateNewPostModal = ({
                       className="w-full"
                     />
                   )}
-                  {images.length > 0 && (
+                  {(images.length > 0 || existingImages.length > 0) && (
                     <Carousel className="w-full">
                       <CarouselContent className="flex">
+                        {existingImages.map((imageUrl, index) => (
+                          <CarouselItem key={`existing-${index}`} className="relative min-w-[200px] h-[200px] basis-auto select-none first:pl-4 pl-2">
+                            <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
+                              <img 
+                                className="w-full h-full object-cover" 
+                                src={imageUrl} 
+                                alt={`Existing ${index + 1}`} 
+                              />
+                            </div>
+                            <button 
+                              className="absolute top-2 right-2 bg-black/30 rounded-full p-1"
+                              onClick={() => handleRemoveImage(index, true)}
+                            >
+                              <X className="h-4 w-4 text-white" />
+                            </button>
+                          </CarouselItem>
+                        ))}
                         {images.map((image, index) => (
-                          <CarouselItem key={index} className="relative min-w-[200px] h-[200px] basis-auto select-none first:pl-4 pl-2">
+                          <CarouselItem key={`new-${index}`} className="relative min-w-[200px] h-[200px] basis-auto select-none first:pl-4 pl-2">
                             <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
                               <img 
                                 className="w-full h-full object-cover" 
@@ -258,9 +334,12 @@ const CreateNewPostModal = ({
                   Cancel
                 </Button>
               </DialogClose>
-              <Button onClick={handleSubmit} disabled={createPostMutation.isPending}>
-                {createPostMutation.isPending && <Loader2 className="size-4 animate-spin" />}
-                Post
+              <Button 
+                onClick={handleSubmit} 
+                disabled={createPostMutation.isPending || updatePostMutation.isPending}
+              >
+                {(createPostMutation.isPending || updatePostMutation.isPending) && <Loader2 className="size-4 animate-spin" />}
+                {mode === 'create' ? 'Post' : 'Update'}
               </Button>
             </DialogFooter>
           </div>

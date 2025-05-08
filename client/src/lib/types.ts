@@ -47,6 +47,7 @@ export type TourAttachment = {
   title: string;
   introduction: string;
   destination: string;
+  departureLocation: string;
   imageUrls: string[];
 }
 
@@ -80,6 +81,8 @@ export type Tour = {
     busyDates: Date[]
   };
   bookmarks: BookmarkUser[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type TourList = {

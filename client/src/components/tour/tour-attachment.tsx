@@ -1,6 +1,7 @@
 import { TourAttachment as TourAttachmentType } from "@/lib/types";
 import { MapPin, X } from "lucide-react";
 import { Link } from "react-router";
+import { getAbsoluteAddress } from "../utils/convert";
 
 interface TourAttachmentProps {
   tour: TourAttachmentType;
@@ -32,7 +33,7 @@ const TourAttachment = ({ tour, onRemove }: TourAttachmentProps) => {
           </h3>
           <div className="flex items-center gap-1 mt-1 text-emerald-600 font-medium">
             <MapPin className="size-3" />
-            <span className="text-sm">{tour?.destination}</span>
+            <span className="text-sm">{getAbsoluteAddress(tour.destination, tour.departureLocation)}</span>
           </div>
           <p className="text-xs line-clamp-2 mt-1">
             {tour?.introduction}

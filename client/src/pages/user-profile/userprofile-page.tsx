@@ -45,7 +45,7 @@ const UserProfilePage = () => {
   const { data: calendarData } = useGetBusyDates(userId);
 
   const statusMap = useMemo(() => {
-    const map = new Map<string, "BOOKED" | "UNAVAILABLE" | "AVAILABLE">();
+    const map = new Map<string, "UNAVAILABLE" | "AVAILABLE">();
     calendarData?.dates.forEach((item) => {
       const formattedDate = format(new Date(item.date), "yyyy-MM-dd");
       map.set(formattedDate, item.status);
@@ -59,34 +59,33 @@ const UserProfilePage = () => {
       {role === "TOUR_GUIDE" && (
         <div className="flex flex-col gap-1 max-w-[320px] sticky top-20 left-0">
           <div className="flex justify-between px-3">
-            <p className="font-medium pt-2 text-primary">Schedule</p>
-            <Button variant="link" className="text-primary pr-1">
-              <Link to="/busy-schedule">
-                Edit
-              </Link>
-            </Button>
+            <p className="font-medium pt-2 text-primary">Busy Dates</p>
+            {userInfo?._id === userId && (
+              <Button variant="link" className="text-primary pr-1">
+                <Link to="/busy-schedule">
+                  Edit
+                </Link>
+              </Button>
+            )}
           </div>
           <Calendar
             mode="single"
             selected={date}
             onSelect={setDate}
             className={"border rounded-t-xl bg-white"}
+            disabled={(date) => {
+              if (date < new Date()) return true;
+              return statusMap.get(format(date, "yyyy-MM-dd")) === "UNAVAILABLE";
+            }}
             modifiers={{
-              booked: (day) =>
-                statusMap.get(format(day, "yyyy-MM-dd")) === "BOOKED",
               busy: (day) =>
                 statusMap.get(format(day, "yyyy-MM-dd")) === "UNAVAILABLE",
             }}
             modifiersClassNames={{
-              booked: "bg-green-100",
               busy: "bg-slate-200",
             }}
           />
           <div className="flex gap-2 p-3 justify-between bg-white -mt-1 rounded-b-xl border-x border-b">
-            <div className="flex items-center">
-              <div className="w-6 h-6 rounded-lg border mr-2 bg-green-100" />
-              <span className="text-sm" >Booked</span>
-            </div>
             <div className="flex items-center">
               <div className="w-6 h-6 rounded-lg border mr-2 bg-slate-200" />
               <span className="text-sm">Busy</span>

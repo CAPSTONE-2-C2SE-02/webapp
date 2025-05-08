@@ -35,6 +35,15 @@ export const deletePost = async (postId: string): Promise<Post> => {
   return response.data.result;
 };
 
+export const updatePost = async (postId: string, formData: FormData): Promise<Post> => {
+  const response = await axiosInstance.put(`/posts/${postId}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    }
+  });
+  return response.data.result;
+}
+
 export const likePost = async (postId: string): Promise<ApiResponse<Pick<UserInfo, | "_id" | "username" | "fullName">[]>> => {
   const response = await axiosInstance.post(API.POST.LIKE, { postId });
   return response.data;

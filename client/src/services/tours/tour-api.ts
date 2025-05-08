@@ -1,7 +1,7 @@
 import { ApiResponse, Tour, TourList } from "@/lib/types";
 import { rootApi } from "../root-api";
 import axiosInstance from "@/config/api";
-import axios from "axios";
+import publicApi from "@/config/public.api";
 
 export const tourApi = rootApi.injectEndpoints({
   endpoints: (builder) => {
@@ -21,12 +21,10 @@ export const tourApi = rootApi.injectEndpoints({
 
 export const { useCreateTourMutation } = tourApi;
 
-const BASE_API_URL = import.meta.env.VITE_API_URL;
-
 // get all tours created by author
-export const fetchAllPostTourGuide = async (): Promise<Tour[]> => {
+export const fetchAllPostTourGuide = async (): Promise<ApiResponse<Tour[]>> => {
   const response = await axiosInstance.get('/tours/my-tours');
-  return response.data.result;
+  return response.data;
 };
 
 // get all tours by usename
@@ -47,7 +45,7 @@ export const fetchAllTours = async ({
   sortBy: string;
   sortOrder: string;
 }): Promise<ApiResponse<TourList>> => {
-  const response = await axios.get(`${BASE_API_URL}/tours`, {
+  const response = await publicApi.get(`/tours`, {
     params: { page: pageParam, limit, sortBy, sortOrder },
   });
   return response.data;
@@ -55,7 +53,7 @@ export const fetchAllTours = async ({
 
 // get all tours are searched by destination
 export const fetchAllSearchTours = async (destination: string): Promise<ApiResponse<Tour[]>> => {
-  const response = await axios.get(`${BASE_API_URL}/tours/search`, {
+  const response = await publicApi.get(`/tours/search`, {
     params: { destination }
   });
   return response.data;
@@ -63,6 +61,12 @@ export const fetchAllSearchTours = async (destination: string): Promise<ApiRespo
 
 // get tour by id
 export const fetchTourById = async (id: string): Promise<Tour> => {
-  const response = await axiosInstance.get(`${BASE_API_URL}/tours/${id}`);
+  const response = await axiosInstance.get(`/tours/${id}`);
   return response.data.result;
+};
+
+// delete tour by id
+export const deleteTourById = async (id: string): Promise<ApiResponse<string>> => {
+  const response = await axiosInstance.delete(`/tours/${id}`);
+  return response.data;
 };

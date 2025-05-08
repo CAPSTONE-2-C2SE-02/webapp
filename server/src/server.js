@@ -20,9 +20,10 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 8080;
 const server = http.createServer(app);
+
 export const io = new Server(server, {
   cors: {
-    origin: process.env.CORS_ORIGINS,
+    origin: [process.env.CORS_ORIGINS, 'http://192.168.4.115', 'http://172.23.112.1'],
     methods: ["GET", "POST"],
   },
 });
@@ -33,7 +34,7 @@ console.log(`Swagger Docs available at: http://localhost:${process.env.PORT}/api
 
 const startServer = () => {
   app.use(cors({
-    origin: process.env.CORS_ORIGINS,
+    origin: [process.env.CORS_ORIGINS, 'http://192.168.4.115', 'http://172.23.112.1'],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
   }));
