@@ -3,32 +3,32 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 /**
- * Chuyển đổi dữ liệu thành chuỗi an toàn
- * @param {any} value - Giá trị cần chuyển đổi 
- * @returns {string} - Chuỗi đã chuyển đổi
+ * Convert data to a safe string
+ * @param {any} value - Value to convert
+ * @returns {string} - Converted string
  */
 const safeToString = (value) => {
   if (value === null || value === undefined) return '';
   
-  // Xử lý các trường hợp đặc biệt
+  // Handle special cases
   if (typeof value === 'object') {
     try {
-      // Thử chuyển đổi object thành JSON string
+      // Try to convert object to JSON string
       return JSON.stringify(value);
     } catch (error) {
-      console.error('Lỗi khi chuyển đổi object thành string:', error);
+      console.error('Error when converting object to string:', error);
       return '';
     }
   }
   
-  // Trường hợp còn lại, chuyển đổi sang string an toàn
+  // For all other cases, convert to string safely
   return String(value);
 };
 
 /**
- * Phân tích ngữ nghĩa văn bản bằng API OpenAI
- * @param {string} text - Văn bản cần phân tích
- * @returns {object} - Kết quả phân tích
+ * Analyze text semantics using OpenAI API
+ * @param {string} text - Text to analyze
+ * @returns {object} - Analysis results
  */
 export const analyzeContentWithOpenAI = async (text) => {
   try {
@@ -37,33 +37,33 @@ export const analyzeContentWithOpenAI = async (text) => {
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: "gpt-3.5-turbo", // Có thể dùng model mạnh hơn nếu cần
+        model: "gpt-3.5-turbo", // Can use a more powerful model if needed
         messages: [
           {
             role: "system",
-            content: `Bạn là hệ thống phân tích nội dung, nhiệm vụ của bạn là kiểm tra xem nội dung có chứa ngôn từ không phù hợp, những từ thiếu văn hóa, ngữ cảnh tiêu cực hay không. 
+            content: `You are a content analysis system. Your task is to check if content contains inappropriate language, culturally insensitive words, or negative context.
             
-            Đặc biệt chú ý:
-            1. Phát hiện ngôn từ thô tục, xúc phạm, thiếu văn hóa (tiếng Việt hoặc tiếng Anh)
-            2. Phát hiện từ ngữ liên quan đến bạo lực, kỳ thị chủng tộc, đe dọa
-            3. Phát hiện nội dung khiêu dâm, tình dục
-            4. Phát hiện nội dung liên quan đến ma túy, cờ bạc, lừa đảo
-            5. Phát hiện từ ngữ được viết cách điệu nhằm lách bộ lọc (thay chữ cái bằng số, thêm dấu, ...)
-            6. Phát hiện các từ nhiều nghĩa nhưng đang được sử dụng với nghĩa tiêu cực
-            7. Ngôn ngữ mỉa mai, châm biếm với ý xấu
+            Pay special attention to:
+            1. Detect profanity, offensive or culturally insensitive language (in English or Vietnamese)
+            2. Detect language related to violence, racial discrimination, or threats
+            3. Detect pornographic or sexual content
+            4. Detect content related to drugs, gambling, or fraud
+            5. Detect stylized writing intended to bypass filters (replacing letters with numbers, adding symbols, etc.)
+            6. Detect ambiguous words being used with negative meanings
+            7. Detect sarcastic or satirical language with negative intent
             
-            Nếu nội dung KHÔNG có vấn đề, hãy trả về JSON:
+            If the content has NO issues, return JSON:
             {"isInappropriate": false}
             
-            Nếu nội dung CÓ vấn đề, hãy trả về JSON:
-            {"isInappropriate": true, "categories": ["danh sách các loại vi phạm"], "examples": ["các từ hoặc cụm từ vi phạm"]}`
+            If the content HAS issues, return JSON:
+            {"isInappropriate": true, "categories": ["list of violation types"], "examples": ["violating words or phrases"]}`
           },
           {
             role: "user",
             content: safeText
           }
         ],
-        temperature: 0.2, // Đặt nhiệt độ thấp để có kết quả nhất quán
+        temperature: 0.2, // Set low temperature for consistent results
         response_format: { type: "json_object" }
       },
       {
@@ -92,22 +92,22 @@ export const analyzeContentWithOpenAI = async (text) => {
     };
     
   } catch (error) {
-    console.error('Lỗi khi sử dụng API OpenAI cho phân tích ngữ nghĩa:', error);
+    console.error('Error using OpenAI API for semantic analysis:', error);
     return {
       isInappropriate: false,
-      error: 'Không thể phân tích ngữ nghĩa'
+      error: 'Unable to perform semantic analysis'
     };
   }
 };
 
 /**
- * Kiểm duyệt nội dung sử dụng API của OpenAI Moderation
- * @param {string} text - Nội dung cần kiểm duyệt
- * @returns {Object} - Kết quả kiểm duyệt
+ * Moderate content using OpenAI Moderation API
+ * @param {string} text - Content to moderate
+ * @returns {Object} - Moderation results
  */
 export const moderateWithOpenAI = async (text) => {
   try {
-    // Đảm bảo text là chuỗi
+    // Ensure text is a string
     const safeText = safeToString(text);
     
     const response = await axios.post(
@@ -123,15 +123,15 @@ export const moderateWithOpenAI = async (text) => {
     
     const result = response.data.results[0];
     
-    // Kiểm tra xem có vi phạm chính sách không
+    // Check if policy violations exist
     if (result.flagged) {
-      // Lấy các danh mục vi phạm 
+      // Get violation categories
       const flaggedCategories = Object.keys(result.categories)
         .filter(category => result.categories[category] === true);
         
       return {
         isInappropriate: true,
-        inappropriateWords: [], // API này không trả về từ cụ thể
+        inappropriateWords: [], // This API doesn't return specific words
         categories: flaggedCategories,
         source: 'openai_moderation'
       };
@@ -144,31 +144,31 @@ export const moderateWithOpenAI = async (text) => {
     };
     
   } catch (error) {
-    console.error('Lỗi khi sử dụng API OpenAI Moderation:', error);
+    console.error('Error using OpenAI Moderation API:', error);
     return {
       isInappropriate: false,
-      error: 'Không thể kiểm duyệt nội dung'
+      error: 'Unable to moderate content'
     };
   }
 };
 
 /**
- * Trích xuất văn bản từ dữ liệu bài đăng
- * @param {Object} postData - Dữ liệu bài đăng
- * @returns {string} - Văn bản đã trích xuất
+ * Extract text from post data
+ * @param {Object} postData - Post data
+ * @returns {string} - Extracted text
  */
 const extractTextFromPostData = (postData) => {
   if (!postData) return '';
   
-  // Tạo một mảng chứa các phần văn bản cần kiểm tra
+  // Create an array to store text parts for checking
   const textParts = [];
   
-  // Xử lý caption
+  // Process caption
   if (postData.caption) {
     textParts.push(safeToString(postData.caption));
   }
   
-  // Xử lý hashtag
+  // Process hashtags
   if (postData.hashtag) {
     if (Array.isArray(postData.hashtag)) {
       textParts.push(postData.hashtag.map(tag => safeToString(tag)).join(' '));
@@ -177,7 +177,7 @@ const extractTextFromPostData = (postData) => {
     }
   }
   
-  // Xử lý content
+  // Process content
   if (postData.content) {
     if (Array.isArray(postData.content)) {
       textParts.push(postData.content.map(item => safeToString(item)).join(' '));
@@ -186,7 +186,7 @@ const extractTextFromPostData = (postData) => {
     }
   }
   
-  // Log dữ liệu để debug
+  // Log data for debugging
   console.log('Post Data:', postData);
   console.log('Extracted Text:', textParts.join(' '));
   
@@ -194,15 +194,15 @@ const extractTextFromPostData = (postData) => {
 };
 
 /**
- * Phân tích nội dung theo ngữ cảnh (context-aware) bằng OpenAI
- * @param {string} text - Văn bản cần phân tích
- * @returns {object} - Kết quả phân tích
+ * Analyze content with context awareness using OpenAI
+ * @param {string} text - Text to analyze
+ * @returns {object} - Analysis results
  */
 export const analyzeContextWithOpenAI = async (text) => {
   try {
     const safeText = safeToString(text);
     
-    // Sử dụng chat completions API với prompt đặc biệt cho phân tích ngữ cảnh
+    // Use chat completions API with special prompt for context analysis
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
@@ -210,21 +210,21 @@ export const analyzeContextWithOpenAI = async (text) => {
         messages: [
           {
             role: "system",
-            content: `Bạn là hệ thống phân tích ngữ cảnh chuyên sâu, nhiệm vụ của bạn là:
+            content: `You are an advanced context analysis system. Your tasks are:
             
-            1. Phát hiện nội dung không phù hợp kể cả khi được viết một cách gián tiếp, ẩn ý
-            2. Hiểu và phân tích ngữ cảnh của từ ngữ, không chỉ đơn thuần dựa vào từ vựng
-            3. Phát hiện các cách viết lách, nhại, biến thể của từ ngữ không phù hợp
-            4. Phân biệt được ngữ cảnh học thuật, giáo dục với ngữ cảnh xúc phạm, thô tục
-            5. Đánh giá mức độ nguy hại của nội dung nếu phát hiện vấn đề
+            1. Detect inappropriate content even when written indirectly or with hidden meanings
+            2. Understand and analyze the context of the language, not just vocabulary
+            3. Detect evasive writing, parodies, or variations of inappropriate words
+            4. Distinguish between academic/educational contexts and offensive/vulgar contexts
+            5. Evaluate the harm level of content if issues are detected
 
-            Phân tích chi tiết và trả về kết quả ở định dạng JSON.
+            Analyze in detail and return results in JSON format.
             
-            Nếu nội dung hoàn toàn phù hợp, trả về:
+            If the content is completely appropriate, return:
             {"isInappropriate": false}
             
-            Nếu nội dung có vấn đề, trả về:
-            {"isInappropriate": true, "explanation": "lý do", "severity": "low|medium|high", "offendingElements": ["phần nội dung có vấn đề"]}`
+            If the content has issues, return:
+            {"isInappropriate": true, "explanation": "reason", "severity": "low|medium|high", "offendingElements": ["problematic content parts"]}`
           },
           {
             role: "user",
@@ -247,7 +247,7 @@ export const analyzeContextWithOpenAI = async (text) => {
     if (result.isInappropriate) {
       return {
         isInappropriate: true,
-        explanation: result.explanation || 'Nội dung không phù hợp dựa trên phân tích ngữ cảnh',
+        explanation: result.explanation || 'Content is inappropriate based on context analysis',
         severity: result.severity || 'medium',
         offendingElements: result.offendingElements || [],
         source: 'context_analysis'
@@ -259,18 +259,18 @@ export const analyzeContextWithOpenAI = async (text) => {
     };
     
   } catch (error) {
-    console.error('Lỗi khi phân tích ngữ cảnh:', error);
+    console.error('Error during context analysis:', error);
     return {
       isInappropriate: false,
-      error: 'Không thể phân tích ngữ cảnh'
+      error: 'Unable to perform context analysis'
     };
   }
 };
 
 /**
- * Hàm kiểm duyệt tổng hợp - chỉ sử dụng AI
- * @param {Object} postData - Dữ liệu bài đăng
- * @returns {Object} - Kết quả kiểm duyệt
+ * Comprehensive moderation function - using AI only
+ * @param {Object} postData - Post data
+ * @returns {Object} - Moderation results
  */
 export const moderatePostContent = async (postData) => {
   if (!postData) {
@@ -282,30 +282,30 @@ export const moderatePostContent = async (postData) => {
   }
 
   try {
-    // Trích xuất và chuẩn hóa văn bản từ postData
+    // Extract and normalize text from postData
     const extractedText = extractTextFromPostData(postData);
     
-    // Bước 1: Kiểm tra với OpenAI Moderation API
+    // Step 1: Check with OpenAI Moderation API
     const moderationResult = await moderateWithOpenAI(extractedText);
     
     if (moderationResult.isInappropriate) {
       return {
         ...moderationResult,
-        message: 'Phát hiện nội dung không phù hợp từ hệ thống kiểm duyệt'
+        message: 'Inappropriate content detected by moderation system'
       };
     }
 
-    // Bước 2: Phân tích ngữ nghĩa (semantic analysis)
+    // Step 2: Semantic analysis
     const semanticResult = await analyzeContentWithOpenAI(extractedText);
     
     if (semanticResult.isInappropriate) {
       return {
         ...semanticResult,
-        message: 'Phát hiện nội dung không phù hợp từ phân tích ngữ nghĩa'
+        message: 'Inappropriate content detected by semantic analysis'
       };
     }
 
-    // Bước 3: Phân tích ngữ cảnh chuyên sâu (chỉ áp dụng cho nội dung dài)
+    // Step 3: In-depth context analysis (only applied to longer content)
     if (extractedText.length > 100) {
       const contextResult = await analyzeContextWithOpenAI(extractedText);
       
@@ -316,12 +316,12 @@ export const moderatePostContent = async (postData) => {
           severity: contextResult.severity,
           offendingElements: contextResult.offendingElements,
           source: 'context_analysis',
-          message: 'Phát hiện nội dung không phù hợp từ phân tích ngữ cảnh'
+          message: 'Inappropriate content detected by context analysis'
         };
       }
     }
 
-    // Không phát hiện vấn đề qua tất cả các bước kiểm tra
+    // No issues detected through all checks
     return {
       isInappropriate: false,
       inappropriateWords: [],
@@ -329,11 +329,11 @@ export const moderatePostContent = async (postData) => {
     };
     
   } catch (error) {
-    console.error('Lỗi trong quá trình kiểm duyệt:', error);
-    // Trả về kết quả mặc định khi có lỗi
+    console.error('Error during moderation process:', error);
+    // Return default result when error occurs
     return {
       isInappropriate: false,
-      error: 'Có lỗi xảy ra trong quá trình kiểm duyệt'
+      error: 'An error occurred during the moderation process'
     };
   }
 };

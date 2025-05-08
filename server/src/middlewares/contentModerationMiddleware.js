@@ -5,25 +5,25 @@ export const contentModerationMiddleware = async (req, res, next) => {
     try {
         const postData = req.body;
         
-        // Thực hiện kiểm duyệt nội dung
+        // Perform content moderation
         const moderationResult = await moderatePostContent(postData);
         
         if (moderationResult.isInappropriate) {
-            // Xử lý phản hồi dựa trên loại kiểm duyệt
-            let responseMessage = 'Bài đăng của bạn chứa nội dung không phù hợp';
+            // Handle response based on moderation type
+            let responseMessage = 'Your post contains inappropriate content';
             let additionalData = {};
             
-            // Tùy chỉnh phản hồi dựa trên nguồn phát hiện
+            // Customize response based on detection source
             switch (moderationResult.source) {
                 case 'openai_moderation':
-                    responseMessage = 'Hệ thống kiểm duyệt phát hiện nội dung vi phạm tiêu chuẩn cộng đồng';
+                    responseMessage = 'The moderation system has detected content that violates community standards';
                     additionalData = {
                         categories: moderationResult.categories || []
                     };
                     break;
                     
                 case 'ai_semantic_analysis':
-                    responseMessage = 'Phân tích ngữ nghĩa phát hiện ngôn từ không phù hợp';
+                    responseMessage = 'Semantic analysis has detected inappropriate language';
                     additionalData = {
                         categories: moderationResult.categories || [],
                         examples: moderationResult.inappropriateWords || []
@@ -31,7 +31,7 @@ export const contentModerationMiddleware = async (req, res, next) => {
                     break;
                     
                 case 'context_analysis':
-                    responseMessage = moderationResult.explanation || 'Phát hiện nội dung không phù hợp dựa trên ngữ cảnh';
+                    responseMessage = moderationResult.explanation || 'Inappropriate content detected based on context';
                     additionalData = {
                         severity: moderationResult.severity || 'medium',
                         offendingElements: moderationResult.offendingElements || []
@@ -39,8 +39,8 @@ export const contentModerationMiddleware = async (req, res, next) => {
                     break;
                     
                 default:
-                    // Trường hợp mặc định
-                    responseMessage = moderationResult.message || 'Bài đăng của bạn chứa nội dung không phù hợp';
+                    // Default case
+                    responseMessage = moderationResult.message || 'Your post contains inappropriate content';
                     additionalData = {
                         inappropriateWords: moderationResult.inappropriateWords || [],
                         categories: moderationResult.categories || []
@@ -56,13 +56,13 @@ export const contentModerationMiddleware = async (req, res, next) => {
             });
         }
         
-        // Nếu nội dung phù hợp, tiếp tục xử lý
+        // If content is appropriate, continue processing
         next();
     } catch (error) {
         console.error("Content moderation error:", error);
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             success: false,
-            message: "Lỗi khi kiểm duyệt nội dung",
+            message: "Error while moderating content",
             error: error.message
         });
     }
