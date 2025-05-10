@@ -31,7 +31,7 @@ export default function UserNav() {
         <button className="flex items-center text-primary gap-2 outline-none border-none focus:outline-none">
           <Avatar className="size-10">
             <AvatarImage src={userInfo?.profilePicture} alt="Avatar" className="object-cover" />
-            <AvatarFallback>{userInfo?.fullName}</AvatarFallback>
+            <AvatarFallback className="bg-teal-100 text-primary">{userInfo?.fullName?.charAt(0)}</AvatarFallback>
           </Avatar>
           <ChevronDown className="size-5" />
         </button>

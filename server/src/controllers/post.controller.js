@@ -493,14 +493,8 @@ class PostController {
                 })
                     .populate("createdBy", "_id username fullName profilePicture")
                     .populate("likes", "_id username fullName")
-                    .populate("tourAttachment", "_id title destination introduction imageUrls");
-            }
-
-            if (posts.length === 0) {
-                return res.status(StatusCodes.NOT_FOUND).json({
-                    success: false,
-                    error: "No posts found matching the search query",
-                });
+                    .populate("tourAttachment", "_id title destination introduction imageUrls")
+                    .populate("bookmarks", "user -itemId");
             }
 
             return res.status(StatusCodes.OK).json({

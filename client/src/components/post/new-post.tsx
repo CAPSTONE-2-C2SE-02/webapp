@@ -4,6 +4,7 @@ import { Image, Paperclip, MapPin, Smile } from "lucide-react";
 import { useState } from "react";
 import useAuthInfo from "@/hooks/useAuth";
 import CreatePostModal from "../modals/create-post-modal";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const NewPost = () => {
   const auth = useAuthInfo();
@@ -18,13 +19,10 @@ const NewPost = () => {
       <div className="py-5 px-6 bg-white border border-border rounded-xl mb-5 w-full" onClick={showCreatePost}>
         <div className="w-full flex items-center gap-4 mb-4">
           <Link to={"/users/username"}>
-            <div className="size-9 rounded-full border border-slate-100 overflow-hidden">
-              <img
-                src={auth?.profilePicture}
-                alt="avatar"
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <Avatar className="size-9 border">
+              <AvatarImage src={auth?.profilePicture} className="object-cover" />
+              <AvatarFallback className="bg-teal-100 text-primary">{auth?.fullName?.charAt(0)}</AvatarFallback>
+            </Avatar>
           </Link>
           <div className="flex-1 px-4 py-1.5 rounded-full bg-slate-200">
             <span className="text-sm font-normal text-zinc-500">

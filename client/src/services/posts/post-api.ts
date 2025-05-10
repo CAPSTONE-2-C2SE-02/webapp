@@ -58,3 +58,10 @@ export const getTopHashtags = async (): Promise<{ count: number; hashtag: string
   const response = await publicApi.get('/posts/hashtags/top');
   return response.data.result;
 };
+
+export const searchPost = async (query: string): Promise<ApiResponse<Post[]>> => {
+  const response = await publicApi.get(`/posts/search`, {
+    params: { q: query }
+  });
+  return response.data;
+};

@@ -58,6 +58,8 @@ postSchema.virtual("bookmarks", {
 postSchema.set('toJSON', { virtuals: true });
 postSchema.set('toObject', { virtuals: true });
 
+postSchema.index({ hashtag: "text", content: "text" });
+
 const Post = mongoose.model("Post", postSchema);
 
 export default Post;
