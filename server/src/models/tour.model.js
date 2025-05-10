@@ -80,6 +80,8 @@ tourSchema.virtual("bookmarks", {
 tourSchema.set('toJSON', { virtuals: true });
 tourSchema.set('toObject', { virtuals: true });
 
+tourSchema.index({ destination: "text", title: "text" });
+
 const Tour = mongoose.model("Tour", tourSchema);
 
 export default Tour;

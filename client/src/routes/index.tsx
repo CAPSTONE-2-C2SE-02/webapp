@@ -17,6 +17,7 @@ import ChatPage from "@/pages/chat-page";
 import ChatLayout from "@/layouts/chat-layout";
 import ChatNoneSelection from "@/components/chat/chat-none-selection";
 import BookmarkPage from "@/pages/bookmark-page";
+import SearchPage from "@/pages/search-page";
 const TourManagementPage = lazy(() => import("@/pages/tour-management-page"));
 const UserProfilePage = lazy(() => import("@/pages/user-profile/userprofile-page"));
 const UserProfileToursPage = lazy(() => import("@/pages/user-profile/userprofile-tours-page"));
@@ -91,6 +92,8 @@ const routes = createBrowserRouter([
       },
       // Ranking Route
       { path: "/ranking", element: <RankingPage /> },
+      // Search Route
+      { path: "/search", element: <SearchPage /> },
       { path: "/not-found", element: <NotFoundPage /> },
       { path: "*", element: <NotFoundPage /> },
     ]

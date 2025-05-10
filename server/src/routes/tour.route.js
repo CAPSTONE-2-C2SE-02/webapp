@@ -331,7 +331,7 @@ router.post("/", authenticated, upload.array("images"), authorize("TOUR_GUIDE"),
 router.get("/", tourController.getAllTours);
 router.get("/my-tours", authenticated, authorize("TOUR_GUIDE"), tourController.getMyTours);
 router.get("/profile/:username", tourController.getAllToursByUsername);
-router.get("/search", tourController.findByDestination);
+router.get("/search", tourController.searchTours);
 router.get("/:id", optionalAuth, tourController.getTourById);
 router.put("/:id", authenticated, upload.array("images"), authorize("TOUR_GUIDE"), validate(tourSchema), checkOwnerTour, tourController.updateTour);
 router.delete("/:id", authenticated, authorize("TOUR_GUIDE"), checkOwnerTour, tourController.deleteTour);

@@ -73,7 +73,7 @@ const ProfileLayout = () => {
                 <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] [16px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
                         <AvatarImage src={user.profilePicture} className="object-cover"/>
-                        <AvatarFallback>{user.fullName?.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="bg-teal-100 text-primary">{user.fullName?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-col justify-items-center">
                         <p className="font-bold text-2xl my-1 justify-center truncate max-w-44 pt-2 text-center" title={user.fullName}>{user.fullName}</p>

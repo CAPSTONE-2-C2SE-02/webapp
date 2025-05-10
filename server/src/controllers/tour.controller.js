@@ -242,12 +242,11 @@ class TourController {
         }
     }
 
-    // [GET] /api/v1/tours/search?destination=
-
-    // db.tours.createIndex({ destination: "text" })
-    async findByDestination(req, res) {
+    // [GET] /api/v1/tours/search?q=
+    // search tour by title or destination
+    async searchTours(req, res) {
         try {
-            const searchQuery = req.query.destination?.trim();
+            const searchQuery = req.query.q?.trim();
             if (!searchQuery) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
@@ -259,20 +258,26 @@ class TourController {
 
             let tours = [];
 
+            // first try text search using MongoDB's text index
             tours = await Tour.find(
                 { $text: { $search: searchQuery } },
                 { score: { $meta: "textScore" } }
             )
                 .sort({ score: { $meta: "textScore" } })
-                .populate("author", "_id username fullName profilePicture ranking rating");
+                .populate("author", "_id username fullName profilePicture ranking rating")
+                .populate("bookmarks", "user -itemId");
 
+            // if no results from text search, try regex search on both title and destination
             if (tours.length === 0) {
                 tours = await Tour.find({
                     $or: [
                         { destination: { $regex: formattedQuery, $options: "i" } },
+                        { title: { $regex: formattedQuery, $options: "i" } }
                     ],
                 })
-                    .populate("author", "_id username fullName profilePicture ranking rating");
+                    .populate("author", "_id username fullName profilePicture ranking rating")
+                    .populate("bookmarks", "user -itemId")
+                    .sort({ createdAt: -1 });
             }
 
             return res.status(StatusCodes.OK).json({

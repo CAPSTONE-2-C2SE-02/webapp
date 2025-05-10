@@ -4,6 +4,7 @@ import { Post, PostsNewFeed } from "@/lib/types";
 import { toast } from "sonner";
 import { useLocation, useNavigate } from "react-router";
 import useAuthInfo from "@/hooks/useAuth";
+import { AxiosError } from "axios";
 
 // create post mutation
 export function useCreatePostMutation() {
@@ -42,7 +43,16 @@ export function useCreatePostMutation() {
     },
     onError: (error) => {
       console.error(error);
-      toast.error("Failed to create post. Please try again.");
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 400) {
+          toast.error(error.response?.data.error, {
+            description: error.response?.data?.message,
+            duration: 3000,
+          });
+        } else {
+          toast.error("Failed to create post. Please try again.");
+        }
+      }
     }
   });
 
@@ -100,12 +110,41 @@ export function useUpdatePostMutation() {
 
   return useMutation({
     mutationFn: ({ postId, formData }: { postId: string; formData: FormData }) => updatePost(postId, formData),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    onSuccess: async (updatedPost) => {
+      const queryFilter = { queryKey: ["posts-feed"] } satisfies QueryFilters;
+
+      await queryClient.cancelQueries(queryFilter);
+      
+      queryClient.setQueriesData<InfiniteData<PostsNewFeed, string | null>>(
+        queryFilter,
+        (oldData) => {
+          if (!oldData) return;
+
+          // replace the old post with the updated post
+          return {
+            pageParams: oldData.pageParams,
+            pages: oldData.pages.map((page) => ({
+              ...page,
+              data: page.data.map((post) =>
+                post._id === updatedPost._id ? updatedPost : post
+              ),
+            })),
+          };
+        }
+      );
     },
     onError: (error) => {
       console.error(error);
-      toast.error("Failed to update post. Please try again.");
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 400) {
+          toast.error(error.response?.data.error, {
+            description: error.response?.data?.message,
+            duration: 3000,
+          });
+        } else {
+          toast.error("Failed to update post. Please try again.");
+        }
+      }
     }
   });
 }

@@ -25,13 +25,13 @@ class PostController {
             }
             const request = req.body;
 
-            // Kiểm duyệt nội dung trước khi tạo bài đăng
+            // check if the post content is appropriate
             const moderationResult = moderatePostContent(request);
             
             if (moderationResult.isInappropriate) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
-                    message: `Bài đăng của bạn chứa từ ngữ không phù hợp trong phần ${moderationResult.source}`,
+                    message: `Your post contains inappropriate words in the ${moderationResult.source} section`,
                     inappropriateWords: moderationResult.inappropriateWords,
                     error: "Inappropriate content detected"
                 });
@@ -47,7 +47,7 @@ class PostController {
 
             const createdPost = await Post.create(newPost);
 
-            // Cập nhật điểm ranking
+            // Update ranking points
             const todayStart = dayjs().startOf('day').toDate();
             const todayEnd = dayjs().endOf('day').toDate();
 
@@ -77,7 +77,7 @@ class PostController {
                 ranking.totalScore = attendanceScore + completionScore + postScore + reviewScore;
                 await ranking.save();
             }
-            // Cập nhật điểm ranking cho tour guide
+            // Update ranking points for tour guide
             await updateTourGuideRankingAndRating(user._id);
 
             const post = await Post.findById(createdPost._id)
@@ -180,7 +180,19 @@ class PostController {
                 });
             }
 
-            const requestData = req.body;
+            const requestUpdateData = req.body;
+
+            // check if the post content is appropriate
+            const moderationResult = moderatePostContent(requestUpdateData);
+            
+            if (moderationResult.isInappropriate) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    message: `Your post contains inappropriate words in the ${moderationResult.source} section`,
+                    inappropriateWords: moderationResult.inappropriateWords,
+                    error: "Inappropriate content detected"
+                });
+            }
 
             let imageUrls = post.imageUrls;
             if (req.files && req.files.length > 0) {
@@ -188,16 +200,25 @@ class PostController {
                 imageUrls = [...imageUrls, ...newImageUrls];
             }
 
+            // handle tour attachment explicitly
+            const updateData = {
+                ...requestUpdateData,
+                imageUrls: imageUrls,
+            };
+
+            // if tourAttachment is an empty string, set it to null
+            if (requestUpdateData.tourAttachment === '') {
+                updateData.tourAttachment = null;
+            }
+
             const updatedPost = await Post.findByIdAndUpdate(
                 id,
-                {
-                    $set: {
-                        ...requestData,
-                        imageUrls: imageUrls,
-                    },
-                },
+                { $set: updateData },
                 { new: true }
-            );
+            ).populate("createdBy", "_id username fullName profilePicture")
+             .populate("likes", "_id username fullName")
+             .populate("tourAttachment", "_id title destination introduction imageUrls")
+             .populate("bookmarks", "user -itemId");
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -472,14 +493,8 @@ class PostController {
                 })
                     .populate("createdBy", "_id username fullName profilePicture")
                     .populate("likes", "_id username fullName")
-                    .populate("tourAttachment", "_id title destination introduction imageUrls");
-            }
-
-            if (posts.length === 0) {
-                return res.status(StatusCodes.NOT_FOUND).json({
-                    success: false,
-                    error: "No posts found matching the search query",
-                });
+                    .populate("tourAttachment", "_id title destination introduction imageUrls")
+                    .populate("bookmarks", "user -itemId");
             }
 
             return res.status(StatusCodes.OK).json({

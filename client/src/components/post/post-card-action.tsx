@@ -5,8 +5,8 @@ import { useAppSelector } from "@/hooks/redux";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useState } from "react";
 import { useDeletePostMutation } from "@/services/posts/mutation";
-import CreateNewPostModal from "../modals/create-post-modal";
 import { Post } from "@/lib/types";
+import CreatePostModal from "../modals/create-post-modal";
 
 interface PostCardActionProps {
   postData: Post;
@@ -87,7 +87,7 @@ const PostCardAction = ({ postData }: PostCardActionProps) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <CreateNewPostModal 
+      <CreatePostModal 
         isOpen={showEditModal}
         onOpenChange={setShowEditModal}
         postData={postData}

@@ -51,10 +51,10 @@ export const fetchAllTours = async ({
   return response.data;
 };
 
-// get all tours are searched by destination
-export const fetchAllSearchTours = async (destination: string): Promise<ApiResponse<Tour[]>> => {
+// get all tours are searched by destination or title
+export const searchTours = async (query: string): Promise<ApiResponse<Tour[]>> => {
   const response = await publicApi.get(`/tours/search`, {
-    params: { destination }
+    params: { q: query }
   });
   return response.data;
 };

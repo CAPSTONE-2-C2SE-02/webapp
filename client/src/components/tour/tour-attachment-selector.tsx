@@ -20,6 +20,7 @@ const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSele
     queryKey: ["tours", "tours-author"],
     queryFn: fetchAllPostTourGuide,
   });
+
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // debounced search
@@ -27,7 +28,7 @@ const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSele
 
   const filteredTours = useMemo(() => {
     if (!tours || !isShow) return [];
-    return tours.filter(
+    return tours?.result?.filter(
       (tour) =>
         tour.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
         tour?.destination.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
@@ -78,7 +79,7 @@ const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSele
             <span>{error.message}</span>
           </div>
         )}
-        {filteredTours.map((tour) => (
+        {filteredTours?.map((tour) => (
           <div key={tour._id} className="border-b py-3 px-3 cursor-pointer" onClick={() => handleSelectTour(tour)}>
             <h3 className="font-semibold text-primary">{tour.title}</h3>
             <div className="flex items-center text-gray-500 text-sm mt-1">
