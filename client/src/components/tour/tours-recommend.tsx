@@ -9,7 +9,7 @@ const ToursRecommend = () => {
   const { data: recommendations, isLoading } = useGetRecommendations(userId || "", 3);
   return (
     <div>
-      <h4 className="text-base text-primary font-semibold mb-2">TourRecommend</h4>
+      <h4 className="text-base text-primary font-semibold mb-2">Recommended Tour</h4>
       <div className="flex flex-col w-full gap-2">
         {isLoading ? (
           <>

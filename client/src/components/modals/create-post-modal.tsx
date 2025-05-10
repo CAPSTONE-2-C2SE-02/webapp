@@ -20,170 +20,289 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCreatePostMutation, useUpdatePostMutation } from "@/services/posts/mutation";
 import useAuthInfo from "@/hooks/useAuth";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Popover, PopoverContent } from "../ui/popover";
 import { EmojiPicker, EmojiPickerContent, EmojiPickerSearch } from "../ui/emoji-picker";
 
-interface CreateNewPostModalProps {
+// Types
+interface PostFormData {
+  content: string;
+  tags: string[];
+  selectedTour: TourPostType | null;
+  images: File[];
+  existingImages: string[];
+  removedImages: string[];
+}
+
+interface CreatePostModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   postData?: Post;
   mode?: 'create' | 'update';
 }
 
-const CreateNewPostModal = ({
+// Image Carousel Component
+const ImageCarousel = ({ 
+  existingImages, 
+  images, 
+  onRemoveImage 
+}: { 
+  existingImages: string[]; 
+  images: File[]; 
+  onRemoveImage: (index: number, isExisting: boolean) => void;
+}) => {
+  if (images.length === 0 && existingImages.length === 0) return null;
+
+  return (
+    <Carousel className="w-full">
+      <CarouselContent className="flex">
+        {existingImages.map((imageUrl, index) => (
+          <CarouselItem key={`existing-${index}`} className="relative min-w-[200px] h-[200px] basis-auto select-none first:pl-4 pl-2">
+            <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
+              <img 
+                className="w-full h-full object-cover" 
+                src={imageUrl} 
+                alt={`Existing ${index + 1}`} 
+              />
+            </div>
+            <button 
+              className="absolute top-2 right-2 bg-black/30 rounded-full p-1"
+              onClick={() => onRemoveImage(index, true)}
+            >
+              <X className="h-4 w-4 text-white" />
+            </button>
+          </CarouselItem>
+        ))}
+        {images.map((image, index) => (
+          <CarouselItem key={`new-${index}`} className="relative min-w-[200px] h-[200px] basis-auto select-none first:pl-4 pl-2">
+            <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
+              <img 
+                className="w-full h-full object-cover" 
+                src={URL.createObjectURL(image)} 
+                alt={`Upload ${index + 1}`} 
+              />
+            </div>
+            <button 
+              className="absolute top-2 right-2 bg-black/30 rounded-full p-1"
+              onClick={() => onRemoveImage(index, false)}
+            >
+              <X className="h-4 w-4 text-white" />
+            </button>
+          </CarouselItem>
+        ))}
+      </CarouselContent>
+    </Carousel>
+  );
+};
+
+// Action Buttons Component
+const ActionButtons = ({
+  onImageUpload,
+  onToggleTagInput,
+  onToggleTourSelector,
+  onToggleEmoji,
+  isTourGuide,
+}: {
+  onImageUpload: () => void;
+  onToggleTagInput: () => void;
+  onToggleTourSelector: () => void;
+  onToggleEmoji: () => void;
+  isTourGuide: boolean;
+}) => {
+  return (
+    <div className="inline-flex items-center gap-0 text-primary">
+      <Button size={"icon"} variant={"ghost"} onClick={onImageUpload}>
+        <Image className="size-5" />
+      </Button>
+      <Button size={"icon"} variant={"ghost"} onClick={onToggleTagInput}>
+        <Hash className="size-5" />
+      </Button>
+      {isTourGuide && (
+        <Button size={"icon"} variant={"ghost"} onClick={onToggleTourSelector}>
+          <MapPin className="size-5" />
+        </Button>
+      )}
+      <Button size={"icon"} variant={"ghost"} onClick={onToggleEmoji}>
+        <Smile className="size-5" />
+      </Button>
+    </div>
+  );
+};
+
+const CreatePostModal = ({
   isOpen,
   onOpenChange,
   postData,
   mode = 'create'
-}: CreateNewPostModalProps) => {
+}: CreatePostModalProps) => {
   const auth = useAuthInfo();  
   const createPostMutation = useCreatePostMutation();
   const updatePostMutation = useUpdatePostMutation();
+  
+  const [formData, setFormData] = useState<PostFormData>({
+    content: "",
+    tags: [],
+    selectedTour: null,
+    images: [],
+    existingImages: [],
+    removedImages: []
+  });
 
   const [isShowTagInput, setIsShowTagInput] = useState(false);
   const [showTourSelector, setShowTourSelector] = useState(false);
   const [isOpenEmoji, setIsOpenEmoji] = useState(false);
 
-  const [tags, setTags] = useState<string[]>([]);
-  const [content, setContent] = useState<string>("");
-  const [selectedTour, setSelectedTour] = useState<TourPostType | null>(null);
-  const [images, setImages] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<string[]>([]);
-  const [removedImages, setRemovedImages] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Initialize form with post data if in update mode
   useEffect(() => {
-    if (mode === 'update' && postData) {
-      setTags(postData.hashtag || []);
-      setContent(postData.content.join('\n'));
-      setExistingImages(postData.imageUrls || []);
-      if (postData.tourAttachment) {
-        setSelectedTour(postData.tourAttachment);
-      }
-      if (contentRef.current) {
-        contentRef.current.innerText = postData.content.join('\n');
-      }
-      // Show tag input if there are existing tags
+    if (mode === 'update' && postData && isOpen) {
+      const initialFormData = {
+        content: postData.content.join('\n'),
+        tags: postData.hashtag || [],
+        selectedTour: postData.tourAttachment || null,
+        images: [],
+        existingImages: postData.imageUrls || [],
+        removedImages: []
+      };
+      
+      setFormData(initialFormData);
+      
+      const timerId = setTimeout(() => {
+        if (contentRef.current) {
+          contentRef.current.innerText = initialFormData.content;
+        }
+      }, 0);
+      
       if (postData.hashtag && postData.hashtag.length > 0) {
         setIsShowTagInput(true);
       }
-    }
-  }, [mode, postData]);
 
-  // reset all form fields when modal is closed
+      return () => clearTimeout(timerId);
+    }
+  }, [isOpen, mode, postData]);
+
+  // Reset form when modal is closed
   useEffect(() => {
     if (!isOpen) {
+      const emptyFormData = {
+        content: "",
+        tags: [],
+        selectedTour: null,
+        images: [],
+        existingImages: [],
+        removedImages: []
+      };
+      setFormData(emptyFormData);
       setIsShowTagInput(false);
       setShowTourSelector(false);
-      setTags([]);
-      setContent("");
-      setSelectedTour(null);
-      setImages([]);
-      setExistingImages([]);
-      setRemovedImages([]);
       if (contentRef.current) contentRef.current.innerText = "";
     }
   }, [isOpen]);
 
-  // set content from div textbox
   const handleInput = () => {
     if (contentRef.current) {
       const text = contentRef.current.innerText.trim();
-      setContent(text);
+      setFormData(prev => ({ ...prev, content: text }));
     }
-  }
+  };
 
-  // handle tasks related to images 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      setImages(prev => [...prev, ...files]);
+      setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
+    }
+    if (e.target) {
+      e.target.value = "";
     }
   };
 
-  const handleRemoveImage = (index: number, isExisting: boolean = false) => {
+  const handleRemoveImage = (index: number, isExisting: boolean) => {
     if (isExisting) {
-      const imageToRemove = existingImages[index];
-      setExistingImages(prev => prev.filter((_, i) => i !== index));
-      setRemovedImages(prev => [...prev, imageToRemove]);
+      const imageToRemove = formData.existingImages[index];
+      setFormData(prev => ({
+        ...prev,
+        existingImages: prev.existingImages.filter((_, i) => i !== index),
+        removedImages: [...prev.removedImages, imageToRemove]
+      }));
     } else {
-      setImages(prev => prev.filter((_, i) => i !== index));
+      setFormData(prev => ({
+        ...prev,
+        images: prev.images.filter((_, i) => i !== index)
+      }));
     }
   };
 
-  // create or update post
   const handleSubmit = async () => {
     try {
-      const formData = new FormData();
+      const formDataToSubmit = new FormData();
   
-      // Append text data
-      if (content) {
-        content.split('\n').forEach((line) => {
-          formData.append('content', line);
+      if (formData.content) {
+        const contentLines = formData.content.split('\n').filter(line => line.trim());
+        contentLines.forEach((line) => {
+          formDataToSubmit.append('content', line);
         });
       }
-      tags.forEach((tag) => {
-        formData.append('hashtag', tag);
+      
+      formData.tags.forEach((tag) => {
+        formDataToSubmit.append('hashtag', tag);
       });
-      if (selectedTour) {
-        formData.append('tourAttachment', selectedTour._id);
+      
+      // handle tour attachment for both create and update modes
+      if (mode === 'update') {
+        // for update mode, always send tourAttachment field
+        formDataToSubmit.append('tourAttachment', formData.selectedTour?._id || '');
+      } else if (formData.selectedTour?._id) {
+        // for create mode, only send if there's a selected tour
+        formDataToSubmit.append('tourAttachment', formData.selectedTour._id);
       }
 
-      // Append new images
-      images.forEach((image) => {
-        formData.append('images', image);
+      formData.images.forEach((image) => {
+        formDataToSubmit.append('images', image);
       });
 
-      // Append existing images that weren't removed
-      existingImages.forEach((imageUrl) => {
-        formData.append('existingImages', imageUrl);
-      });
-
-      // Append removed images
-      removedImages.forEach((imageUrl) => {
-        formData.append('removedImages', imageUrl);
-      });
+      if (mode === "update") {
+        formData.existingImages.forEach((imageUrl) => {
+          formDataToSubmit.append('existingImages', imageUrl);
+        });
+        
+        formData.removedImages.forEach((imageUrl) => {
+          formDataToSubmit.append('removedImages', imageUrl);
+        });
+      }
 
       if (mode === 'create') {
         createPostMutation.mutate(
-          formData,
+          formDataToSubmit,
           {
-            onSuccess: () => {
-              onOpenChange(false);
-            },
-            onError: () => {
-              return;
-            }
+            onSuccess: () => onOpenChange(false),
           }
         );
       } else if (mode === 'update' && postData) {
         updatePostMutation.mutate(
-          { postId: postData._id, formData },
+          { postId: postData._id, formData: formDataToSubmit },
           {
             onSuccess: () => {
               onOpenChange(false);
+              toast.success('Post updated successfully');
             },
-            onError: () => {
-              return;
-            }
           }
         );
       }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      console.error(error);
-      toast.error(error?.data?.error || `Error when ${mode === 'create' ? 'creating' : 'updating'} post`);
+    } catch (error: unknown) {
+      console.error('Submit error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(errorMessage || `Error when ${mode === 'create' ? 'creating' : 'updating'} post`);
     }
   };
+
+  const isSubmitting = createPostMutation.isPending || updatePostMutation.isPending;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md md:max-w-2xl p-0 max-h-[calc(100vh-48px)] h-auto overflow-hidden">
         <div className="relative w-full h-full flex overflow-hidden">
-          {/* create post view */}
+          {/* Create post view */}
           <div 
             className={cn(
               "w-full flex-shrink-0 flex flex-col gap-4 transition-transform duration-300 ease-in-out p-5",
@@ -196,9 +315,10 @@ const CreateNewPostModal = ({
               </DialogTitle>
               <Description className="text-center text-xs">Let's share your feelings!</Description>
             </DialogHeader>
+
             {/* Form */}
             <div className="flex items-start gap-3">
-              <div className="size-9 rounded-full overflow-hidden flex-shrink">
+              <div className="size-9 rounded-full overflow-hidden flex-shrink-0">
                 <img
                   src={auth?.profilePicture || "https://ui-avatars.com/api/?size=128&background=random"}
                   alt="avatar"
@@ -212,7 +332,7 @@ const CreateNewPostModal = ({
                 </div>
                 <div className="space-y-3 overflow-x-auto overflow-y-auto max-h-[calc(100vh-400px)]">
                   <div className="relative">
-                    {content.length == 0 && (
+                    {formData.content.length === 0 && (
                       <span className="absolute top-0 left-0 text-gray-400 pointer-events-none text-sm">
                         What's on your mind?
                       </span>
@@ -228,56 +348,22 @@ const CreateNewPostModal = ({
                       className="w-full select-text break-words rounded focus:outline-none min-h-[1rem] text-sm whitespace-pre-wrap"
                     />
                   </div>
+
                   {isShowTagInput && (
                     <TagsInput
-                      value={tags}
-                      onValueChange={setTags}
+                      value={formData.tags}
+                      onValueChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
                       placeholder="Enter hashtag"
                       className="w-full"
                     />
                   )}
-                  {(images.length > 0 || existingImages.length > 0) && (
-                    <Carousel className="w-full">
-                      <CarouselContent className="flex">
-                        {existingImages.map((imageUrl, index) => (
-                          <CarouselItem key={`existing-${index}`} className="relative min-w-[200px] h-[200px] basis-auto select-none first:pl-4 pl-2">
-                            <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
-                              <img 
-                                className="w-full h-full object-cover" 
-                                src={imageUrl} 
-                                alt={`Existing ${index + 1}`} 
-                              />
-                            </div>
-                            <button 
-                              className="absolute top-2 right-2 bg-black/30 rounded-full p-1"
-                              onClick={() => handleRemoveImage(index, true)}
-                            >
-                              <X className="h-4 w-4 text-white" />
-                            </button>
-                          </CarouselItem>
-                        ))}
-                        {images.map((image, index) => (
-                          <CarouselItem key={`new-${index}`} className="relative min-w-[200px] h-[200px] basis-auto select-none first:pl-4 pl-2">
-                            <div className="overflow-hidden w-full h-full rounded-lg border border-zinc-300">
-                              <img 
-                                className="w-full h-full object-cover" 
-                                src={URL.createObjectURL(image)} 
-                                alt={`Upload ${index + 1}`} 
-                              />
-                            </div>
-                            <button 
-                              className="absolute top-2 right-2 bg-black/30 rounded-full p-1"
-                              onClick={() => handleRemoveImage(index)}
-                            >
-                              <X className="h-4 w-4 text-white" />
-                            </button>
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                    </Carousel>
-                  )}
 
-                  {/* Hidden file input */}
+                  <ImageCarousel
+                    existingImages={formData.existingImages}
+                    images={formData.images}
+                    onRemoveImage={handleRemoveImage}
+                  />
+
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -286,47 +372,43 @@ const CreateNewPostModal = ({
                     accept="image/*"
                     onChange={handleImageUpload}
                   />
-                  {selectedTour && (
-                    <TourAttachment tour={selectedTour} onRemove={() => setSelectedTour(null)} />
+
+                  {formData.selectedTour && (
+                    <TourAttachment 
+                      tour={formData.selectedTour} 
+                      onRemove={() => setFormData(prev => ({ ...prev, selectedTour: null }))} 
+                    />
                   )}
                 </div>
-                <div className="inline-flex items-center gap-0 text-primary">
-                  <Button size={"icon"} variant={"ghost"} onClick={() => fileInputRef.current?.click()}>
-                    <Image className="size-5" />
-                  </Button>
-                  <Button size={"icon"} variant={"ghost"} onClick={() => setIsShowTagInput(prev => !prev)}>
-                    <Hash className="size-5" />
-                  </Button>
-                  {auth?.role === "TOUR_GUIDE" && (
-                    <Button size={"icon"} variant={"ghost"} onClick={() => setShowTourSelector(true)}>
-                      <MapPin className="size-5" />
-                    </Button>
-                  )}
-                  <Popover open={isOpenEmoji} onOpenChange={setIsOpenEmoji}>
-                    <PopoverTrigger asChild>
-                      <Button size={"icon"} variant={"ghost"}>
-                        <Smile className="size-5" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0 w-auto" asChild>
-                      <EmojiPicker
-                        className="h-[326px] rounded-lg border shadow-md"
-                        onEmojiSelect={({ emoji }) => {
-                          if (contentRef.current) {
-                            contentRef.current.innerText += emoji;
-                          }
-                          handleInput();
-                          setIsOpenEmoji(false);
-                        }}                
-                      >
-                        <EmojiPickerSearch />
-                        <EmojiPickerContent />
-                      </EmojiPicker>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+
+                <ActionButtons
+                  onImageUpload={() => fileInputRef.current?.click()}
+                  onToggleTagInput={() => setIsShowTagInput(prev => !prev)}
+                  onToggleTourSelector={() => setShowTourSelector(true)}
+                  onToggleEmoji={() => setIsOpenEmoji(prev => !prev)}
+                  isTourGuide={auth?.role === "TOUR_GUIDE"}
+                />
+
+                <Popover open={isOpenEmoji} onOpenChange={setIsOpenEmoji}>
+                  <PopoverContent className="p-0 w-auto" asChild>
+                    <EmojiPicker
+                      className="h-[326px] rounded-lg border shadow-md"
+                      onEmojiSelect={({ emoji }) => {
+                        if (contentRef.current) {
+                          contentRef.current.innerText += emoji;
+                        }
+                        handleInput();
+                        setIsOpenEmoji(false);
+                      }}                
+                    >
+                      <EmojiPickerSearch />
+                      <EmojiPickerContent />
+                    </EmojiPicker>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
+
             {/* Action */}
             <DialogFooter className="w-full flex items-center sm:justify-between">
               <DialogClose asChild>
@@ -336,15 +418,15 @@ const CreateNewPostModal = ({
               </DialogClose>
               <Button 
                 onClick={handleSubmit} 
-                disabled={createPostMutation.isPending || updatePostMutation.isPending}
+                disabled={isSubmitting}
               >
-                {(createPostMutation.isPending || updatePostMutation.isPending) && <Loader2 className="size-4 animate-spin" />}
+                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
                 {mode === 'create' ? 'Post' : 'Update'}
               </Button>
             </DialogFooter>
           </div>
 
-          {/* tour selector */}
+          {/* Tour selector */}
           <div
             className={cn(
               "w-full p-5 flex-shrink-0 flex flex-col transition-transform duration-300 ease-in-out",
@@ -354,7 +436,7 @@ const CreateNewPostModal = ({
             <TourAttachmentSelector
               isShow={showTourSelector}
               onBack={() => setShowTourSelector(false)}
-              onSelect={(tour) => setSelectedTour(tour)}
+              onSelect={(tour) => setFormData(prev => ({ ...prev, selectedTour: tour }))}
             />
           </div>
         </div>
@@ -363,4 +445,4 @@ const CreateNewPostModal = ({
   );
 };
 
-export default CreateNewPostModal;
+export default CreatePostModal;

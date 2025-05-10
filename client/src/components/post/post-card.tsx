@@ -67,7 +67,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
               <img
                 src={postData.createdBy.profilePicture}
                 alt=""
-                className="w-full h-full"
+                className="w-full h-full object-cover"
               />
             </div>
             <div className="text-primary">

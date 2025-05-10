@@ -21,7 +21,7 @@ createRoot(document.getElementById('root')!).render(
             <SocketProvider>
               <AppRoutes />
             </SocketProvider>
-            <Toaster position="top-right" duration={2000} />
+            <Toaster position="bottom-right" duration={2000} />
           </PersistGate>
         </Provider>
       </QueryClientProvider>
