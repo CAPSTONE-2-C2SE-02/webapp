@@ -1,9 +1,13 @@
 import cron from "node-cron";
 import Booking from "../models/booking.model.js";
 import Tour from "../models/tour.model.js";
+import Ranking from "../models/ranking.model.js";
 import User from "../models/user.model.js";
+import notificationController from "../controllers/notification.controller.js";
 import { releaseBookedDates } from "../services/calendar.service.js";
 import { updateTourGuideRankingAndRating } from "../services/ranking.service.js";
+
+const roleTourGuide = "67de2632ddfe8bd37f87a471"; // ID của role Tour Guide
 
 // --- Cron job: Check expired bookings ---
 const checkExpiredBookings = async () => {
@@ -57,8 +61,7 @@ const checkExpiredBookings = async () => {
 const updateTourGuideRanking = async () => {
     try {
         console.log("🔄 Auto updating tour guide ranking & rating...");
-        // Lấy tất cả user là tour guide (thay role id cho đúng hệ thống của bạn)
-        const tourGuides = await User.find({ role: "67de2632ddfe8bd37f87a471" });
+        const tourGuides = await User.find({ role: roleTourGuide });
         for (const guide of tourGuides) {
             await updateTourGuideRankingAndRating(guide._id);
         }
@@ -68,9 +71,84 @@ const updateTourGuideRanking = async () => {
     }
 };
 
+// --- Cron job: Auto complete & not completed bookings ---
+const autoUpdateBookingStatus = async () => {
+    try {
+        const now = new Date();
+
+        // 1. Tự động hoàn thành nếu WAITING_CONFIRM quá 7 ngày
+        const waitingBookings = await Booking.find({
+            status: "WAITING_CONFIRM",
+            updatedAt: { $lte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) }
+        });
+
+        for (const booking of waitingBookings) {
+            booking.status = "COMPLETED";
+            await booking.save();
+
+            // Gửi notification cho tour guide
+            await notificationController.sendNotification({
+                body: {
+                    type: "BOOKING",
+                    senderId: null,
+                    receiverId: booking.tourGuideId,
+                    relatedId: booking._id,
+                    relatedModel: "Booking",
+                    message: "The booking has been automatically marked as COMPLETED after 7 days.",
+                },
+            }, {
+                status: () => ({
+                    json: () => { },
+                }),
+            });
+        }
+
+        // 2. Tự động set NOT_COMPLETED nếu PAID quá 3 ngày sau endDate
+        const notCompletedBookings = await Booking.find({
+            status: "PAID",
+            endDate: { $lte: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000) }
+        });
+
+        for (const booking of notCompletedBookings) {
+            booking.status = "NOT_COMPLETED";
+            await booking.save();
+
+            // Trừ 5 điểm trực tiếp vào totalScore
+            const ranking = await Ranking.findOneAndUpdate(
+                { tourGuideId: booking.tourGuideId },
+                { $inc: { totalScore: -5 } },
+                { upsert: true, new: true }
+            );
+            await ranking.save();
+            await updateTourGuideRankingAndRating(booking.tourGuideId);
+
+            // Gửi notification cho tour guide
+            await notificationController.sendNotification({
+                body: {
+                    type: "BOOKING",
+                    senderId: null,
+                    receiverId: booking.tourGuideId,
+                    relatedId: booking._id,
+                    relatedModel: "Booking",
+                    message: "Your booking has been marked as NOT_COMPLETED because you did not confirm completion within 3 days after the tour ended. 5 points have been deducted from your ranking.",
+                },
+            }, {
+                status: () => ({
+                    json: () => { },
+                }),
+            });
+        }
+
+        console.log(`✅ Auto updated ${waitingBookings.length} completed and ${notCompletedBookings.length} not completed bookings.`);
+    } catch (error) {
+        console.error("❌ Error in autoUpdateBookingStatus:", error);
+    }
+};
+
 // Đặt lịch cho từng job
 cron.schedule("*/1 * * * *", checkExpiredBookings); // mỗi phút kiểm tra booking hết hạn
 cron.schedule("0 * * * *", updateTourGuideRanking); // mỗi giờ cập nhật ranking
+cron.schedule("*/1 * * * *", autoUpdateBookingStatus); // mỗi phút tự động hoàn thành và không hoàn thành booking
 
-export { checkExpiredBookings, updateTourGuideRanking };
+export { checkExpiredBookings, updateTourGuideRanking, autoUpdateBookingStatus };
 
