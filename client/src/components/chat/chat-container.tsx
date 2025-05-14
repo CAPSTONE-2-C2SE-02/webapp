@@ -140,7 +140,7 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Type a message..."
-              className="pr-10 rounded-2xl"
+              className="pr-10 rounded-2xl focus-visible:ring-gray-300"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   handleSendMessage();
@@ -149,22 +149,24 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 space-x-1 text-primary">
               {/* hidden file input */}
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                multiple
-                accept="image/*"
-                onChange={e => setFiles(Array.from(e.target.files||[]))}
-              />
-              <Button
-                variant={"ghost"}
-                size={"icon"}
-                className="size-8 rounded-2xl"
-                onClick={() => fileInputRef.current?.click()}
-                >
-                <Image className="size-4" />
-              </Button>
+              <div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  multiple
+                  accept="image/*"
+                  onChange={e => setFiles(Array.from(e.target.files||[]))}
+                />
+                <Button
+                  variant={"ghost"}
+                  size={"icon"}
+                  className="size-8 rounded-2xl"
+                  onClick={() => fileInputRef.current?.click()}
+                  >
+                  <Image className="size-4" />
+                </Button>
+              </div>
             </div>
           </div>
           <Button

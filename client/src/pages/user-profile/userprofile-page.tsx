@@ -42,7 +42,7 @@ const UserProfilePage = () => {
 
   const posts = data?.pages.flatMap((page) => page.data) || []; 
 
-  const { data: calendarData } = useGetBusyDates(userId);
+  const { data: calendarData } = useGetBusyDates(userId, role);
 
   const statusMap = useMemo(() => {
     const map = new Map<string, "UNAVAILABLE" | "AVAILABLE">();

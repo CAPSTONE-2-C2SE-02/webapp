@@ -7,6 +7,8 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import useLightBox from "@/hooks/useLightBox";
+import ImagesLightbox from "../utils/images-lightbox";
 
 interface ProfileImagesProps {
     images: string[];
@@ -22,9 +24,11 @@ export function ProfileImages({
     onPageChange,
 }: ProfileImagesProps) {
     const [activeTab, setActiveTab] = useState<"images" | "videos">("images");
+    const { isLightboxOpen, currentImageIndex, setCurrentImageIndex, openLightbox, closeLightbox } = useLightBox();
+
 
     return (
-        <div className="p-6 min-h-[400px] w-full flex flex-col items-start gap-3 bg-white rounded-xl mb-5">
+        <div className="p-6 min-h-[400px] w-full flex flex-col items-start gap-3 bg-white rounded-xl">
             {/* Custom Tabs */}
             <div className="flex border-b border-gray-200 justify-start w-full">
                 <button
@@ -50,7 +54,7 @@ export function ProfileImages({
                     images.length > 0 ? (
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full min-h-[400px]">
                             {images.map((image, index) => (
-                                <div key={`${image}-${index}`} className="aspect-square">
+                                <div key={`${image}-${index}`} className="aspect-square" onClick={() => openLightbox(index)}>
                                     <img
                                         src={image}
                                         alt={`Profile Image ${index + 1}`}
@@ -77,7 +81,7 @@ export function ProfileImages({
 
             {/* Pagination */}
             {activeTab === "images" && totalPages > 0 && (
-                <div className="mt-6 flex justify-center w-full ">
+                <div className="mt-2 flex justify-center w-full ">
                     <Pagination>
                         <PaginationContent>
                             <PaginationItem>
@@ -110,6 +114,16 @@ export function ProfileImages({
                         </PaginationContent>
                     </Pagination>
                 </div>
+            )}
+
+            {isLightboxOpen && (
+                <ImagesLightbox
+                    images={images}
+                    currentIndex={currentImageIndex}
+                    setCurrentIndex={setCurrentImageIndex}
+                    onClose={closeLightbox}
+                    type="image"
+                />
             )}
         </div>
     );

@@ -3,6 +3,7 @@ import Role from "../enums/role.enum.js";
 import RoleModel from "../models/role.model.js";
 import User from "../models/user.model.js";
 import { comparePassword, hashPassword } from "../utils/password.util.js";
+import Post from "../models/post.model.js";
 
 class UserController {
 
@@ -122,6 +123,9 @@ class UserController {
                 })
                 .select("-password");
 
+            // count posts
+            const countPosts = await Post.countDocuments({ createdBy: user._id });
+
             if (!user) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -131,7 +135,7 @@ class UserController {
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                result: { ...user._doc, role: user.role.name }
+                result: { ...user._doc, role: user.role.name, countPosts: countPosts }
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

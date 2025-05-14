@@ -4,7 +4,8 @@ import { Button } from "../ui/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { followUser } from "@/services/users/user-api";
 import { UserInfo } from "@/lib/types";
-
+import { useAppDispatch } from "@/hooks/redux";
+import { follow, unfollow } from "@/stores/slices/auth-slice";
 interface FollowButtonProps {
   targetUserId: string;
   currentUserId: string;
@@ -12,6 +13,7 @@ interface FollowButtonProps {
 }
 
 const FollowButton = ({ targetUserId, currentUserId, initialIsFollowing }: FollowButtonProps) => {
+  const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
 
@@ -48,15 +50,26 @@ const FollowButton = ({ targetUserId, currentUserId, initialIsFollowing }: Follo
       queryClient.setQueryData(["user", targetUserId], context?.previousUser);
       setIsFollowing(initialIsFollowing); // Reset UI
     },
+    onSuccess: (data) => {
+      if (data.result) {
+        if (initialIsFollowing) {
+          dispatch(unfollow(data.result));
+        } else {
+          dispatch(follow(data.result));
+        }
+      }
+    },
     onSettled: () => {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ["user", targetUserId] });
       }, 2000);
     },
   });
+
   const handleFollow = () => {
-    followMutation.mutate()
-  }
+    followMutation.mutate();
+  };
+
   return (
     <Button
       onClick={handleFollow}

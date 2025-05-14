@@ -2,15 +2,6 @@ import TourCard from '@/components/tour/tour-card';
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search } from 'lucide-react';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from "@/components/ui/pagination"
 import { Link, useParams } from 'react-router';
 import useGetTourByUsername from '@/hooks/useGetTourByUsername';
 
@@ -18,9 +9,9 @@ const UserProfileToursPage = () => {
     const { username } = useParams<{ username: string }>();
     const {data: tours} = useGetTourByUsername(username as string)
     return (
-        <div className="my-1 w-full flex flex-col items-start gap-2 bg-white rounded-t-xl">
+        <div className="w-full flex flex-col items-start gap-2 bg-white rounded-xl p-5">
             {/* Header */}
-            <div className="flex flex-col w-full p-3 sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex flex-col w-full sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h2 className="text-sm font-medium ml-3">Result: {tours && tours.length} Properties Found</h2>
                 <div className="flex gap-5">
                     {/* <SearchInput /> */}
@@ -53,7 +44,7 @@ const UserProfileToursPage = () => {
                 </div>
             </div>
             {/* Tour Cards */}
-            <div className="px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
                 <div className="p-2 w-full flex flex-col shadow bg-white rounded-2xl border-zinc-50 gap-5">
                     <div className="flex flex-col items-center justify-center gap-4">
                         <div className="w-full h-[290px]  bg-slate-200 rounded-xl flex items-center justify-center">
@@ -69,32 +60,6 @@ const UserProfileToursPage = () => {
                 {tours && tours.map((tour) => (
                     <TourCard key={tour._id} tour={tour} type={"grid"} />
                 ))}
-            </div>
-            <div className="items-center w-full text-primary py-3">
-                <Pagination>
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious href="#" />
-                        </PaginationItem>
-                        <PaginationItem>
-                            <PaginationLink href="#" isActive>1</PaginationLink>
-                        </PaginationItem>
-                        <PaginationItem>
-                            <PaginationLink href="#" >
-                                2
-                            </PaginationLink>
-                        </PaginationItem>
-                        <PaginationItem>
-                            <PaginationLink href="#">3</PaginationLink>
-                        </PaginationItem>
-                        <PaginationItem>
-                            <PaginationEllipsis />
-                        </PaginationItem>
-                        <PaginationItem>
-                            <PaginationNext href="#" />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
             </div>
         </div >
     )

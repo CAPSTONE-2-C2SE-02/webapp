@@ -130,7 +130,7 @@ const TourListing = ({
     <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-sm font-medium ml-3">Result: 23 Properties Found</h2>
+        <h2 className="text-sm font-medium ml-3">Result: {tours.length} Properties Found</h2>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -156,19 +156,21 @@ const TourListing = ({
           <Button variant="outline" size="icon">
             <MapPin className="h-4 w-4" />
           </Button>
-          <Select defaultValue="createdAt" onValueChange={handleSortTours}>
-            <SelectTrigger className="w-[180px]">
-              <span className="text-sm">Sort by:</span>
-              <SelectValue placeholder="Popular" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="createdAt">Latest</SelectItem>
-              <SelectItem value="slot">Slot</SelectItem>
-              <SelectItem value="price-asc">Low to High</SelectItem>
-              <SelectItem value="price-desc">High to Low</SelectItem>
-              <SelectItem value="rating">Rating</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 ml-4">
+            <span className="text-sm">Sort by:</span>
+            <Select defaultValue="createdAt" onValueChange={handleSortTours}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Latest" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="createdAt">Latest</SelectItem>
+                <SelectItem value="slot">Slot</SelectItem>
+                <SelectItem value="price-asc">Price (low to high)</SelectItem>
+                <SelectItem value="price-desc">Price (high to low)</SelectItem>
+                <SelectItem value="rating">Rating</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
       {/* Tour Cards */}
@@ -182,7 +184,7 @@ const TourListing = ({
           <TourCardSkeleton />
         </div>
       )}
-      <div className={viewType === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" : "space-y-3"}>
+      <div className={viewType === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" : "flex flex-col gap-3"}>
         {tours.map((tour) => (
           <TourCard key={tour._id} tour={tour} type={viewType} />
         ))}

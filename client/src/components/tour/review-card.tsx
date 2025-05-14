@@ -1,53 +1,53 @@
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { Star } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { Review } from "@/lib/types";
+import { Link } from "react-router";
+import StarRating from "../utils/star-rating";
 
 const ReviewCard = ({ review }: { review: Review }) => {
   return (
-    <div className="flex flex-col border rounded-lg p-4 bg-white shadow-md gap-2">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="flex items-start border rounded-lg p-3 px-5 bg-white gap-6">
+      <Link to={`/${review.travelerId?.username}`} prefetch="intent" className="flex flex-col items-center gap-2 flex-shrink-0">
         <Avatar className="size-12 border border-border">
           <AvatarImage src={review.travelerId?.profilePicture} alt={review.travelerId?.fullName} />
           <AvatarFallback>
             {review.travelerId?.fullName?.charAt(0) || "N"}
           </AvatarFallback>
         </Avatar>
-        <div>
-          <p className="font-semibold">
+        <div className="flex flex-col items-center gap-0">
+          <div className="font-semibold text-base text-primary leading-tight">
             {review.travelerId?.fullName || "Anonymous"}
-          </p>
-          <p className="text-sm text-gray-500">
-            {review.createdAt
-              ? format(new Date(review.createdAt), "dd/MM/yyyy")
-              : "Unknown Date"}
+          </div>
+          <span className="text-xs text-gray-500">@{review.travelerId?.username}</span>
+        </div>
+      </Link>
+      <div className="space-y-4">
+        <span className="text-xs text-primary font-medium italic">
+          {review.createdAt
+            ? format(new Date(review.createdAt), "p - MMMM d, yyyy")
+            : "Unknown Date"}
+        </span>
+        <div className="space-y-1">
+          <div className="flex items-center gap-4">
+            <Badge className="rounded-full">
+              Tour
+            </Badge>
+            <StarRating rating={review.ratingForTour} />
+          </div>
+          <p className="text-gray-600 text-sm">
+            {review.reviewTour || "No tour review provided"}
           </p>
         </div>
-        <div className="ml-auto flex gap-1">
-          {Array.from({ length: review.ratingForTourGuide }).map((_, i) => (
-            <Star
-              key={i}
-              className="text-yellow-400"
-              fill="#FFC400"
-              size={16}
-            />
-          ))}
+        <div className="space-y-1">
+          <div className="flex items-center gap-4">
+            <Badge className="rounded-full">
+              Tour Guide
+            </Badge>
+            <StarRating rating={review.ratingForTourGuide} />
+          </div>
+          <p className="text-gray-600 text-sm">{review.reviewTourGuide || "No tour guide review provided"}</p>
         </div>
-      </div>
-      <div className="text-gray-600">
-        <Badge className="inline-block px-3 py-1 border bg-white text-primary border-gray-300 rounded-full text-xs truncate min-w-fit">
-          Tour
-        </Badge>
-        <p className="text-gray-600">
-          {review.reviewTour || "No tour review provided"}
-        </p>
-      </div>
-      <div className="text-gray-600">
-        <Badge className="inline-block px-3 py-1 border bg-white text-primary border-gray-300 rounded-full text-xs truncate min-w-fit">
-          Tour Guide
-        </Badge>
-        <p>{review.reviewTourGuide || "No tour guide review provided"}</p>
       </div>
       <div className="flex">
         {review.imageUrls && review.imageUrls.length > 0 && (

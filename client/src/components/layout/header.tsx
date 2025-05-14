@@ -1,7 +1,7 @@
 import { Link, NavLink } from "react-router";
 import tripConnectLogo from "@/assets/tripconnect.svg";
 import SearchInput from "./search-input";
-import { Home, Plane, HandHeart, MessageCircle, Bookmark } from "lucide-react";
+import { Home, Plane, MessageCircle, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import UserNav from "./user-nav";
@@ -18,11 +18,6 @@ const NAV_ITEMS = [
     href: "/tours",
     icon: Plane,
     placeholder: "Tours"
-  },
-  {
-    href: "/campaigns",
-    icon: HandHeart,
-    placeholder: "Campaigns"
   },
   {
     href: "/messages",
@@ -49,10 +44,11 @@ const Header = () => {
               to={item.href}
               className={({ isActive }) =>
                 cn(
-                  "flex items-center gap-2 px-3 py-2 rounded-full transition-all",
-                  isActive ? "text-primary bg-teal-500/40" : "text-slate-300"
+                  "flex items-center gap-2 py-2 rounded-full transition-all duration-300 ease-in-out",
+                  isActive ? "text-primary bg-teal-500/40 px-4" : "text-slate-300 px-2"
                 )
               }
+              prefetch="intent"
             >
               {({ isActive }) => (
                 <>
