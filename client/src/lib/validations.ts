@@ -12,22 +12,22 @@ export const loginSchema = z.object({
 export type LoginValues = z.infer<typeof loginSchema>;
 
 export const signUpschema = z.object({
-    email: z.string().email("Invalid email address"),
-    fullName: z.string().min(3, "Full Name must be at least 3 characters"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string(),
-    phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
-    dateOfBirth: z.date()
-      .refine((date) => isValid(date), { message: "Invalid birth date" })
-      .refine(
-        (date) => !isFuture(date),
-        { message: "Birth date cannot be in the future" }
-      )
-      .refine(
-        (date) => differenceInYears(new Date(), date) >= 13,
-        { message: "You must be at least 13 years old" }
-      ),
-    role: z.enum(["traveller", "tourguide"]),
+  email: z.string().email("Invalid email address"),
+  fullName: z.string().min(3, "Full Name must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
+  dateOfBirth: z.date()
+    .refine((date) => isValid(date), { message: "Invalid birth date" })
+    .refine(
+      (date) => !isFuture(date),
+      { message: "Birth date cannot be in the future" }
+    )
+    .refine(
+      (date) => differenceInYears(new Date(), date) >= 13,
+      { message: "You must be at least 13 years old" }
+    ),
+  role: z.enum(["traveller", "tourguide"]),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"],
@@ -83,17 +83,24 @@ export const profileSchema = z.object({
   city: z.string().optional(),
   dateOfBirth: z.date()
     .refine((date) => isValid(date), { message: "Invalid birth date" })
-    .refine(
-      (date) => !isFuture(date),
-      { message: "Birth date cannot be in the future" }
-    )
-    .refine(
-      (date) => differenceInYears(new Date(), date) >= 13,
-      { message: "You must be at least 13 years old" }
-    ),
+    .refine((date) => !isFuture(date), { message: "Birth date cannot be in the future" })
+    .refine((date) => differenceInYears(new Date(), date) >= 13, { message: "You must be at least 13 years old" })
+    .optional(),
   introduction: z.string().optional(),
-  avatar: z.union([z.string(), z.instanceof(File)]).optional(),
-  coverPhoto: z.union([z.string(), z.instanceof(File)]).optional(),
+  avatar: z.union([
+    z.any().refine(
+      (val) => val instanceof Blob && val.size <= 2 * 1024 * 1024,
+      "Avatar must be a file not exceeding 2MB"
+    ),
+    z.string().url("Invalid URL"),
+  ]).nullable(),
+  coverPhoto: z.union([
+    z.any().refine(
+      (val) => val instanceof Blob && val.size <= 2 * 1024 * 1024,
+      "Cover photo must be a file not exceeding 2MB"
+    ),
+    z.string().url("Invalid URL"),
+  ]).nullable(),
 });
 
 export type ProfileValues = z.infer<typeof profileSchema>;
@@ -117,7 +124,7 @@ export const createReviewSchema = z.object({
   reviewTour: z.string().max(500, "Tour review cannot exceed 500 characters"),
   reviewTourGuide: z.string().max(500, "Guide review cannot exceed 500 characters"),
   imageUrls: z.array(z.union([z.instanceof(File), z.string()]))
-  .max(5, "You can upload up to 5 images"),
+    .max(5, "You can upload up to 5 images"),
 });
 
 export type CreateReviewValues = z.infer<typeof createReviewSchema>;

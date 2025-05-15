@@ -20,12 +20,15 @@ export function useUserInfoQuery(username: string) {
 const validateProfileData = (profileData: EditProfileData): string | null => {
     try {
         profileSchema.parse(profileData);
+        console.log("Validation passed:", profileData);
         return null;
     } catch (error) {
         if (error instanceof z.ZodError) {
+            console.error("Validation errors:", error.errors);
             return error.errors[0].message;
         }
-        return "Unknown authentication error";
+        console.error("Unknown validation error:", error);
+        return "Invalid profile data";
     }
 };
 
@@ -75,22 +78,36 @@ export const handleSaveProfile = (
         updateProfileMutation: ReturnType<typeof useUpdateUserProfileMutation>;
     }
 ) => {
+    console.log("handleSaveProfile called with:", { profileData, user, authUserInfo });
     const userId = user?._id || authUserInfo?._id;
     if (!userId) {
+        console.error("handleSaveProfile failed: User ID not found");
         toast.error("Unable to update profile: User ID not found.");
         return;
     }
 
     const validationError = validateProfileData(profileData);
     if (validationError) {
+        console.error("Validation error:", validationError);
         toast.error(validationError);
         return;
     }
 
     const requestData = prepareRequestData(profileData, user);
-    console.log("Data sent:", requestData instanceof FormData ? [...requestData.entries()] : requestData);
+    console.log("Request data prepared:", requestData instanceof FormData ? [...requestData.entries()] : requestData);
 
-    updateProfileMutation.mutate({ userId, data: requestData });
+    updateProfileMutation.mutate(
+        { userId, data: requestData },
+        {
+            onSuccess: () => {
+                console.log("Mutation successful");
+            },
+            onError: (error: Error) => {
+                console.error("Mutation error:", error);
+                toast.error(error.message || "Failed to update profile.");
+            },
+        }
+    );
 };
 
 export function useUpdateUserProfileMutation() {
@@ -98,20 +115,32 @@ export function useUpdateUserProfileMutation() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
-    const mutation = useMutation<UserInfo, Error, { userId: string; data: FormData | Record<string, any>; }>({
-        mutationFn: ({ userId, data }) => updateUserProfile({ userId, data }),
-        onSuccess: (updatedUser) => {
-            queryClient.setQueryData(["user", updatedUser.username], updatedUser);
-            toast.success("Profile update successful!");
-            queryClient.invalidateQueries({ queryKey: ["user"] });
-            dispatch(setAuthUser(updatedUser))
+    const mutation = useMutation<UserInfo, Error, { userId: string; data: FormData | Record<string, any> }>({
+        mutationFn: ({ userId, data }) => {
+            console.log("useUpdateUserProfileMutation called with:", { userId, data: data instanceof FormData ? [...data.entries()] : data });
+            return updateUserProfile({ userId, data });
         },
-        onError: (error: Error) => {
-            console.error("Lỗi trong mutation:", error.message);
-            toast.error(error.message || "Unable to update profile. Please try again.");
-            if (error.message.includes("401")) {
-                navigate("/login");
+        onSuccess: (updatedUser) => {
+            console.log("Mutation onSuccess:", updatedUser);
+            queryClient.setQueryData(["user", updatedUser.username], updatedUser);
+            queryClient.setQueryData(["my-info"], updatedUser);
+            queryClient.invalidateQueries({ queryKey: ["user"] });
+            queryClient.invalidateQueries({ queryKey: ["my-info"] });
+            dispatch(setAuthUser(updatedUser));
+            toast.success("Profile updated successfully!");
+        },
+        onError: (error: Error | AxiosError) => {
+            console.error("Mutation onError:", error);
+            let errorMessage = error.message || "Unable to update profile. Please try again.";
+            if (error instanceof AxiosError) {
+                if (error.response?.status === 401) {
+                    errorMessage = "Session expired. Please log in again.";
+                    navigate("/login");
+                } else if (error.response?.data?.error) {
+                    errorMessage = error.response.data.error;
+                }
             }
+            toast.error(errorMessage);
         },
     });
 
@@ -123,7 +152,7 @@ export function useMyInfoQuery() {
         queryKey: ["my-info"],
         queryFn: fetchMyInfo,
     });
-};
+}
 
 export function useDeleteBusyDate(tourGuideId: string) {
     const queryClient = useQueryClient();
@@ -132,12 +161,12 @@ export function useDeleteBusyDate(tourGuideId: string) {
         mutationFn: async (date: Date) => deleteBusyDate(date),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["busyDates", tourGuideId] });
-            toast.success("Remove Busy date successfully")
+            toast.success("Remove Busy date successfully");
         },
         onError: (error) => {
             if (error instanceof AxiosError) {
                 toast.error(error.response?.data?.error);
             }
         },
-    })
+    });
 }
