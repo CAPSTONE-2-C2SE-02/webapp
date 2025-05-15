@@ -124,6 +124,7 @@ export type UserInfo = {
   createdAt: string;
   updatedAt: string;
   rating: number;
+  countPosts: number;
 }
 
 export type Follow = {

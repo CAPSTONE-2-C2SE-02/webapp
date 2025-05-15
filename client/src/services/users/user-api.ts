@@ -1,4 +1,4 @@
-import { ApiResponse, Booking, Calendar, SetAvailabilityResponse, UserInfo, UserSelectedState } from "@/lib/types";
+import { ApiResponse, Booking, Calendar, Follow, SetAvailabilityResponse, UserInfo, UserSelectedState } from "@/lib/types";
 import { rootApi } from "../root-api";
 import { API } from "@/config/constants";
 import axiosInstance from "@/config/api";
@@ -20,7 +20,7 @@ export const userApi = rootApi.injectEndpoints({
 
 export const { useGetUserInfoByUsernameQuery } = userApi;
 
-export const followUser = async (userId: string): Promise<any> => {
+export const followUser = async (userId: string): Promise<ApiResponse<Follow>> => {
   if (!userId) throw new Error("User ID is required");
   const response = await axiosInstance.post(API.PROFILE.FOLLOW(userId));
   return response.data;
@@ -168,7 +168,7 @@ export const fetchUserPhotos = async (username: string): Promise<string[]> => {
   if (!response.data.success) {
     throw new Error(response.data.error || "Failed to fetch user photos");
   }
-  return Array.isArray(response.data.result?.postImages) ? response.data.result.postImages : [];
+  return Array.isArray(response.data.result) ? response.data.result : [];
 };
 
 export const fetchUserById = async (userId: string): Promise<UserSelectedState> => {

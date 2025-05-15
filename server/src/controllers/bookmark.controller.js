@@ -137,6 +137,10 @@ class BookmarkController {
             {
               path: "tourAttachment",
               select: "title introduction imageUrls destination departureLocation author",
+            },
+            {
+              path: "likes",
+              select: "_id username fullName",
             }
           ]
         });

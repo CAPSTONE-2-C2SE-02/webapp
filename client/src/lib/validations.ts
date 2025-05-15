@@ -1,5 +1,4 @@
 import { differenceInYears, isFuture, isValid } from "date-fns";
-import { Phone } from "lucide-react";
 import { z } from "zod";
 
 const requiredString = z.string().trim().min(1, "This field is required.");
@@ -66,11 +65,13 @@ export const createTourSchema = z.object({
       title: z.string().min(1, "Title is required"),
       description: z.string().min(1, "Description is required"),
     })
-  ).optional()
-  ,
+  ).optional(),
   include: z.string().min(1, "Include section is required"),
   notInclude: z.string().min(1, "Not Include section is required"),
   images: z.array(fileSchema).optional(),
+}).refine((data) => data.schedule?.length === data.duration, {
+  message: "Schedule must be equal to duration",
+  path: ["schedule"],
 });
 
 export type CreateTourValues = z.infer<typeof createTourSchema>;

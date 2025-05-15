@@ -53,6 +53,7 @@ const SearchInput = () => {
             setSearchQuery(e.target.value);
             setIsOpen(true);
           }}
+          onFocus={() => setIsOpen(true)}
           onKeyDown={navigateToSearchPage}
         />
       </div>

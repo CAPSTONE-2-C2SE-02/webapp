@@ -83,7 +83,7 @@ class PostController {
             const post = await Post.findById(createdPost._id)
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
-                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")
                 .sort({ "createdAt": -1 })
                 .exec();
@@ -111,7 +111,7 @@ class PostController {
             const posts = await Post.find().skip(skip).limit(limit)
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
-                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")
                 .sort({ "createdAt": -1 })
                 .exec();
@@ -143,7 +143,7 @@ class PostController {
             const post = await Post.findOne({ _id: id })
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
-                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")
                 .exec();
 
@@ -217,7 +217,7 @@ class PostController {
                 { new: true }
             ).populate("createdBy", "_id username fullName profilePicture")
              .populate("likes", "_id username fullName")
-             .populate("tourAttachment", "_id title destination introduction imageUrls")
+             .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
              .populate("bookmarks", "user -itemId");
 
             return res.status(StatusCodes.OK).json({
@@ -394,7 +394,7 @@ class PostController {
 
             const posts = await Post.find({ createdBy: user._id })
                 .populate("likes", "_id username fullName")
-                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")
 
             if (!posts) {
@@ -481,7 +481,7 @@ class PostController {
                 .sort({ score: { $meta: "textScore" } })
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
-                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId");
 
             if (posts.length === 0) {
@@ -493,7 +493,7 @@ class PostController {
                 })
                     .populate("createdBy", "_id username fullName profilePicture")
                     .populate("likes", "_id username fullName")
-                    .populate("tourAttachment", "_id title destination introduction imageUrls")
+                    .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                     .populate("bookmarks", "user -itemId");
             }
 
@@ -529,7 +529,7 @@ class PostController {
             const posts = await Post.find({ createdBy: user._id }).skip(skip).limit(limit)
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
-                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")
                 .sort({ "createdAt": -1 })
 
@@ -576,7 +576,7 @@ class PostController {
             const posts = await Post.find({ hashtag: hashtag })
                 .populate("createdBy", "_id username fullName profilePicture")
                 .populate("likes", "_id username fullName")
-                .populate("tourAttachment", "_id title destination introduction imageUrls")
+                .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")
                 .sort({ createdAt: -1 });
 

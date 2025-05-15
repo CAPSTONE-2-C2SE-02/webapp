@@ -240,6 +240,7 @@ export function useLikePostMutation() {
     onSettled: (_data, _error, postId) => {
       queryClient.invalidateQueries({ queryKey: ["post", postId] });
       queryClient.invalidateQueries({ queryKey: ["posts-feed"] });
+      queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
     },
   });
 

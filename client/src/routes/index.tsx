@@ -17,7 +17,7 @@ import ChatPage from "@/pages/chat-page";
 import ChatLayout from "@/layouts/chat-layout";
 import ChatNoneSelection from "@/components/chat/chat-none-selection";
 import BookmarkPage from "@/pages/bookmark-page";
-import SearchPage from "@/pages/search-page";
+import ToursPage from "@/pages/tours-page";
 const TourManagementPage = lazy(() => import("@/pages/tour-management-page"));
 const UserProfilePage = lazy(() => import("@/pages/user-profile/userprofile-page"));
 const UserProfileToursPage = lazy(() => import("@/pages/user-profile/userprofile-tours-page"));
@@ -28,8 +28,8 @@ const SigninPage = lazy(() => import("@/pages/signin-page"));
 const SignupPage = lazy(() => import("@/pages/signup-page"));
 const HomePage = lazy(() => import("@/pages/home-page"));
 const PostPage = lazy(() => import("@/pages/post-page"));
-const ToursPage = lazy(() => import("@/pages/tours-page"));
 const TourDetail = lazy(() => import("@/pages/tourdetail-page"));
+const SearchPage = lazy(() => import("@/pages/search-page"));
 
 const routes = createBrowserRouter([
   {
