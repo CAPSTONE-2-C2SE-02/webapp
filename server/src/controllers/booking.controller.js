@@ -20,6 +20,18 @@ class BookingController {
         const travelerId = req.user.userId;
         const slots = adults + youths + children;
 
+        // Kiểm tra ngày booking chỉ cho phép trong năm hiện tại
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (start.getFullYear() !== currentYear || end.getFullYear() !== currentYear) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                error: "You can only book tours within the current year.",
+            });
+        }
+
         let tourGuideId;
         try {
             const tour = await Tour.findById(tourId);
