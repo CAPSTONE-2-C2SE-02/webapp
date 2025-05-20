@@ -1,7 +1,9 @@
 export const API = {
   POST: {
     LIKE: '/posts/like',
-    SEARCH: (tag: string) => `/posts/search?q=${tag}`
+    SEARCH: (query: string) => `/posts/search?q=${query}`,
+    HASHTAG: (hashtag: string) => `/posts/hashtag/${hashtag}`,
+    TOP_HASHTAGS: '/posts/hashtags/top',
   },
   PROFILE: {
     FOLLOW: (userId: string) => `/profiles/follow/${userId}`,

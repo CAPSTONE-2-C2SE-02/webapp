@@ -128,7 +128,7 @@ class BookmarkController {
           populate: [
             {
               path: "createdBy",
-              select: "fullName username profilePicture"
+              select: "fullName username profilePicture bio"
             },
             {
               path: "bookmarks",
@@ -151,7 +151,7 @@ class BookmarkController {
           populate: [
             {
               path: "author",
-              select: "fullName username profilePicture"
+              select: "fullName username profilePicture bio"
             },
             {
               path: "bookmarks",

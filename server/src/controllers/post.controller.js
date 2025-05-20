@@ -93,7 +93,7 @@ class PostController {
             await updateTourGuideRankingAndRating(user._id);
 
             const post = await Post.findById(createdPost._id)
-                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("createdBy", "_id username fullName profilePicture bio")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")
@@ -121,7 +121,7 @@ class PostController {
             const skip = (page - 1) * limit;
 
             const posts = await Post.find().skip(skip).limit(limit)
-                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("createdBy", "_id username fullName profilePicture bio")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")
@@ -153,7 +153,7 @@ class PostController {
         try {
             const { id } = req.params;
             const post = await Post.findOne({ _id: id })
-                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("createdBy", "_id username fullName profilePicture bio")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")
@@ -230,10 +230,10 @@ class PostController {
                 id,
                 { $set: updateData },
                 { new: true }
-            ).populate("createdBy", "_id username fullName profilePicture")
-                .populate("likes", "_id username fullName")
-                .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
-                .populate("bookmarks", "user -itemId");
+            ).populate("createdBy", "_id username fullName profilePicture bio")
+             .populate("likes", "_id username fullName")
+             .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
+             .populate("bookmarks", "user -itemId");
 
             return res.status(StatusCodes.OK).json({
                 success: true,
@@ -494,7 +494,7 @@ class PostController {
                 { score: { $meta: "textScore" } }
             )
                 .sort({ score: { $meta: "textScore" } })
-                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("createdBy", "_id username fullName profilePicture bio")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId");
@@ -506,7 +506,7 @@ class PostController {
                         { hashtag: { $regex: formattedQuery, $options: "i" } },
                     ],
                 })
-                    .populate("createdBy", "_id username fullName profilePicture")
+                    .populate("createdBy", "_id username fullName profilePicture bio")
                     .populate("likes", "_id username fullName")
                     .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                     .populate("bookmarks", "user -itemId");
@@ -542,7 +542,7 @@ class PostController {
             }
 
             const posts = await Post.find({ createdBy: user._id }).skip(skip).limit(limit)
-                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("createdBy", "_id username fullName profilePicture bio")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")
@@ -579,7 +579,7 @@ class PostController {
     // [GET] /api/v1/post/hashtag
     async getPostsByHashtag(req, res) {
         try {
-            const { hashtag } = req.body;
+            const hashtag = req.params.hashtag;
 
             if (!hashtag) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
@@ -589,7 +589,7 @@ class PostController {
             }
 
             const posts = await Post.find({ hashtag: hashtag })
-                .populate("createdBy", "_id username fullName profilePicture")
+                .populate("createdBy", "_id username fullName profilePicture bio")
                 .populate("likes", "_id username fullName")
                 .populate("tourAttachment", "_id title destination departureLocation introduction imageUrls")
                 .populate("bookmarks", "user -itemId")

@@ -1,3 +1,4 @@
+import Chatbot from "@/components/chat/chatbot";
 import Header from "@/components/layout/header";
 import { useAppSelector } from "@/hooks/redux";
 import { useGetUserAuthQuery } from "@/services/root-api";
@@ -23,8 +24,9 @@ const MainLayout = () => {
   return (
     <div className="flex flex-col w-full">
       <Header />
-      <main className="max-w-7xl w-full mx-auto">
+      <main className="max-w-7xl w-full mx-auto px-2 lg:px-0">
         <Outlet />
+        <Chatbot />
       </main>
     </div>
   )

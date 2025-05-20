@@ -16,7 +16,7 @@ const RankingItem = ({ tourGuide, point, rank }: RankingItemProps) => {
   return (
     <Link
       to={`/${tourGuide?.username}`}
-      className="flex items-center justify-between p-3 pl-5 w-full bg-white rounded hover:bg-slate-500 group transition-colors duration-200"
+      className="flex items-center justify-between p-3 pl-5 w-full bg-white rounded hover:bg-primary/70 group transition-colors duration-200"
     >
       <div className="text-base space-x-4 text-primary group-hover:text-white transition-colors duration-200">
         <span className="font-black">{rank}</span>

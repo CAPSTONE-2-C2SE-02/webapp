@@ -29,7 +29,7 @@ const TourCard = ({ tour, type = "grid" }: TourCardProps) => {
               <img
                 src={tour.imageUrls[0]}
                 alt={tour.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300"
               />
               <div onClick={handleBookmarkClick}>
                 <BookMarkButton
@@ -111,6 +111,7 @@ const TourCard = ({ tour, type = "grid" }: TourCardProps) => {
               <img
                 src={tour.imageUrls[0]}
                 alt={tour.title}
+                loading="lazy"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               <div onClick={handleBookmarkClick}>

@@ -69,7 +69,7 @@ const ToursPage = () => {
         />
       </div>
       {auth?.role === "TOUR_GUIDE" && (
-        <Button className="fixed bottom-8 right-8 rounded-full transition-all duration-300 overflow-hidden w-10 h-10 hover:w-[152px] group z-30" asChild>
+        <Button className="fixed bottom-20 right-8 rounded-full transition-all duration-300 overflow-hidden w-10 h-10 hover:w-[152px] group z-30" asChild>
           <Link to={"/tours/create"}>
             <PlusIcon className="z-10 absolute left-3" />
             <span className="origin-right absolute right-5 translate-x-10 opacity-0 invisible transition-all duration-300 group-hover:opacity-100 group-hover:delay-75 group-hover:visible group-hover:translate-x-0">Create new tour</span>

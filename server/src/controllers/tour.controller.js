@@ -7,8 +7,6 @@ import axios from "axios";
 import Bookmark from "../models/bookmark.model.js";
 import Notification from "../models/notification.model.js";
 
-const RECOMMENDATION_API = process.env.RECOMMENDATION_API_URL;
-
 class TourController {
 
     // [POST] /api/v1/tours
@@ -101,7 +99,7 @@ class TourController {
         try {
             const id = req.params.id;
             const tour = await Tour.findById(id)
-                .populate("author", "_id username fullName profilePicture ranking rating")
+                .populate("author", "_id username fullName profilePicture ranking rating bio")
                 .populate("bookmarks", "user -itemId");
 
             if (!tour) {

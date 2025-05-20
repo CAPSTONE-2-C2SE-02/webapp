@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Link } from "react-router";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "../ui/button";
-import { CornerDownRight, SendHorizonal } from "lucide-react";
+import { CornerDownRight, Heart, SendHorizonal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "../ui/input";
 import { useAppSelector } from "@/hooks/redux";
@@ -72,9 +72,12 @@ const CommentCard = ({ comment, onAddReply }: CommentProps) => {
           <p className="mb-1">{comment.content}</p>
           {/* comment action */}
           {isAuthenticated && (
-            <div className="flex items-center gap-3">
-              <Button variant={"outline"} size={"sm"} className="h-7 px-2" onClick={() => { setIsReplying(!isReplying); inputReplyRef.current?.focus(); }}>
-                <CornerDownRight /> Reply
+            <div className="flex items-center gap-2">
+              <Button size={"icon"} variant={"ghost"} className="w-6 h-6 px-1 py-0 text-xs">
+                <Heart className="size-3" />
+              </Button>
+              <Button className="h-6 px-1 py-0 text-xs" variant={"ghost"} onClick={() => { setIsReplying(!isReplying); inputReplyRef.current?.focus(); }}>
+                <CornerDownRight className="size-3" /> Reply
               </Button>
             </div>
           )}

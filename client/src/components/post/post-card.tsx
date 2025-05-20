@@ -21,6 +21,7 @@ import CommentPostModal from "../modals/comment-post-modal";
 import ImagesLightbox from "../utils/images-lightbox";
 import useLightBox from "@/hooks/useLightBox";
 import BookMarkButton from "@/components/utils/book-mark-button";
+import HoverUserCard from "../user/hover-user-card";
 
 const PostCard = ({ postData }: { postData: Post }) => {
   const auth = useAuthInfo();
@@ -71,12 +72,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
               />
             </div>
             <div className="text-primary">
-              <Link
-                to={`/${postData?.createdBy?.username}`}
-                className="hover:underline text-sm font-medium"
-              >
-                {postData?.createdBy?.fullName}
-              </Link>
+              <HoverUserCard user={postData?.createdBy} />
               <div className="flex items-center gap-1">
                 <Clock className="size-3" />
                 <Link
@@ -103,9 +99,17 @@ const PostCard = ({ postData }: { postData: Post }) => {
           {/* Text Content */}
           {(postData?.content || postData?.hashtag) && (
             <div>
-              {postData?.content.length > 0 && postData.content.map((content, index) => (
-                <p key={`${content}+${index}`} className="text-black text-sm font-normal">{content}</p>
-              ))}
+              {postData?.content.length > 0 && postData.content.map((content, index) => {
+                // convert if content is link, add <a> tag
+                if (content.includes("http")) {
+                  return (
+                    <Link to={content} target="_blank" rel="noopener noreferrer" key={`${content}+${index}`} className="text-teal-600 text-sm hover:underline">{content}</Link>
+                  )
+                }
+                return (
+                  <p key={`${content}+${index}`} className="text-black text-sm font-normal">{content}</p>
+                )
+              })}
               {/* Hashtag */}
               <div className="flex items-center gap-1 mt-1">
                 {postData?.hashtag?.length > 0 && postData.hashtag.map(tag => (

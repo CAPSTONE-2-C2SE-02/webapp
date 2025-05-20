@@ -70,26 +70,28 @@ const ProfileLayout = () => {
                     </div>
                 )}
                 {/* <img src="https://placehold.co/1920x400" className="rounded-t-2xl" /> */}
-                <div className="shadow-xl flex flex-col bg-white !rounded-b-xl rounded-t-[100px] [16px] pt-2 px-2 pb-3 -translate-y-40 max-w-[220px] absolute left-10">
+                <div className="shadow-xl flex flex-col bg-white !rounded-b-3xl rounded-t-[100px] pt-2 px-2 pb-5 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
                         <AvatarImage src={user.profilePicture} className="object-cover"/>
                         <AvatarFallback className="bg-teal-100 text-primary">{user.fullName?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-col justify-items-center">
-                        <p className="font-bold text-2xl my-1 justify-center truncate max-w-44 pt-2 text-center" title={user.fullName}>{user.fullName}</p>
-                        {user.role === "TOUR_GUIDE" && (
-                            <div className="flex items-center justify-center py-2">
-                                <Star className="w-4 h-4 mx-1 stroke-amber-400 fill-amber-400" />
-                                <span className="font-medium text-black text-sm">{user.rating > 0 && user.rating} {generateRatingText(user.rating)}</span>
+                        <p className="font-bold text-2xl my-1 justify-center truncate max-w-44 pt-2 text-center text-primary" title={user.fullName}>{user.fullName}</p>
+                        <div className="space-y-2">
+                            {user.role === "TOUR_GUIDE" && (
+                                <div className="flex items-center justify-center">
+                                    <Star className="w-4 h-4 mx-1 stroke-amber-400 fill-amber-400" />
+                                    <span className="font-medium text-black text-sm">{user.rating > 0 && user.rating} {generateRatingText(user.rating)}</span>
+                                </div>
+                            )}
+                            <div className="flex items-center justify-center">
+                                <UserRound className="w-4 h-4 mx-1 stroke-slate-600" />
+                                <p className="font-medium text-slate-600 text-sm">{user.followers.length} Follower</p>
                             </div>
-                        )}
-                        <div className="flex items-center justify-center py-2">
-                            <UserRound className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm">{user.followers.length} Follower</p>
-                        </div>
-                        <div className="flex items-center justify-center py-2">
-                            <UserRoundCheck className="w-4 h-4 mx-1 stroke-slate-600" />
-                            <p className="font-medium text-slate-600 text-sm">{user.followings.length} Following</p>
+                            <div className="flex items-center justify-center">
+                                <UserRoundCheck className="w-4 h-4 mx-1 stroke-slate-600" />
+                                <p className="font-medium text-slate-600 text-sm">{user.followings.length} Following</p>
+                            </div>
                         </div>
                     </div>
                 </div>
