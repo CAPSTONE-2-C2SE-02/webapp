@@ -1,15 +1,16 @@
 import { Slider } from "@/components/ui/slider";
 import FilterWrapper from "./filter-wrapper";
-
+import { Button } from "@/components/ui/button";
 const MAX_LENGTH = 21;
 const MIN_LENGTH = 1;
 
 interface LengthFilterProps {
   lengthRange: number[];
   setLengthRange: (value: number[]) => void;
+  onApply: () => void;
 } 
 
-const LengthFilter = ({ lengthRange, setLengthRange }: LengthFilterProps) => {
+const LengthFilter = ({ lengthRange, setLengthRange, onApply }: LengthFilterProps) => {
   return (
     <FilterWrapper title="Length">
       <div className="flex items-center justify-between gap-4">
@@ -24,6 +25,7 @@ const LengthFilter = ({ lengthRange, setLengthRange }: LengthFilterProps) => {
         value={lengthRange}
         onValueChange={setLengthRange}
       />
+      <Button size={"sm"} className="w-full mt-2" onClick={onApply}>Apply</Button>
     </FilterWrapper>
   );
 }

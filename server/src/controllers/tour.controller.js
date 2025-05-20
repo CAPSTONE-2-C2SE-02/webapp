@@ -56,6 +56,19 @@ class TourController {
             const limit = parseInt(req.query.limit) || 10;
             const skip = (page - 1) * limit;
 
+            // Filter params
+            const minPrice = parseInt(req.query.minPrice) || 0;
+            const maxPrice = parseInt(req.query.maxPrice) || Number.MAX_SAFE_INTEGER;
+            const minLength = parseInt(req.query.minLength) || 1;
+            const maxLength = parseInt(req.query.maxLength) || Number.MAX_SAFE_INTEGER;
+            const minRating = parseFloat(req.query.minRating) || 0;
+
+            const filter = {
+                priceForAdult: { $gte: minPrice, $lte: maxPrice },
+                duration: { $gte: minLength, $lte: maxLength },
+                rating: { $gte: minRating },
+            };
+
             const sortOptions = {};
             if (sortBy === "price") {
                 sortOptions.priceForAdult = sortOrder === "asc" ? 1 : -1;
@@ -68,14 +81,14 @@ class TourController {
             }
 
             const tours = await Tour
-                .find()
+                .find(filter)
                 .sort(sortOptions)
                 .skip(skip)
                 .limit(limit)
                 .populate("author", "_id username fullName profilePicture ranking rating")
                 .populate("bookmarks", "user -itemId");
 
-            const totalTours = await Tour.countDocuments();
+            const totalTours = await Tour.countDocuments(filter);
 
             return res.status(StatusCodes.OK).json({
                 success: true,

@@ -5,21 +5,53 @@ import { Link, useSearchParams } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { fetchAllTours } from "@/services/tours/tour-api";
 import TourSearchBox from "@/components/tour/tour-search-box";
-import { PlusIcon } from "lucide-react";
+import { Filter, PlusIcon } from "lucide-react";
 import useAuthInfo from "@/hooks/useAuth";
+import { Separator } from "@/components/ui/separator";
+import { useState } from "react";
+
+const MAX_LENGTH = 21;
+const MIN_LENGTH = 1;
+const MAX_PRICE = 1500000;
+const MIN_PRICE = 0;
 
 const ToursPage = () => {
   const [searchParams] = useSearchParams();
   const params = Object.fromEntries([...searchParams]);
   const auth = useAuthInfo();
   
+  // Filter state
+  const [priceRange, setPriceRange] = useState([MIN_PRICE, MAX_PRICE]);
+  const [lengthRange, setLengthRange] = useState([MIN_LENGTH, MAX_LENGTH]);
+  const [minRating, setMinRating] = useState(0);
+
   const page = params.page ? parseInt(params.page) : 1;
   const sortBy = (params.sortBy || "createdAt") as | "price" | "rating" | "createdAt";
   const sortOrder = (params.sortOrder || "desc") as "asc" | "desc";
   
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ["tours", page, sortBy, sortOrder],
-    queryFn: () => fetchAllTours({ pageParam: page, sortBy, sortOrder }),
+    queryKey: [
+      "tours",
+      page,
+      sortBy,
+      sortOrder,
+      priceRange[0],
+      priceRange[1],
+      lengthRange[0],
+      lengthRange[1],
+      minRating,
+    ],
+    queryFn: () =>
+      fetchAllTours({
+        pageParam: page,
+        sortBy,
+        sortOrder,
+        minPrice: priceRange[0],
+        maxPrice: priceRange[1],
+        minLength: lengthRange[0],
+        maxLength: lengthRange[1],
+        minRating,
+      }),
     placeholderData: keepPreviousData,
   });
 
@@ -46,12 +78,23 @@ const ToursPage = () => {
       <div className="flex items-start flex-col lg:flex-row gap-5">
         {/* Filter Sidebar */}
         <div className="bg-white px-2 py-3 max-w-80 rounded-xl border border-slate-200 shadow-sm space-y-2 items-center sticky left-0 top-[88px]">
-          <div className="flex items-center justify-between mx-5">
-            <h5 className="text-sm">Filter</h5>
-            <Button size={"sm"} variant={"ghost"}>Reset Filter</Button>
-          </div>
-          {/* Cards Feature */}
-          <TourFilterPanel />
+          <h5 className="text-sm flex items-center justify-center gap-2 uppercase font-bold text-primary mt-1">
+            <Filter className="h-4 w-4" /> Search Filter
+          </h5>
+          <Separator className="my-2" />
+          <TourFilterPanel
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            lengthRange={lengthRange}
+            setLengthRange={setLengthRange}
+            minRating={minRating}
+            setMinRating={setMinRating}
+            onReset={() => {
+              setPriceRange([MIN_PRICE, MAX_PRICE]);
+              setLengthRange([MIN_LENGTH, MAX_LENGTH]);
+              setMinRating(0);
+            }}
+          />
         </div>
         {isError && (
           <div className="w-full shadow bg-white rounded-2xl border border-zinc-50 p-5 text-sm text-red-500 font-medium">
