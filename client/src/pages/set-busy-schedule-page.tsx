@@ -29,7 +29,7 @@ const SetBusySchedulePage = () => {
   const [busyDates, setBusyDates] = useState<Date[]>([])
   const [activeTab, setActiveTab] = useState("select")
 
-  const { data: busyDatesData, isLoading } = useGetBusyDates(tourGuideId as string);
+  const { data: busyDatesData, isLoading } = useGetBusyDates(tourGuideId as string, "TOUR_GUIDE");
 
   const { mutate: saveBusyDates } = useMutation({
     mutationFn: saveBusyDatesToServer,
@@ -95,7 +95,7 @@ const SetBusySchedulePage = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="select">Select Busy Dates</TabsTrigger>
-              <TabsTrigger value="view">View Schedule ({busyDatesData?.dates?.length})</TabsTrigger>
+              <TabsTrigger value="view">View Schedule {busyDatesData && busyDatesData?.dates?.length > 0 && `(${busyDatesData?.dates?.length})`}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="select">

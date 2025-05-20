@@ -11,7 +11,7 @@ interface FollowerCardProps {
 }
 
 const FollowerCard = ({ user }: FollowerCardProps) => {
-  const { userInfo } = useAppSelector((state) => state.auth);
+  const { userInfo, isAuthenticated } = useAppSelector((state) => state.auth);
   const followerCount = Array.isArray(user.followers) ? user.followers.length : 0;
 
   const isFollowing = userInfo?.followings.map(item => item._id).includes(user?._id) as boolean;
@@ -38,9 +38,11 @@ const FollowerCard = ({ user }: FollowerCardProps) => {
         </div>
         <Badge className="rounded-full text-xs truncate min-w-fit capitalize text-primary" variant={"outline"}>{convertRoleName(user.role.name)}</Badge>
       </div>
-      <div className="mt-2 flex justify-end ">
-        {user._id !== userInfo?._id && <FollowButton currentUserId={userInfo?._id || ""} targetUserId={user._id} initialIsFollowing={isFollowing} />}
-      </div>
+      {isAuthenticated && user._id !== userInfo?._id && (
+        <div className="mt-2 flex justify-end ">
+          <FollowButton currentUserId={userInfo?._id || ""} targetUserId={user._id} initialIsFollowing={isFollowing} />
+        </div>
+      )}
     </div>
   )
 }

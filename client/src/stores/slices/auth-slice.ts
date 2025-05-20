@@ -1,4 +1,4 @@
-import { UserInfo } from "@/lib/types";
+import { Follow, UserInfo } from "@/lib/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 interface AuthState {
@@ -33,8 +33,23 @@ export const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
     },
+    setInformation: (state, action: PayloadAction<Partial<UserInfo>>) => {
+      if (state.userInfo) {
+        state.userInfo = { ...state.userInfo, ...action.payload };
+      }
+    },
+    follow: (state, action: PayloadAction<Follow>) => {
+      if (state.userInfo) {
+        state.userInfo = { ...state.userInfo, followings: [...state.userInfo.followings, action.payload] };
+      }
+    },
+    unfollow: (state, action: PayloadAction<Follow>) => {
+      if (state.userInfo) {
+        state.userInfo = { ...state.userInfo, followings: state.userInfo.followings.filter((following) => following._id !== action.payload._id) };
+      }
+    }
   },
 });
 
-export const { setCredentials, setAuthUser, logOut } = authSlice.actions;
+export const { setCredentials, setAuthUser, logOut, setInformation, follow, unfollow } = authSlice.actions;
 export default authSlice.reducer;

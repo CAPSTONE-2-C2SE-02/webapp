@@ -180,9 +180,6 @@ const PostCard = ({ postData }: { postData: Post }) => {
                   Comment
                 </span>
               </div>
-              <div className="flex items-center justify-center py-1 px-1.5 rounded-xl bg-primary/20">
-                <span className="text-sm font-semibold leading-none">13</span>
-              </div>
             </Button>
             <Button
               variant={"ghost"}

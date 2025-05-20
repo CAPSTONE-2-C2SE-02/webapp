@@ -2,7 +2,6 @@ import { MapPin, UsersRound, BookCheck, Check, X, CalendarDays } from "lucide-re
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tour } from "@/lib/types";
 import TourImageGallery from "./tour-image-gallery";
-import { Separator } from "../ui/separator";
 import { getAbsoluteAddress } from "../utils/convert";
 import BookMarkButton from "@/components/utils/book-mark-button";
 import useAuthInfo from "@/hooks/useAuth";
@@ -25,7 +24,7 @@ export default function TourInfo({ tour }: TourInfoProps) {
         }}
       />
       <h1 className="text-3xl font-bold mb-4 text-start text-primary max-w-[92%]">{tour.title}</h1>
-      <div className="grid grid-cols-2 gap-2 mb-4 text-sm bg-slate-50/60 p-3 rounded-md">
+      <div className="grid grid-cols-2 gap-2 mb-4 text-sm bg-slate-50/60 p-3 rounded-md border border-slate-100">
         <div className="flex items-center gap-2 text-primary">
           <MapPin className="size-4" />
           <span className="font-medium"><span className="text-teal-500">{getAbsoluteAddress(tour.destination, tour.departureLocation)}</span></span>
@@ -56,25 +55,26 @@ export default function TourInfo({ tour }: TourInfoProps) {
           <TabsTrigger value="notInclude">Not Include</TabsTrigger>
         </TabsList>
         <TabsContent value="introduction" className="mt-4">
-          <div
-            className="p-2 px-3 border border-border rounded-md"
-            dangerouslySetInnerHTML={{ __html: tour.introduction }}
-          />
+          <div className="p-3 py-2.5 border border-border rounded-md text-base space-y-3">
+            <h5 className="text-primary font-bold uppercase text-lg font-madimi">About the tour</h5>
+            {tour.introduction.split("\n").map((line, index) => (
+              <p key={index} className="text-sm">{line}</p>
+            ))}
+          </div>
         </TabsContent>
         <TabsContent value="schedule" className="mt-4 space-y-3">
           {tour.schedule.map((day, index) => (
             <div key={index} className="px-3 py-2 border border-border rounded-md">
-              <h4 className="text-primary font-bold uppercase text-lg">Day {index + 1}</h4>
-              <Separator className="my-1.5" />
+              <h4 className="text-primary font-bold uppercase text-lg font-madimi">Day {index + 1}</h4>
               <h5 className="font-semibold">{day.title}</h5>
-              <p>{day.description}</p>
+              <p className="text-sm">{day.description}</p>
             </div>
           ))}
         </TabsContent>
         <TabsContent value="include" className="mt-4">
           <ul className="list-none space-y-1">
             {tour.include.map((item, index) => (
-              <li key={index} className="flex items-center gap-2">
+              <li key={index} className="flex items-center gap-2 text-sm">
                 <Check className="text-green-500 size-4 flex-shrink-0" />
                 <span>{item}</span>
               </li>
@@ -84,7 +84,7 @@ export default function TourInfo({ tour }: TourInfoProps) {
         <TabsContent value="notInclude" className="mt-4">
           <ul className="list-none space-y-1">
             {tour.notInclude.map((item, index) => (
-              <li key={index} className="flex items-center gap-2">
+              <li key={index} className="flex items-center gap-2 text-sm">
                 <X className="text-red-500 size-4 flex-shrink-0" />
                 <span>{item}</span>
               </li>

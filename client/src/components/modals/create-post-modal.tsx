@@ -20,8 +20,10 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useCreatePostMutation, useUpdatePostMutation } from "@/services/posts/mutation";
 import useAuthInfo from "@/hooks/useAuth";
-import { Popover, PopoverContent } from "../ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { EmojiPicker, EmojiPickerContent, EmojiPickerSearch } from "../ui/emoji-picker";
+import { useAppDispatch } from "@/hooks/redux";
+import { setInformation } from "@/stores/slices/auth-slice";
 
 // Types
 interface PostFormData {
@@ -94,47 +96,14 @@ const ImageCarousel = ({
   );
 };
 
-// Action Buttons Component
-const ActionButtons = ({
-  onImageUpload,
-  onToggleTagInput,
-  onToggleTourSelector,
-  onToggleEmoji,
-  isTourGuide,
-}: {
-  onImageUpload: () => void;
-  onToggleTagInput: () => void;
-  onToggleTourSelector: () => void;
-  onToggleEmoji: () => void;
-  isTourGuide: boolean;
-}) => {
-  return (
-    <div className="inline-flex items-center gap-0 text-primary">
-      <Button size={"icon"} variant={"ghost"} onClick={onImageUpload}>
-        <Image className="size-5" />
-      </Button>
-      <Button size={"icon"} variant={"ghost"} onClick={onToggleTagInput}>
-        <Hash className="size-5" />
-      </Button>
-      {isTourGuide && (
-        <Button size={"icon"} variant={"ghost"} onClick={onToggleTourSelector}>
-          <MapPin className="size-5" />
-        </Button>
-      )}
-      <Button size={"icon"} variant={"ghost"} onClick={onToggleEmoji}>
-        <Smile className="size-5" />
-      </Button>
-    </div>
-  );
-};
-
 const CreatePostModal = ({
   isOpen,
   onOpenChange,
   postData,
   mode = 'create'
 }: CreatePostModalProps) => {
-  const auth = useAuthInfo();  
+  const auth = useAuthInfo();
+  const dispatch = useAppDispatch();
   const createPostMutation = useCreatePostMutation();
   const updatePostMutation = useUpdatePostMutation();
   
@@ -275,7 +244,13 @@ const CreatePostModal = ({
         createPostMutation.mutate(
           formDataToSubmit,
           {
-            onSuccess: () => onOpenChange(false),
+            onSuccess: () => {
+              // Update the user's post count
+              if (auth?.countPosts !== undefined) {
+                dispatch(setInformation({ countPosts: auth.countPosts + 1 }));
+              }
+              onOpenChange(false);
+            },
           }
         );
       } else if (mode === 'update' && postData) {
@@ -330,7 +305,7 @@ const CreatePostModal = ({
                   <span className="text-base font-semibold text-primary">{auth?.fullName}</span>
                   <Badge className="text-xs rounded-full">@{auth?.username}</Badge>
                 </div>
-                <div className="space-y-3 overflow-x-auto overflow-y-auto max-h-[calc(100vh-400px)]">
+                <div className="space-y-3 p-1 overflow-x-auto overflow-y-auto max-h-[calc(100vh-400px)]">
                   <div className="relative">
                     {formData.content.length === 0 && (
                       <span className="absolute top-0 left-0 text-gray-400 pointer-events-none text-sm">
@@ -381,31 +356,42 @@ const CreatePostModal = ({
                   )}
                 </div>
 
-                <ActionButtons
-                  onImageUpload={() => fileInputRef.current?.click()}
-                  onToggleTagInput={() => setIsShowTagInput(prev => !prev)}
-                  onToggleTourSelector={() => setShowTourSelector(true)}
-                  onToggleEmoji={() => setIsOpenEmoji(prev => !prev)}
-                  isTourGuide={auth?.role === "TOUR_GUIDE"}
-                />
+                <div className="inline-flex items-center gap-0 text-primary">
+                  <Button size={"icon"} variant={"ghost"} onClick={() => fileInputRef.current?.click()}>
+                    <Image className="size-5" />
+                  </Button>
+                  <Button size={"icon"} variant={"ghost"} onClick={() => setIsShowTagInput(prev => !prev)}>
+                    <Hash className="size-5" />
+                  </Button>
+                  {auth?.role === "TOUR_GUIDE" && (
+                    <Button size={"icon"} variant={"ghost"} onClick={() => setShowTourSelector(true)}>
+                      <MapPin className="size-5" />
+                    </Button>
+                  )}
 
-                <Popover open={isOpenEmoji} onOpenChange={setIsOpenEmoji}>
-                  <PopoverContent className="p-0 w-auto" asChild>
-                    <EmojiPicker
-                      className="h-[326px] rounded-lg border shadow-md"
-                      onEmojiSelect={({ emoji }) => {
-                        if (contentRef.current) {
-                          contentRef.current.innerText += emoji;
-                        }
-                        handleInput();
-                        setIsOpenEmoji(false);
-                      }}                
-                    >
-                      <EmojiPickerSearch />
-                      <EmojiPickerContent />
-                    </EmojiPicker>
-                  </PopoverContent>
-                </Popover>
+                  <Popover open={isOpenEmoji} onOpenChange={setIsOpenEmoji}>
+                    <PopoverTrigger asChild>
+                      <Button size={"icon"} variant={"ghost"}>
+                        <Smile className="size-5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0 w-auto" asChild>
+                      <EmojiPicker
+                        className="h-[326px] rounded-lg border shadow-md"
+                        onEmojiSelect={({ emoji }) => {
+                          if (contentRef.current) {
+                            contentRef.current.innerText += emoji;
+                          }
+                          handleInput();
+                          setIsOpenEmoji(false);
+                        }}                
+                      >
+                        <EmojiPickerSearch />
+                        <EmojiPickerContent />
+                      </EmojiPicker>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
             </div>
 

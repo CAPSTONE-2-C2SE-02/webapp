@@ -46,7 +46,7 @@ const TourCard = ({ tour, type = "grid" }: TourCardProps) => {
             {/* content */}
             <div className="p-2 pt-3 flex flex-col items-center gap-5 flex-1 bg-white group-hover:-translate-y-10 transition-all duration-300">
               <div className="space-y-2 w-full">
-                <h4 className="text-sm font-semibold line-clamp-1">
+                <h4 className="text-sm font-semibold line-clamp-1 text-primary">
                   {tour.title}
                 </h4>
                 <p className="line-clamp-2 text-xs">{tour.introduction}</p>
@@ -105,7 +105,7 @@ const TourCard = ({ tour, type = "grid" }: TourCardProps) => {
         </Link>
       ) : (
         <Link to={`/tours/${tour._id}`} className="w-full">
-          <div className="p-2 flex gap-2 shadow bg-white rounded-2xl group transition-all duration-300 hover:shadow-md border border-zinc-50">
+          <div className="p-2 flex gap-2 shadow bg-white rounded-2xl group transition-all duration-300 hover:shadow-md border">
             {/* image */}
             <div className="w-60 h-40 overflow-hidden relative rounded-lg">
               <img
@@ -127,7 +127,7 @@ const TourCard = ({ tour, type = "grid" }: TourCardProps) => {
             {/* content */}
             <div className="flex-1 p-2 flex items-start justify-between flex-col">
               <div className="space-y-1.5">
-                <h4 className="text-base font-semibold line-clamp-1">
+                <h4 className="text-base font-semibold line-clamp-1 text-primary">
                   {tour.title}
                 </h4>
                 <p className="line-clamp-2 text-xs">{tour.introduction}</p>
@@ -173,7 +173,8 @@ const TourCard = ({ tour, type = "grid" }: TourCardProps) => {
                 </div>
                 <Button className="rounded-2xl" asChild>
                   <Link to={`/tours/${tour._id}`}>
-                    Book now <ArrowRight className="size-4" />
+                    {auth?.role === "TRAVELER" ? "Book now" : "View detail"}{" "}
+                    <ArrowRight className="size-4" />
                   </Link>
                 </Button>
               </div>

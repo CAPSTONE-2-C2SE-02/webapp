@@ -25,6 +25,8 @@ const CreateNewTourForm = () => {
     const [createTour, { isLoading, isError, isSuccess, error, data }] = useCreateTourMutation();
     const [uploadedImages, setUploadedImages] = useState<File[]>([]);
 
+    const navigate = useNavigate();
+
     const form = useForm<CreateTourValues>({
         resolver: zodResolver(createTourSchema),
         defaultValues: {
@@ -44,8 +46,29 @@ const CreateNewTourForm = () => {
         },
     });
 
-    const navigate = useNavigate();
+    const duration = form.watch("duration");
+    const schedule = form.watch("schedule");
 
+    // Sync schedule with duration
+    useEffect(() => {
+        const currentScheduleLength = schedule?.length || 0;
+        
+        if (currentScheduleLength < duration) {
+            // Add missing days
+            const daysToAdd = duration - currentScheduleLength;
+            for (let i = 0; i < daysToAdd; i++) {
+                append({ title: "", description: "" });
+            }
+        } else if (currentScheduleLength > duration) {
+            // Remove extra days
+            const daysToRemove = currentScheduleLength - duration;
+            for (let i = 0; i < daysToRemove; i++) {
+                remove(currentScheduleLength - 1 - i);
+            }
+        }
+    }, [duration]);
+
+    // handle image upload
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
         if (files.length > 0) {
@@ -57,6 +80,7 @@ const CreateNewTourForm = () => {
         }
     };
 
+    // remove image
     const removeImage = (index: number) => {
         setUploadedImages(prev => {
             const updatedImages = prev.filter((_, i) => i !== index);
@@ -65,13 +89,27 @@ const CreateNewTourForm = () => {
         });
     };
 
+    // handle schedule
     const { fields, append, remove } = useFieldArray({
         control: form.control,
         name: "schedule",
     });
 
+    // handle submit form
     async function onSubmit(values: CreateTourValues) {
         try {
+            // Validate schedule completion
+            if (values.schedule?.some(day => !day.title || !day.description)) {
+                toast.error("Please fill in all schedule details for each day");
+                return;
+            }
+
+            // Validate images
+            if (!values.images || values.images.length === 0) {
+                toast.error("Please upload at least one image");
+                return;
+            }
+
             const formData = new FormData();
             Object.entries(values).forEach(([key, value]) => {
                 if (key === "images" && Array.isArray(value)) {
@@ -81,12 +119,12 @@ const CreateNewTourForm = () => {
                 } else if (key === "schedule") {
                     formData.append("schedule", JSON.stringify(value));
                 } else if (key === "include") {
-                    const includesList = (value as string).split("\n");
+                    const includesList = (value as string).split("\n").filter(item => item.trim() !== "");
                     includesList.forEach(item => {
                         formData.append("include", item);
                     });
                 } else if (key === "notInclude") {
-                    const notIncludesList = (value as string).split("\n");
+                    const notIncludesList = (value as string).split("\n").filter(item => item.trim() !== "");
                     notIncludesList.forEach(item => {
                         formData.append("notInclude", item);
                     });
@@ -118,10 +156,10 @@ const CreateNewTourForm = () => {
     return (
         <div className="max-w-[1080px] mx-auto my-6 bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center mb-6">
-                <button className="text-gray-500 hover:text-gray-700" onClick={() => navigate(-1)}>
+                <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
                     <ArrowLeft size={20} />
-                </button>
-                <h1 className="text-2xl font-bold mx-auto">Create New Tour</h1>
+                </Button>
+                <h1 className="text-2xl font-bold mx-auto text-primary">Create New Tour</h1>
             </div>
 
             <Form {...form}>
@@ -190,12 +228,13 @@ const CreateNewTourForm = () => {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel className="text-gray-700 font-medium">
-                                            Duration <span className="text-red-500">*</span>
+                                            Duration (days) <span className="text-red-500">*</span>
                                         </FormLabel>
                                         <FormControl>
                                             <Input type="number"
                                                 min="1"
-                                                placeholder="e.g. 2 (for 2 days)"
+                                                max="30"
+                                                placeholder="e.g. 2"
                                                 {...field}
                                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
                                                 className="h-10"
@@ -288,6 +327,7 @@ const CreateNewTourForm = () => {
                                         <Input
                                             type="number"
                                             min="1"
+                                            max="50"
                                             placeholder="e.g. 10 people"
                                             {...field}
                                             onChange={(e) => field.onChange(parseFloat(e.target.value))}
@@ -328,7 +368,7 @@ const CreateNewTourForm = () => {
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="e.g. Food and drink"
+                                            placeholder="e.g.&#10;Food and drink&#10;Hotel accommodation&#10;Transportation"
                                             {...field}
                                             className="min-h-[120px] resize-none"
                                         />
@@ -348,7 +388,7 @@ const CreateNewTourForm = () => {
                                     </FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="e.g. Transport"
+                                            placeholder="e.g.&#10;Personal expenses&#10;Travel insurance&#10;Airfare"
                                             {...field}
                                             className="min-h-[120px] resize-none"
                                         />
@@ -370,13 +410,15 @@ const CreateNewTourForm = () => {
                                         <div key={field.id} className="relative border rounded-lg p-4 bg-white">
                                             <div className="flex justify-between items-center mb-2">
                                                 <h3 className="text-lg font-semibold">Day {index + 1}</h3>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => remove(index)}
-                                                    className="text-red-500 hover:text-red-600"
-                                                >
-                                                    <X size={16} />
-                                                </button>
+                                                {fields.length > 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => remove(index)}
+                                                        className="text-red-500 hover:text-red-600"
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                )}
                                             </div>
                                             <FormField
                                                 control={form.control}
@@ -402,7 +444,6 @@ const CreateNewTourForm = () => {
                                                                 placeholder="Describe the activities for this day..."
                                                                 className="min-h-[100px]"
                                                                 {...field}
-
                                                             />
                                                         </FormControl>
                                                         <FormMessage className="min-h-[20px]" />
@@ -417,10 +458,12 @@ const CreateNewTourForm = () => {
                                     variant="outline"
                                     className="w-full mt-4 border-gray-300 text-gray-600"
                                     onClick={() => append({ title: "", description: "" })}
+                                    disabled={fields.length >= duration}
                                 >
                                     + Add Day
                                 </Button>
                             </div>
+                            <FormMessage className="text-xs" />
                         </FormItem>
 
                         <FormField
@@ -446,9 +489,8 @@ const CreateNewTourForm = () => {
                                                 }}
                                             >
                                                 <ImagePlus className="mx-auto h-7 w-7 text-gray-400" />
-                                                <p className="mt-2 text-sm text-gray-500">
-                                                    Drop your image here, or{" "}
-                                                    <span className="text-blue-600 cursor-pointer">Browse</span>
+                                                <p className="mt-4 text-xs text-gray-400">
+                                                    JPG, PNG, WebP up to 5MB
                                                 </p>
                                                 <Input
                                                     id="imageInput"
@@ -494,12 +536,12 @@ const CreateNewTourForm = () => {
                         <div className="flex justify-between gap-4">
                             <Button
                                 variant="outline"
-                                className="border-gray-300 text-gray-600 w-full h-full"
+                                className="w-full h-full"
                                 onClick={() => form.reset()}
                             >
                                 Cancel
                             </Button>
-                            <Button type="submit" disabled={isLoading} className="bg-primary text-white hover:bg-blue-900 w-full h-full">
+                            <Button type="submit" disabled={isLoading} className="w-full h-full">
                                 {isLoading && <Loader2 className="size-4 animate-spin" />}
                                 Done
                             </Button>

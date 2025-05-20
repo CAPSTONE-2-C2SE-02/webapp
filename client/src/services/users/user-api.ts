@@ -1,8 +1,9 @@
-import { ApiResponse, Booking, Calendar, SetAvailabilityResponse, UserInfo, UserSelectedState } from "@/lib/types";
+import { ApiResponse, Booking, Calendar, Follow, SetAvailabilityResponse, UserInfo, UserSelectedState } from "@/lib/types";
 import { rootApi } from "../root-api";
 import { API } from "@/config/constants";
 import axiosInstance from "@/config/api";
 import axios from "axios";
+import { toast } from "sonner";
 import { format } from "date-fns";
 
 export const userApi = rootApi.injectEndpoints({
@@ -19,7 +20,7 @@ export const userApi = rootApi.injectEndpoints({
 
 export const { useGetUserInfoByUsernameQuery } = userApi;
 
-export const followUser = async (userId: string): Promise<any> => {
+export const followUser = async (userId: string): Promise<ApiResponse<Follow>> => {
   if (!userId) throw new Error("User ID is required");
   const response = await axiosInstance.post(API.PROFILE.FOLLOW(userId));
   return response.data;
@@ -74,33 +75,36 @@ export const updateUserProfile = async ({
   userId: string;
   data: FormData | Record<string, any>;
 }): Promise<UserInfo> => {
-  if (!userId) throw new Error("User ID is required");
+  if (!userId) {
+    console.error("Update user profile failed: User ID is required");
+    toast.error("User ID is required");
+    throw new Error("User ID is required");
+  }
 
   try {
     if (data instanceof FormData) {
       const profilePicture = data.get("profilePicture");
       const coverPhoto = data.get("coverPhoto");
       const validTypes = ["image/jpeg", "image/png", "image/jpg"];
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 2 * 1024 * 1024;
 
       if (profilePicture instanceof File && profilePicture.size > 0) {
         if (!validTypes.includes(profilePicture.type)) {
-          throw new Error("Profile picture must be JPEG, JPG or PNG");
+          throw new Error("Profile picture must be JPEG, JPG, or PNG");
         }
         if (profilePicture.size > maxSize) {
-          throw new Error("Profile picture must not exceed 5MB");
+          throw new Error("Profile picture must not exceed 2MB");
         }
       }
 
       if (coverPhoto instanceof File && coverPhoto.size > 0) {
         if (!validTypes.includes(coverPhoto.type)) {
-          throw new Error("Cover photo must be JPEG, JPG or PNG");
+          throw new Error("Cover photo must be JPEG, JPG, or PNG");
         }
         if (coverPhoto.size > maxSize) {
-          throw new Error("Cover photo must not exceed 5MB");
+          throw new Error("Cover photo must not exceed 2MB");
         }
       }
-
       console.log("Sending FormData:", [...data.entries()]);
     } else {
       console.log("Sending JSON data:", data);
@@ -108,7 +112,10 @@ export const updateUserProfile = async ({
 
     const response = await axiosInstance.put(API.PROFILE.UPDATE_INFO(userId), data, {
       headers: data instanceof FormData ? { "Content-Type": "multipart/form-data" } : undefined,
+      timeout: 30000,
     });
+
+    console.log("Server response:", response.data);
 
     if (!response?.data) {
       throw new Error("No data received from server");
@@ -118,17 +125,7 @@ export const updateUserProfile = async ({
       throw new Error("Invalid response format: missing 'result' field");
     }
 
-    const result = response.data.result;
-    if (data instanceof FormData) {
-      if (!result.profilePicture && data.get("profilePicture")) {
-        console.warn("Profile picture not updated in response");
-      }
-      if (!result.coverPhoto && data.get("coverPhoto")) {
-        console.warn("Cover photo not updated in response");
-      }
-    }
-
-    return result;
+    return response.data.result;
   } catch (error: any) {
     console.error("Error updating user profile:", {
       message: error.message,
@@ -138,15 +135,18 @@ export const updateUserProfile = async ({
 
     let errorMessage = "Unable to update profile. Please try again later.";
     if (error.response?.status === 500) {
-      errorMessage = "Server error: Unable to process uploaded file. Please check the file format (JPEG/PNG) and try again.";
+      errorMessage = "Server error: Unable to process request. Please try again.";
     } else if (error.response?.data?.error) {
       errorMessage = error.response.data.error;
     } else if (error.response?.status === 400) {
       errorMessage = "Invalid data submitted. Please check your input.";
+    } else if (error.message.includes("timeout")) {
+      errorMessage = "Connection timed out. Please check your network and try again.";
     } else if (error.message) {
       errorMessage = error.message;
     }
 
+    toast.error(errorMessage);
     throw new Error(errorMessage);
   }
 };
@@ -168,7 +168,7 @@ export const fetchUserPhotos = async (username: string): Promise<string[]> => {
   if (!response.data.success) {
     throw new Error(response.data.error || "Failed to fetch user photos");
   }
-  return Array.isArray(response.data.result?.postImages) ? response.data.result.postImages : [];
+  return Array.isArray(response.data.result) ? response.data.result : [];
 };
 
 export const fetchUserById = async (userId: string): Promise<UserSelectedState> => {

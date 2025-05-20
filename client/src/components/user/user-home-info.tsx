@@ -17,7 +17,7 @@ const UserHomeInfo = () => {
         </div>
         <div className="px-4 py-2 bg-slate-100 rounded-lg flex items-center justify-center gap-5">
           <div className="flex flex-col items-center">
-            <span className="text-sm font-medium text-primary">10</span>
+            <span className="text-sm font-medium text-primary">{user?.countPosts}</span>
             <span className="text-xs font-medium text-zinc-400">Articles</span>
           </div>
           <div className="flex flex-col items-center">

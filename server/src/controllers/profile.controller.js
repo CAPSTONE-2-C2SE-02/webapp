@@ -252,7 +252,7 @@ class ProfileController {
                 });
             }
 
-            const targetUser = await User.findById(targetUserId);
+            let targetUser = await User.findById(targetUserId).select("-password");
             if (!targetUser) {
                 return res.status(StatusCodes.NOT_FOUND).json({
                     success: false,
@@ -260,7 +260,7 @@ class ProfileController {
                 });
             }
 
-            const currentUser = await User.findById(currentUserId);
+            const currentUser = await User.findById(currentUserId).select("-password");
 
             if (targetUser.followers.includes(currentUserId)) {
                 // Unfollow
@@ -270,9 +270,13 @@ class ProfileController {
                 await targetUser.save();
                 await currentUser.save();
 
+                // select -password
+                targetUser = await User.findById(targetUserId).select("_id username fullName profilePicture role followers").populate("role", "name");
+
                 return res.status(StatusCodes.OK).json({
                     success: true,
                     message: "Unfollowed the user successfully.",
+                    result: targetUser,
                 });
             } else {
                 // Follow
@@ -298,9 +302,13 @@ class ProfileController {
                     }),
                 });
 
+                // select -password
+                targetUser = await User.findById(targetUserId).select("_id username fullName profilePicture role followers").populate("role", "name");
+
                 return res.status(StatusCodes.OK).json({
                     success: true,
                     message: "Followed the user successfully.",
+                    result: targetUser,
                 });
             }
         } catch (error) {
@@ -388,16 +396,16 @@ class ProfileController {
                 });
             }
 
+            const allPhotos = [];
+
             const posts = await Post.find({ createdBy: user._id }).select("imageUrls");
             const postImages = posts.reduce((acc, post) => {
                 return acc.concat(post.imageUrls);
             }, []);
 
-            const allPhotos = {
-                profilePicture: user.profilePicture,
-                coverPhoto: user.coverPhoto,
-                postImages,
-            }
+            if (user.profilePicture) allPhotos.push(user.profilePicture);
+            if (user.coverPhoto) allPhotos.push(user.coverPhoto);
+            if (postImages.length > 0) allPhotos.push(...postImages);
 
             return res.status(StatusCodes.OK).json({
                 success: true,

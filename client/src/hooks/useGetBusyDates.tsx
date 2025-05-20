@@ -1,7 +1,7 @@
 import { getBusyDates } from "@/services/users/user-api";
 import { useQuery } from "@tanstack/react-query";
 
-export default function useGetBusyDates(tourGuideId: string) {
+export default function useGetBusyDates(tourGuideId: string, role: "TOUR_GUIDE" | "TRAVELER") {
   return useQuery({
     queryKey: ["busyDates", tourGuideId],
     queryFn: () => getBusyDates(tourGuideId as string),
@@ -12,6 +12,7 @@ export default function useGetBusyDates(tourGuideId: string) {
         dates: busyDates.dates.filter((d) => d.status === "UNAVAILABLE"),
       }
     },
-    enabled: !!tourGuideId,
+    enabled: role === "TOUR_GUIDE",
+    staleTime: 1000 * 60 * 60 * 24,
   });
 }

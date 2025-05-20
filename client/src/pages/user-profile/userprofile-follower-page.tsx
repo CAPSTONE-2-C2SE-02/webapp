@@ -28,7 +28,7 @@ const UserProfileFollowPage = () => {
     const { followers, followings } = useOutletContext<OutletContext>();
 
     return (
-        <div className="my-1 w-full flex flex-col items-start gap-3 bg-white rounded-xl pb-5 mb-5">
+        <div className="w-full flex flex-col items-start gap-3 bg-white rounded-xl pb-5">
             <div className="flex w-full rounded-none">
                 <Tabs defaultValue="followers" className="w-full p-1">
                     <TabsList className="flex bg-transparent p-2 justify-start border-b border-border rounded-none">

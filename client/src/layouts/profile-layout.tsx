@@ -216,8 +216,10 @@ const ProfileLayout = () => {
                     }}
                 />
             )}
-
-            <Outlet context={{ userId: user?._id, role: user?.role, followers: user?.followers, followings: user?.followings }} />
+            
+            <div className="mb-5">
+                <Outlet context={{ userId: user?._id, role: user?.role, followers: user?.followers, followings: user?.followings }} />
+            </div>
         </div>
     );
 };

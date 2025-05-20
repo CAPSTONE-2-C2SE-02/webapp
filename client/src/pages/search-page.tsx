@@ -19,7 +19,7 @@ const SearchPage = () => {
     <div className="my-3 w-full flex justify-center gap-3 h-[calc(100vh-6rem-1px)] overflow-hidden">
       <MetaData title={`${searchQuery} - Search result | TripConnect`} />
       {posts.length > 0 && (
-        <ScrollArea className={cn("bg-white border border-border rounded-lg p-3", tours.length > 0 ? "flex-1" : "max-w-2xl")}>
+        <ScrollArea className={cn("bg-white border border-border rounded-lg p-3", tours.length > 0 ? "flex-1" : "max-w-2xl w-full")}>
           <div className="p-2">
             <h3 className="text-lg font-semibold text-primary text-center mb-2">Posts</h3>
             <PostBookmark data={posts} status={status} />
@@ -27,7 +27,7 @@ const SearchPage = () => {
         </ScrollArea>
       )}
       {tours.length > 0 && (
-        <ScrollArea className={cn("bg-white border border-border rounded-lg p-3", posts.length > 0 ? "flex-1" : "max-w-2xl")}>
+        <ScrollArea className={cn("bg-white border border-border rounded-lg p-3", posts.length > 0 ? "flex-1" : "max-w-2xl w-full")}>
           <div className="p-2">
             <h3 className="text-lg font-semibold text-primary text-center mb-2">Tours</h3>
             <TourBookmark data={tours} status={status} />
