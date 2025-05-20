@@ -39,14 +39,34 @@ export const fetchAllTours = async ({
   limit = 12,
   sortBy,
   sortOrder,
+  minPrice,
+  maxPrice,
+  minLength,
+  maxLength,
+  minRating,
 }: {
   pageParam: number;
   limit?: number;
   sortBy: string;
   sortOrder: string;
+  minPrice?: number;
+  maxPrice?: number;
+  minLength?: number;
+  maxLength?: number;
+  minRating?: number;
 }): Promise<ApiResponse<TourList>> => {
   const response = await publicApi.get(`/tours`, {
-    params: { page: pageParam, limit, sortBy, sortOrder },
+    params: {
+      page: pageParam,
+      limit,
+      sortBy,
+      sortOrder,
+      minPrice,
+      maxPrice,
+      minLength,
+      maxLength,
+      minRating,
+    },
   });
   return response.data;
 };
