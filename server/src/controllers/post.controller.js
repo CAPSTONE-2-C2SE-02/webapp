@@ -1,15 +1,15 @@
 import dayjs from "dayjs";
 import { StatusCodes } from "http-status-codes";
 import notificationController from "../controllers/notification.controller.js";
+import Bookmark from "../models/bookmark.model.js";
+import Comment from "../models/comment.model.js";
 import Notification from "../models/notification.model.js";
 import Post from "../models/post.model.js";
 import Ranking from "../models/ranking.model.js";
 import User from "../models/user.model.js";
-import { uploadImages } from "../utils/uploadImage.util.js";
 import { updateTourGuideRankingAndRating } from '../services/ranking.service.js';
 import { moderatePostContent } from "../utils/contentModeration.util.js";
-import Bookmark from "../models/bookmark.model.js";
-import Comment from "../models/comment.model.js";
+import { uploadImages } from "../utils/uploadImage.util.js";
 
 class PostController {
 
@@ -27,7 +27,7 @@ class PostController {
 
             // check if the post content is appropriate
             const moderationResult = moderatePostContent(request);
-            
+
             if (moderationResult.isInappropriate) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
@@ -38,6 +38,18 @@ class PostController {
             }
 
             const imageUrls = req.files ? await uploadImages(req.files) : [];
+
+            // Custom validation: phải có ít nhất 1 trong 3: content, hashtag, imageUrls
+            const hasContent = Array.isArray(request.content) ? request.content.some(c => c && c.trim().length > 0) : (request.content && request.content.trim().length > 0);
+            const hasHashtag = Array.isArray(request.hashtag) ? request.hashtag.length > 0 : (request.hashtag && request.hashtag.trim().length > 0);
+            const hasImage = imageUrls.length > 0;
+
+            if (!hasContent && !hasHashtag && !hasImage) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Post must have at least one of: content, hashtag, or image."
+                });
+            }
 
             const newPost = {
                 createdBy: user._id,
@@ -184,7 +196,7 @@ class PostController {
 
             // check if the post content is appropriate
             const moderationResult = moderatePostContent(requestUpdateData);
-            
+
             if (moderationResult.isInappropriate) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
@@ -194,7 +206,10 @@ class PostController {
                 });
             }
 
-            let imageUrls = post.imageUrls;
+            let imageUrls = Array.isArray(requestUpdateData.imageUrls)
+                ? requestUpdateData.imageUrls.filter(Boolean) // lấy danh sách ảnh client muốn giữ lại
+                : [];
+
             if (req.files && req.files.length > 0) {
                 const newImageUrls = await uploadImages(req.files);
                 imageUrls = [...imageUrls, ...newImageUrls];

@@ -20,6 +20,36 @@ class BookingController {
         const travelerId = req.user.userId;
         const slots = adults + youths + children;
 
+        // Validate các trường bắt buộc
+        if (!startDate || !endDate || !fullName || !country || !phoneNumber || !email || !address || !city) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                error: "All fields: startDate, endDate, fullName, country, phoneNumber, email, address, city are required.",
+            });
+        }
+
+        // Kiểm tra ngày booking chỉ cho phép trong năm hiện tại
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (start.getFullYear() !== currentYear || end.getFullYear() !== currentYear) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                error: "You can only book tours within the current year.",
+            });
+        }
+
+        // Kiểm tra ngày bắt đầu phải cách hiện tại ít nhất 2 ngày
+        const diffTime = start.getTime() - now.getTime();
+        const diffDays = diffTime / (1000 * 60 * 60 * 24);
+        if (diffDays < 2) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                success: false,
+                error: "Start date must be at least 2 days from today.",
+            });
+        }
+
         let tourGuideId;
         try {
             const tour = await Tour.findById(tourId);
