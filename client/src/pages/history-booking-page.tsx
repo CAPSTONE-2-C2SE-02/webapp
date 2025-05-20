@@ -156,17 +156,21 @@ const HistoryBookingPage = () => {
   // filter booking by tab
   const filteredBookings = bookings?.filter((booking) => {
     if (activeTab === "waitingForPayment") {
-      return booking.paymentStatus === "PENDING";
+      return booking.paymentStatus === "PENDING" && booking.status === "PENDING";
     }
     if (activeTab === "waitingForTourCompletion") {
       return booking.paymentStatus === "PAID" && booking.status === "PAID" || booking.status === "WAITING_CONFIRM";
     }
     if (activeTab === "completed") {
-      return booking.status === "COMPLETED" ;
+      return booking.status === "COMPLETED" && booking.paymentStatus === "PAID";
     }
     if (activeTab === "canceled") {
-      return booking.status === "CANCELED" ;
+      return booking.status === "CANCELED" || booking.paymentStatus === "TIMEOUT";
     }
+    if (activeTab === "notCompleted"){
+      return booking.status === "NOT_COMPLETED"
+    }
+
     return true;
   });
   return (
@@ -199,9 +203,15 @@ const HistoryBookingPage = () => {
             >
               Canceled
             </TabsTrigger>
+            <TabsTrigger
+              value="notCompleted"
+              className="rounded-b-none py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none font-medium text-sm"
+            >
+              Not Completed
+            </TabsTrigger>
           </TabsList>
 
-          {["waitingForPayment", "waitingForTourCompletion", "completed", "canceled"].map((tab) => (
+          {["waitingForPayment", "waitingForTourCompletion", "completed", "canceled", "notCompleted"].map((tab) => (
             <TabsContent key={tab} value={tab} className="px-4 space-y-4">
               {filteredBookings && filteredBookings.length > 0 ? (
                 filteredBookings.map((booking) => (

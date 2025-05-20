@@ -53,14 +53,13 @@ export default function UserNav() {
               Profile
             </Link>
           </DropdownMenuItem>
-          {userInfo?.role === "TRAVELER" && (
             <DropdownMenuItem asChild>
               <Link to="/history-booking">
                 <FileClock />
                 Booking History
               </Link>
             </DropdownMenuItem>
-          )}
+          
           {userInfo?.role === "TOUR_GUIDE" && (
             <DropdownMenuItem asChild>
               <Link to="/tour-management">

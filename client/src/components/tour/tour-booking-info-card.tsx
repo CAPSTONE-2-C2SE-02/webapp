@@ -26,8 +26,9 @@ const TourBookingInfoCard = ({
   const totalPeople = booking.adults + booking.youths + booking.children;
   const isPending = booking.paymentStatus === "PENDING";
   const isPaid = booking.paymentStatus === "PAID" && booking.status === "PAID" || booking.status === "WAITING_CONFIRM";
-  const isCompleted = booking.status === "COMPLETED";
-  const isCanceled = booking.status === "CANCELED";
+  const isCompleted = booking.status === "COMPLETED" && booking.paymentStatus === "PAID";
+  const isCanceled = booking.status === "CANCELED" || booking.paymentStatus === "TIMEOUT";
+  const isNotCompleted = booking.status === "NOT_COMPLETED";
   const userInfo = useAppSelector((state) => state.auth.userInfo);
   const role = userInfo?.role; 
 
@@ -156,6 +157,11 @@ const TourBookingInfoCard = ({
                 </TooltipContent>
               </Tooltip>
           </TooltipProvider>
+          )}
+          {isNotCompleted &&(
+            <>
+              <p>Tour is not completed </p>
+            </>
           )}
         </div>
       </div>
