@@ -28,16 +28,18 @@ const NAV_ITEMS = [
 
 const Header = () => {
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  
   return (
-    <header className="border-b sticky top-0 right-0 left-0 bg-white z-50">
-      <div className="container mx-auto flex items-center justify-between px-8 py-4">
-        <div className="flex items-center gap-5 flex-1">
-          <Link to="/" className="size-10">
+    <header className="border-b sticky top-0 right-0 left-0 bg-white/90 backdrop-blur-md z-50">
+      <div className="container mx-auto flex items-center justify-between px-3 md:px-4 lg:px-8 py-4">
+        <div className="flex items-center gap-2 md:gap-3 lg:gap-5 flex-1">
+          <Link to="/" className="size-10 flex items-center gap-2 md:inline-block">
             <img src={tripConnectLogo} className="w-full h-full object-cover" />
+            <span className="inline-block md:hidden font-madimi text-lg font-bold tracking-wide text-teal-500">TripConnect</span>
           </Link>
           <SearchInput />
         </div>
-        <nav className="flex items-center justify-center gap-4 flex-1">
+        <nav className="hidden md:flex items-center justify-center gap-2 lg:gap-4 flex-1">
           {NAV_ITEMS.map((item) => (
             <NavLink
               key={item.placeholder}
@@ -45,7 +47,7 @@ const Header = () => {
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-2 py-2 rounded-full transition-all duration-300 ease-in-out",
-                  isActive ? "text-primary bg-teal-500/40 px-4" : "text-slate-300 px-2"
+                  isActive ? "text-primary bg-teal-200 px-4 border border-primary/10" : "text-slate-500 px-2"
                 )
               }
               prefetch="intent"
@@ -63,7 +65,7 @@ const Header = () => {
         </nav>
 
         {/* header personal action */}
-        <div className="flex items-center gap-5 flex-1 justify-end">
+        <div className="flex items-center gap-4 md:gap-5 flex-1 justify-end">
           {isAuthenticated ? (
             <>
               <NotificationSheet />

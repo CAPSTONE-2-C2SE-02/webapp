@@ -30,6 +30,7 @@ const ChatConversation = ({
     }
     return "No messages yet";
   }
+
   return (
     <NavLink
       to={`/messages/${userSender._id}`}

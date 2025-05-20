@@ -32,17 +32,17 @@ const HomePage = () => {
   const posts = postsData?.pages.flatMap((page) => page.data) || [];
 
   return (
-    <div className="mt-5 w-full flex items-start gap-5">
+    <div className="mt-3 lg:mt-5 w-full flex items-start gap-5">
       <ScrollToTopOnMount />
       {/* left content */}
-      <div className="flex flex-col gap-5 max-w-[280px] w-full sticky top-[93px] left-0 max-h-[calc(100vh-93px)] overflow-y-auto overflow-x-hidden no-scrollbar">
+      <div className="hidden lg:flex flex-col gap-5 max-w-[280px] w-full sticky top-[93px] left-0 max-h-[calc(100vh-93px)] overflow-y-auto overflow-x-hidden no-scrollbar">
         {/* user info */}
         {isAuthenticated && <UserHomeInfo />}
         {/* tour recommend */}
         <ToursRecommend />
       </div>
       {/* main content */}
-      <div className="flex-1 mb-5">
+      <div className="w-full lg:flex-1 mb-5">
         {isAuthenticated && <NewPost />}
         <InfiniteScrollContainer
           className="flex flex-col gap-3"
@@ -57,7 +57,7 @@ const HomePage = () => {
         </InfiniteScrollContainer>
       </div>
       {/* right content */}
-      <div className="flex flex-col gap-5 max-w-[340px] w-full sticky top-[93px] left-0 max-h-[calc(100vh-93px)] overflow-y-auto overflow-x-hidden no-scrollbar">
+      <div className="hidden md:flex flex-col gap-5 max-w-[340px] w-full sticky top-[93px] left-0 max-h-[calc(100vh-93px)] overflow-y-auto overflow-x-hidden no-scrollbar">
         {/* top ranking */}
         <TourguidesRanking />
         {/* checkin widget */}

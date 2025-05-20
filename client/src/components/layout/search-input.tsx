@@ -42,8 +42,8 @@ const SearchInput = () => {
 
   return (
     <div className="relative isolate" ref={searchRef}>
-      <div className="flex items-center gap-3 bg-zinc-100 min-w-80 w-full py-[9px] px-4 rounded-full flex-1">
-        <Search className="size-4" />
+      <div className="hidden md:flex items-center gap-3 bg-zinc-100 border md:w-60 lg:w-80 py-[9px] px-4 rounded-full flex-1">
+        <Search className="size-4 flex-shrink-0" />
         <input
           type="text"
           placeholder="Let's explore our platform"

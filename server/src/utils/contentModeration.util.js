@@ -49,14 +49,14 @@ export const analyzeContentWithOpenAI = async (text) => {
             3. Detect pornographic or sexual content
             4. Detect content related to drugs, gambling, or fraud
             5. Detect stylized writing intended to bypass filters (replacing letters with numbers, adding symbols, etc.)
-            6. Detect ambiguous words being used with negative meanings
-            7. Detect sarcastic or satirical language with negative intent
             
             If the content has NO issues, return JSON:
             {"isInappropriate": false}
             
             If the content HAS issues, return JSON:
-            {"isInappropriate": true, "categories": ["list of violation types"], "examples": ["violating words or phrases"]}`
+            {"isInappropriate": true, "categories": ["list of violation types"], "examples": ["violating words or phrases"]}
+            
+            Only respond with the JSON object, no addtional text.`
           },
           {
             role: "user",
