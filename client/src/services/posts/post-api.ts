@@ -50,12 +50,12 @@ export const likePost = async (postId: string): Promise<ApiResponse<Pick<UserInf
 };
 
 export const getPostsByHashtag = async (hashtag: string): Promise<ApiResponse<Post[]>> => {
-  const response = await publicApi.get(API.POST.SEARCH(hashtag));
+  const response = await publicApi.get(API.POST.HASHTAG(hashtag));
   return response.data;
 };
 
 export const getTopHashtags = async (): Promise<{ count: number; hashtag: string }[]> => {
-  const response = await publicApi.get('/posts/hashtags/top');
+  const response = await publicApi.get(API.POST.TOP_HASHTAGS);
   return response.data.result;
 };
 

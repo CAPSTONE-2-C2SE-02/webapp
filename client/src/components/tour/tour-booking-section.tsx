@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router";
 import useGetBusyDates from "@/hooks/useGetBusyDates";
 import useAuthInfo from "@/hooks/useAuth";
+import HoverUserCard from "../user/hover-user-card";
 
 interface TourBookingSectionProps {
   tourData: Tour;
@@ -32,7 +33,7 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
   }>({ available: true });
   
   // get busy date
-  const { data: datesBusy } = useGetBusyDates(tourData.author._id);
+  const { data: datesBusy } = useGetBusyDates(tourData.author._id, "TOUR_GUIDE");
   console.log(datesBusy?.dates)
 
   const { isAuthenticated } = useAppSelector((state) => state.auth);
@@ -132,8 +133,8 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
               <div className="w-10 h-10 rounded-full overflow-hidden border">
                 <img src={tourData.author.profilePicture} alt="tour guide avatar" />
               </div>
-              <div className="">
-                <p className="font-medium text-primary text-sm">{tourData.author.fullName}</p>
+              <div>
+                <HoverUserCard user={tourData.author} />
                 <p className="leading-none text-xs text-gray-400 font-medium">@{tourData.author.username}</p>
               </div>
             </div>

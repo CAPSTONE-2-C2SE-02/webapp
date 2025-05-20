@@ -46,8 +46,11 @@ export function useCreatePostMutation() {
       if (error instanceof AxiosError) {
         if (error.response?.status === 400) {
           toast.error(error.response?.data.error, {
-            description: error.response?.data?.message,
-            duration: 3000,
+            description: error.response?.data?.message + " (" + error.response?.data?.examples.join(", ") + ")",
+            duration: 4000,
+            classNames: {
+              description: "!text-red-500 !font-medium",
+            },
           });
         } else {
           toast.error("Failed to create post. Please try again.");
@@ -138,8 +141,11 @@ export function useUpdatePostMutation() {
       if (error instanceof AxiosError) {
         if (error.response?.status === 400) {
           toast.error(error.response?.data.error, {
-            description: error.response?.data?.message,
-            duration: 3000,
+            description: error.response?.data?.message + " (" + error.response?.data?.examples.join(", ") + ")",
+            duration: 4000,
+            classNames: {
+              description: "!text-red-500 !font-medium",
+            },
           });
         } else {
           toast.error("Failed to update post. Please try again.");

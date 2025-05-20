@@ -17,7 +17,48 @@ export default function DataTableToolBar<TData>({
 }: DataTableToolBarProps<TData>) {
   "use no memo";
   const isFiltered = table.getState().columnFilters.length > 0;
-  console.log(table.getColumn("title")?.getFilterValue());
+
+  const handlePriceFilter = (value: string) => {
+    const priceColumn = table.getColumn("priceForAdult");
+    if (!priceColumn) return;
+
+    if (value === "all") {
+      priceColumn.setFilterValue(undefined);
+      return;
+    }
+
+    const priceRanges = {
+      low: { min: 0, max: 80 },
+      medium: { min: 80, max: 120 },
+      high: { min: 120, max: Infinity }
+    };
+
+    const range = priceRanges[value as keyof typeof priceRanges];
+    priceColumn.setFilterValue((price: number) => {
+      return price >= range.min && price < range.max;
+    });
+  };
+
+  const handleRatingFilter = (value: string) => {
+    const ratingColumn = table.getColumn("rating");
+    if (!ratingColumn) return;
+
+    if (value === "all") {
+      ratingColumn.setFilterValue(undefined);
+      return;
+    }
+
+    const ratingRanges = {
+      low: { min: 0, max: 3 },
+      medium: { min: 3, max: 4 },
+      high: { min: 4, max: 5 }
+    };
+
+    const range = ratingRanges[value as keyof typeof ratingRanges];
+    ratingColumn.setFilterValue((rating: number) => {
+      return rating >= range.min && rating < range.max;
+    });
+  };
 
   return (
     <div className={cn("p-3 bg-white border border-border rounded-lg flex flex-col space-y-4 md:flex-row md:items-center md:space-x-10 md:space-y-0", className)}>
@@ -43,9 +84,9 @@ export default function DataTableToolBar<TData>({
       </div>
       {/* filter */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
-        <Select>
+        <Select onValueChange={handlePriceFilter}>
           <SelectTrigger className="w-full sm:w-[150px]">
-            <SelectValue placeholder="Price Range" />
+            <SelectValue placeholder="Price" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Prices</SelectItem>
@@ -54,15 +95,15 @@ export default function DataTableToolBar<TData>({
             <SelectItem value="high">High (&gt; $120)</SelectItem>
           </SelectContent>
         </Select>
-        <Select>
+        <Select onValueChange={handleRatingFilter}>
           <SelectTrigger className="w-full sm:w-[150px]">
             <SelectValue placeholder="Rating" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Rating</SelectItem>
-            <SelectItem value="low">Low (&lt; $80)</SelectItem>
-            <SelectItem value="medium">Medium ($80-$120)</SelectItem>
-            <SelectItem value="high">High (&gt; $120)</SelectItem>
+            <SelectItem value="all">All Ratings</SelectItem>
+            <SelectItem value="low">Low (&lt; 3.0)</SelectItem>
+            <SelectItem value="medium">Medium (3.0-4.0)</SelectItem>
+            <SelectItem value="high">High (&gt; 4.0)</SelectItem>
           </SelectContent>
         </Select>
         <Link to={"/tours/create"}>

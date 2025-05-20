@@ -286,7 +286,7 @@ const router = express.Router();
 router.post("/", authenticated, upload.array("images"), contentModerationMiddleware, postController.createPost);
 router.get("/", postController.getAllPosts);
 router.get("/search", postController.searchPost);
-router.get("/hashtag", postController.getPostsByHashtag);
+router.get("/hashtag/:hashtag", postController.getPostsByHashtag);
 router.get("/hashtags/top", postController.getTopHashtags);
 router.get("/profile/:username", postController.getAllPostsByUsername);
 router.get("/:id", postController.getPostById);

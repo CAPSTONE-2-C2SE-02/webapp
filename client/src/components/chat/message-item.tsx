@@ -63,7 +63,7 @@ const MessageItem = ({
         <>
           <div className={cn("flex flex-wrap gap-2", isCurrentUser ? "justify-end" : "justify-start")}>
             {message.imageUrls.map((url, index) => (
-              <img key={url} src={url} className="min-h-40 max-w-64 object-cover rounded" onClick={() => openLightbox(index)} />
+              <img key={url} src={url} loading="lazy" className="min-h-40 max-w-64 object-cover rounded" onClick={() => openLightbox(index)} />
             ))}
           </div>
           {message?.content && (

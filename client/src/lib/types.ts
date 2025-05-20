@@ -5,6 +5,7 @@ export type Post = {
     username: string;
     fullName: string;
     profilePicture: string;
+    bio: string;
   },
   hashtag: string[];
   content: string[];
@@ -78,7 +79,10 @@ export type Tour = {
     fullName: string,
     username: string;
     profilePicture: string,
-    busyDates: Date[]
+    bio: string;
+    busyDates: Date[];
+    ranking: number;
+    rating: number;
   };
   bookmarks: BookmarkUser[];
   createdAt: string;

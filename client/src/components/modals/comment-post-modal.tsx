@@ -161,7 +161,7 @@ const CommentPostModal = ({ isOpen, onOpenChange, postId }: CommentPostModalProp
         )}
 
         {!isLoading && comments.length > 0 && (
-          <ScrollArea className="max-h-[calc(100vh-240px)] w-full pr-2">
+          <ScrollArea className="max-h-[calc(100vh-240px)] w-full">
             <div className="space-y-5 py-1">
               {comments.map((comment) => (
                 <CommentCard comment={comment} key={comment._id} onAddReply={handleAddReply} />

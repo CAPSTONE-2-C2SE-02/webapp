@@ -6,7 +6,7 @@ import RoleModel from "../models/role.model.js";
 import User from "../models/user.model.js";
 import { comparePassword } from "../utils/password.util.js";
 import { generateToken, verifyToken } from "../utils/token.util.js";
-
+import validator from "validator";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -16,6 +16,22 @@ class AuthenticationController {
     async login(req, res) {
         try {
             const { email, password } = req.body;
+
+            // Kiểm tra thiếu email hoặc password
+            if (!email || !password) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Email and password are required.",
+                });
+            }
+
+            // Kiểm tra định dạng email
+            if (!validator.isEmail(email)) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Invalid email format.",
+                });
+            }
 
             const user = await User.findOne({ email })
                 .populate("role", "name");
