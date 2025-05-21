@@ -39,6 +39,7 @@ const checkExpiredBookings = async () => {
             for (const booking of allExpiredBookings) {
                 booking.status = "CANCELED";
                 booking.paymentStatus = "TIMEOUT";
+                booking.cancellationReason = "Booking was automatically canceled due to payment timeout.";
                 await booking.save();
 
                 // Set lại ngày rảnh cho tour guide
