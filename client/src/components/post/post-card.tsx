@@ -13,7 +13,6 @@ import SharePostModal from "../modals/share-post-modal";
 import TourAttachment from "../tour/tour-attachment";
 import { Carousel, CarouselContent, CarouselItem } from "../ui/carousel";
 import { Post } from "@/lib/types";
-import { formatDistanceToNow } from "date-fns";
 import PostCardAction from "./post-card-action";
 import useAuthInfo from "@/hooks/useAuth";
 import { useLikePostMutation } from "@/services/posts/mutation";
@@ -22,6 +21,7 @@ import ImagesLightbox from "../utils/images-lightbox";
 import useLightBox from "@/hooks/useLightBox";
 import BookMarkButton from "@/components/utils/book-mark-button";
 import HoverUserCard from "../user/hover-user-card";
+import { formatPostDate } from "../utils/convert";
 
 const PostCard = ({ postData }: { postData: Post }) => {
   const auth = useAuthInfo();
@@ -79,7 +79,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
                   to={`/${postData?.createdBy?.username}/post/${postData?._id}`}
                   className="text-xs hover:underline"
                 >
-                  {formatDistanceToNow(new Date(postData?.createdAt), { addSuffix: true })}
+                  {formatPostDate(new Date(postData?.createdAt))}
                 </Link>
               </div>
             </div>
@@ -103,7 +103,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
                 // convert if content is link, add <a> tag
                 if (content.includes("http")) {
                   return (
-                    <Link to={content} target="_blank" rel="noopener noreferrer" key={`${content}+${index}`} className="text-teal-600 text-sm hover:underline">{content}</Link>
+                    <Link to={content} target="_blank" rel="noopener noreferrer" key={`${content}+${index}`} className="text-teal-600 text-sm hover:underline break-all line-clamp-2">{content}</Link>
                   )
                 }
                 return (

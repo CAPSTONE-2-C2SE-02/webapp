@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils";
 import type { Table } from "@tanstack/react-table";
-import { PlusIcon, Search, X } from "lucide-react";
+import { HistoryIcon, PlusIcon, Search, X } from "lucide-react";
 import { Link } from "react-router";
 
 interface DataTableToolBarProps<TData>
@@ -110,6 +110,12 @@ export default function DataTableToolBar<TData>({
           <Button className="w-full sm:w-auto">
               <PlusIcon className="h-4 w-4" />
               Create new tour
+          </Button>
+        </Link>
+        <Link to={"/history-booking"}>
+          <Button className="w-full sm:w-auto">
+            <HistoryIcon className="h-4 w-4" />
+            Booking History
           </Button>
         </Link>
       </div>

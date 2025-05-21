@@ -206,9 +206,12 @@ class PostController {
                 });
             }
 
-            let imageUrls = Array.isArray(requestUpdateData.imageUrls)
-                ? requestUpdateData.imageUrls.filter(Boolean) // lấy danh sách ảnh client muốn giữ lại
-                : [];
+            let imageUrls = [];
+            if (requestUpdateData.existingImages) {
+                imageUrls = Array.isArray(requestUpdateData.existingImages)
+                    ? requestUpdateData.existingImages.filter(Boolean)
+                    : [requestUpdateData.existingImages];
+            }
 
             if (req.files && req.files.length > 0) {
                 const newImageUrls = await uploadImages(req.files);

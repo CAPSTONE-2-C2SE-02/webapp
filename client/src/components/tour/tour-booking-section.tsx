@@ -123,29 +123,33 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
   return (
     <div className="lg:col-span-1">
       <div className="sticky top-[88px] space-y-4">
-        <Card className="shadow-sm">
-          <CardHeader className="py-3 pb-0">
-            <CardTitle className="text-center text-base text-primary">Tour Guide</CardTitle>
-            <CardDescription className="sr-only">Tour Booking Section</CardDescription>
-          </CardHeader>
-          <CardContent className="pb-4 pt-2 flex items-center justify-between">
-            <div className="flex items-center gap-3 select-none">
-              <div className="w-10 h-10 rounded-full overflow-hidden border">
-                <img src={tourData.author.profilePicture} alt="tour guide avatar" />
+        {/* tour guide info */}
+        <div className="pr-1">
+          <Card className="shadow-[4px_4px_oklch(0.392_0.0844_240.76)] border-primary">
+            <CardHeader className="py-3 pb-0">
+              <CardTitle className="text-center text-base text-primary">Tour Guide</CardTitle>
+              <CardDescription className="sr-only">Tour Booking Section</CardDescription>
+            </CardHeader>
+            <CardContent className="pb-4 pt-2 flex items-center justify-between">
+              <div className="flex items-center gap-3 select-none">
+                <div className="w-10 h-10 rounded-full overflow-hidden border">
+                  <img src={tourData.author.profilePicture} alt="tour guide avatar" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <HoverUserCard user={tourData.author} />
+                  <p className="leading-none text-xs text-gray-400 font-medium">@{tourData.author.username}</p>
+                </div>
               </div>
-              <div>
-                <HoverUserCard user={tourData.author} />
-                <p className="leading-none text-xs text-gray-400 font-medium">@{tourData.author.username}</p>
-              </div>
-            </div>
-            <Button className="rounded-full" size={"sm"} asChild>
-              <Link to={isCurrentUser ? `/${tourData.author.username}` : `/messages/${tourData.author._id}`} className="text-xs" state={{ tour: tourData, sendTourImmediately: true }}>
-                {isCurrentUser ? "View Profile" : "Contact Now"}
-                <ArrowUpRight />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+              <Button className="rounded-full" size={"sm"} asChild>
+                <Link to={isCurrentUser ? `/${tourData.author.username}` : `/messages/${tourData.author._id}`} className="text-xs" state={{ tour: tourData, sendTourImmediately: true }}>
+                  {isCurrentUser ? "View Profile" : "Contact Now"}
+                  <ArrowUpRight />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        {/* booking form */}
         <Card className="shadow-sm">
           <CardHeader>
             <CardTitle className="text-center text-xl text-primary">Tour Booking</CardTitle>
@@ -241,7 +245,7 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                 }
 
                 <div>
-                  <h3 className="text-base font-medium text-center mb-4">Customer Types</h3>
+                  <h3 className="text-sm font-medium text-start mb-4">How many tickets?</h3>
                   <div className="space-y-4">
                     <FormField
                       control={form.control}
@@ -249,7 +253,10 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                       render={({ field }) => (
                         <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="text-base">Adults - <span className="bg-teal-200 px-2 py-0.5 rounded-sm">${tourData.priceForAdult}</span></FormLabel>
+                          <FormLabel className="text-base">
+                            <span className="text-primary">Adult (age 18–65)</span>
+                            <div className="text-sm text-muted-foreground">${tourData.priceForAdult}</div>
+                          </FormLabel>
                           <div className="flex items-center gap-2">
                             <Button
                               type="button"
@@ -282,7 +289,10 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                       render={({ field }) => (
                         <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="text-base">Youths - <span className="bg-teal-200 px-2 py-0.5 rounded-sm">${tourData.priceForYoung}</span></FormLabel>
+                          <FormLabel className="text-base">
+                            <span className="text-primary">Youth (age 12–17)</span>
+                            <div className="text-sm text-muted-foreground">${tourData.priceForYoung}</div>
+                          </FormLabel>
                           <div className="flex items-center gap-2">
                             <Button
                               type="button"
@@ -315,7 +325,10 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                       render={({ field }) => (
                         <FormItem>
                         <div className="flex items-center justify-between">
-                          <FormLabel className="text-base">Children - <span className="bg-teal-200 px-2 py-0.5 rounded-sm">${tourData.priceForChildren}</span></FormLabel>
+                          <FormLabel className="text-base">
+                            <span className="text-primary">Children (age 0–11)</span>
+                            <div className="text-sm text-muted-foreground">${tourData.priceForChildren}</div>
+                          </FormLabel>
                           <div className="flex items-center gap-2">
                             <Button
                               type="button"

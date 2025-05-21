@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { TramFrontIcon } from "lucide-react";
+import { LinkIcon, TramFrontIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { getConversationMedia } from "@/services/messages/message-api";
@@ -27,6 +27,7 @@ const ChatInformation = ({ isShow, userId }: ChatInformationProps) => {
 
   const tours = media?.tours || [];
   const images = media?.images || [];
+  const links = media?.links || [];
 
   return (
     <>
@@ -37,11 +38,11 @@ const ChatInformation = ({ isShow, userId }: ChatInformationProps) => {
         )}
       >
         {/* tour links */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           <div className="flex items-center gap-1 text-primary text-base font-medium">
             Attachments
           </div>
-          <span className="text-muted-foreground text-xs">Tour links</span>
+          <span className="text-muted-foreground text-xs block">Tour links</span>
           {isLoading ? (
             <div className="bg-muted text-muted-foreground text-sm text-center py-2">
               Loading...
@@ -73,6 +74,27 @@ const ChatInformation = ({ isShow, userId }: ChatInformationProps) => {
                 </Button>
               )}
             </>
+          )}
+          <span className="text-muted-foreground text-xs block">Links</span>
+          {isLoading ? (
+            <div className="bg-muted text-muted-foreground text-sm text-center py-2">
+              Loading...
+            </div>
+          ) : links.length === 0 ? (
+            <div className="bg-muted text-muted-foreground text-sm text-center py-2">
+              No links found
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1 space-y-1">
+              {links.map((link) => (
+                <Link key={link} to={link} target="_blank" className="bg-muted p-2 flex gap-2 items-center rounded-sm">
+                  <LinkIcon className="size-4 text-primary flex-shrink-0" />
+                  <p className="line-clamp-1 text-xs text-slate-600">
+                    {link}
+                  </p>
+                </Link>
+              ))}
+            </div>
           )}
         </div>
         {/* images */}

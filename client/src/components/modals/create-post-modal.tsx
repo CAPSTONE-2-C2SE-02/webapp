@@ -55,7 +55,7 @@ const ImageCarousel = ({
   if (images.length === 0 && existingImages.length === 0) return null;
 
   return (
-    <Carousel className="w-full">
+    <Carousel className="w-full max-w-[584px]">
       <CarouselContent className="flex">
         {existingImages.map((imageUrl, index) => (
           <CarouselItem key={`existing-${index}`} className="relative min-w-[200px] h-[200px] basis-auto select-none first:pl-4 pl-2">
@@ -292,7 +292,7 @@ const CreatePostModal = ({
             </DialogHeader>
 
             {/* Form */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 w-full">
               <div className="size-9 rounded-full overflow-hidden flex-shrink-0">
                 <img
                   src={auth?.profilePicture || "https://ui-avatars.com/api/?size=128&background=random"}
@@ -300,7 +300,7 @@ const CreatePostModal = ({
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="w-full flex-1 space-y-4">
+              <div className="flex-1 flex flex-col gap-4 w-full">
                 <div className="flex items-center gap-1.5">
                   <span className="text-base font-semibold text-primary">{auth?.fullName}</span>
                   <Badge className="text-xs rounded-full">@{auth?.username}</Badge>

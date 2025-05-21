@@ -175,8 +175,8 @@ class ChatMessage {
         participants: { $all: [senderId, recipientId] },
       }).populate({
         path: "messages",
-        match: { messageType: { $in: ["image", "tour"] } },
-        select: "messageType imageUrls tour",
+        match: { messageType: { $in: ["image", "tour", "text"] } },
+        select: "messageType imageUrls tour content",
         populate: { path: "tour", select: "title" },
         options: { sort: { createdAt: 1 } },
       });
@@ -190,6 +190,7 @@ class ChatMessage {
 
       const images = [];
       const tours = [];
+      const links = [];
 
       for (const msg of conversation.messages) {
         if (msg.messageType === "image" && Array.isArray(msg.imageUrls)) {
@@ -199,12 +200,15 @@ class ChatMessage {
           let tourObj = { _id: msg.tour._id, title: msg.tour.title };
           tours.push(tourObj);
         }
+        if (msg.messageType === "text" && msg.content.includes("http")) {
+          links.push(msg.content);
+        }
       }
 
       return res.status(StatusCodes.OK).json({
         success: true,
         message: "Media retrieved successfully",
-        result: { images, tours },
+        result: { images, tours, links },
       });
     } catch (error) {
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

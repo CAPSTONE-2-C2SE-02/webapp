@@ -318,7 +318,8 @@ export interface ConversationMedia {
   tours: {
     _id: string;
     title: string;
-  }[]
+  }[];
+  links: string[];
 }
 
 export interface BookmarkInfo {
