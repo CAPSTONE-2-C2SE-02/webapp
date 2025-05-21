@@ -128,7 +128,7 @@ const ProfileLayout = () => {
                             value={user.bio || "No bio available yet."}
                             readOnly
                             disabled
-                            className="w-[630px] h-[94px] text-sm resize-none py-2 px-3 bg-slate-200 rounded-b-xl rounded-r-xl"
+                            className="w-[630px] h-[94px] text-sm resize-none p-3 bg-slate-200 rounded-b-xl rounded-r-xl"
                         />
                         {isAuthenticated && authUserInfo?.username === username && (
                             <Button

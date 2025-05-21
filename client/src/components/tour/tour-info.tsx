@@ -24,7 +24,7 @@ export default function TourInfo({ tour }: TourInfoProps) {
         }}
       />
       <h1 className="text-3xl font-bold mb-4 text-start text-primary max-w-[92%]">{tour.title}</h1>
-      <div className="grid grid-cols-2 gap-2 mb-4 text-sm bg-slate-50/60 p-3 rounded-md border border-slate-100">
+      <div className="grid grid-cols-2 gap-2 mb-4 text-sm bg-slate-50/60 p-3 rounded-md border border-primary shadow-[3px_4px_oklch(0.392_0.0844_240.76)]">
         <div className="flex items-center gap-2 text-primary">
           <MapPin className="size-4" />
           <span className="font-medium"><span className="text-teal-500">{getAbsoluteAddress(tour.destination, tour.departureLocation)}</span></span>
@@ -67,7 +67,9 @@ export default function TourInfo({ tour }: TourInfoProps) {
             <div key={index} className="px-3 py-2 border border-border rounded-md">
               <h4 className="text-primary font-bold uppercase text-lg font-madimi">Day {index + 1}</h4>
               <h5 className="font-semibold">{day.title}</h5>
-              <p className="text-sm">{day.description}</p>
+              {day.description.split("\n").map((line, index) => (
+                <p key={index} className="text-sm">{line}</p>
+              ))}
             </div>
           ))}
         </TabsContent>
