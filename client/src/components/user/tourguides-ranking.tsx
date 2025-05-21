@@ -3,6 +3,7 @@ import TopUserRanking from "./top-user-ranking";
 import { Link } from "react-router";
 import { useRankingTop } from "@/hooks/useRanking";
 import { toast } from "sonner";
+import { Skeleton } from "../ui/skeleton";
 
 const rankingStyles = [
   {
@@ -20,7 +21,7 @@ const rankingStyles = [
 ]
 
 const TourguidesRanking = () => {
-  const { data: topThreeRank, isError, isSuccess } = useRankingTop(3);
+  const { data: topThreeRank, isError, isSuccess, isLoading } = useRankingTop(3);
 
   useEffect(() => {
     if (isError) {
@@ -33,10 +34,11 @@ const TourguidesRanking = () => {
   return (
     <div className="w-full bg-white rounded-xl p-5 border">
       <Link to={"/ranking"}>
-      <h1 className="text-base py-1 px-4 rounded-lg bg-primary text-white font-bold text-center mb-5 w-fit mx-auto shadow-[5px_5px_oklch(70.4%_0.14_182.503)]">Tour Guides Ranking</h1>
+        <h1 className="text-base py-1 px-4 rounded-lg bg-primary text-white font-bold text-center mb-5 w-fit mx-auto shadow-[5px_5px_oklch(70.4%_0.14_182.503)]">Tour Guides Ranking</h1>
       </Link>
       <div className="flex items-end justify-center gap-6">
         {isError && <p className="text-center bg-slate-200 py-2 rounded-md text-red-500 font-medium">Error Loading Ranking</p>}
+        {isLoading && <Skeleton className="w-full h-[100px] rounded-md" />}
         {/* Top 3 tourguide */}
         {isSuccess && topThreeRank && reorderedTopGuides.map((item, index) => {
           const rankOrder = [2, 1, 3];

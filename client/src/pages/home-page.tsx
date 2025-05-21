@@ -42,7 +42,7 @@ const HomePage = () => {
         <ToursRecommend />
       </div>
       {/* main content */}
-      <div className="w-full lg:flex-1 mb-5">
+      <div className="w-full lg:flex-1">
         {isAuthenticated && <NewPost />}
         <InfiniteScrollContainer
           className="flex flex-col gap-3"

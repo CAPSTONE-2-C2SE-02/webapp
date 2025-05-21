@@ -29,12 +29,33 @@ const MessageItem = ({
         <div
           className={cn(
             "rounded-xl px-3 py-2 text-sm",
-            isCurrentUser ? "bg-primary text-primary-foreground rounded-br-none" : "bg-muted rounded-bl-none",
+            isCurrentUser
+              ? "bg-primary text-primary-foreground rounded-br-none"
+              : "bg-muted rounded-bl-none"
           )}
         >
-          {message.content}
+          {message.content.includes("http")
+            ? message.content.split(" ").map((item) => {
+                if (item.includes("http")) {
+                  return (
+                    <Link
+                      to={item}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "text-white text-sm underline break-all line-clamp-2",
+                        isCurrentUser ? "text-white" : "text-primary"
+                      )}
+                    >
+                      {item}
+                    </Link>
+                  );
+                }
+                return ` ${item}`;
+              })
+            : message.content}
         </div>
-      )
+      );
     }
     if (message.messageType === "tour") {
       return (
