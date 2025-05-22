@@ -20,6 +20,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createCancel } from "@/services/bookings/booking-api";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { useAppSelector } from "@/hooks/redux";
 
 interface CancelTourProps {
   booking: Booking;
@@ -30,6 +31,7 @@ interface CancelTourProps {
 
 const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTourProps) => {
     const queryClient = useQueryClient();
+    const userInfo = useAppSelector((state) => state.auth.userInfo);
     const form = useForm<CancelTourValues>({
       resolver: zodResolver(cancelTourValues),
       defaultValues: {
@@ -41,7 +43,7 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
       },
     });
     useEffect(() => {
-        if (booking) {
+        if (booking && booking.status === "CANCELED") {
           form.reset({
             secretKey: booking.secretKey,
             fullName: booking.fullName,
@@ -49,22 +51,36 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
             phoneNumber: booking.phoneNumber,
             reason: booking.cancellationReason || "",
           });
-        }
+        } else {
+            form.reset({
+                secretKey: "",
+                fullName: "",
+                email: "",
+                phoneNumber: "",
+                reason: "",
+            });
+            }
       }, [booking, form]);
+
+      useEffect(() => {
+            console.log("isEditable:", isEditable);
+            console.log("Booking status:", booking.status);
+      }, [isEditable, booking]);
 
     const { mutate: createCancelMutation} = useMutation({
         mutationFn: createCancel,
         onSuccess: (data) => {
           if (data.success) {
             toast.success("Cancel tour created successfully");
+            
+            queryClient.setQueryData<Booking[]>(
+                [userInfo?.role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
+                (oldBookings) =>
+                    oldBookings?.map((b) =>
+                    b._id === booking._id ? { ...b, status: "CANCELED" } : b
+                ) || oldBookings
+            );
             queryClient.invalidateQueries({ queryKey: ["CancelBooking"] });
-            // queryClient.setQueryData<Booking[]>(
-            //     bookingsQueryKey,
-            //     (old) =>
-            //       old?.map((b) =>
-            //         b._id === booking._id ? { ...b, status: "CANCELED" } : b
-            //       )
-            //   );
             onOpenChange(false);
           }
         },
@@ -74,16 +90,22 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
       });
 
     const totalPeople = booking.adults + booking.youths + booking.children;
+
     const handleClose = () => {
         onOpenChange(false);
+        form.reset();
     };
-
+    // Check if the booking is editable
     const onSubmit = async (values: CancelTourValues) => {
-        createCancelMutation({
+        if (!isEditable) return; 
+            createCancelMutation({
             ...values,
             bookingId: booking._id,
-        })
+        });
     };
+
+    const departure= booking.tourId.departureLocation.split(",")[0].trim();
+    const destination = booking.tourId.destination.split(",")[0].trim();
 
     return (
     
@@ -94,44 +116,50 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
             </DialogHeader>
 
             <div className="border rounded-lg overflow-hidden flex bg-white shadow-sm mb-4">
-            <div className="w-48 p-1">
+            <div className="w-56 h-40 p-1">
                 <img
                 src={booking.tourId.imageUrls[0]}
                 alt={booking.tourId.title}
-                className="h-full rounded-md"
+                className="h-full w-full rounded-md object-cover"
                 />
             </div>
 
             <div className="flex-1 p-4">
                 <h3 className="font-medium text-sm">{booking.tourId.title}</h3>
                 <p className="text-xs text-gray-500 mt-1">
-                {format(new Date(booking.startDate), "dd/MM/yyyy")} -{" "}
-                {format(new Date(booking.endDate), "dd/MM/yyyy")}
+                    {format(new Date(booking.startDate), "dd/MM/yyyy")} -{" "}
+                    {format(new Date(booking.endDate), "dd/MM/yyyy")}
                 </p>
 
                 <div className="flex items-center mt-2">
-                <MapPin className="h-3 w-3 text-emerald-500" />
-                <span className="text-xs text-emerald-500 ml-1">
-                    {booking.tourId.departureLocation} - {booking.tourId.destination}
-                </span>
+                    <MapPin className="h-3 w-3 text-emerald-500" />
+                    <span className="text-xs text-emerald-500 ml-1">
+                        {departure} - {destination}
+                    </span>
                 </div>
 
                 <div className="flex items-center mt-2 space-x-4">
-                <div className="flex items-center">
-                    <Clock className="h-4 w-4 text-gray-500" />
-                    <span className="text-xs ml-1">{booking.tourId.duration} Days</span>
-                </div>
+                    <div className="flex items-center">
+                        <Clock className="h-4 w-4 text-gray-500" />
+                        <span className="text-xs ml-1">{booking.tourId.duration} Days</span>
+                    </div>
 
-                <div className="flex items-center">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <span className="text-xs ml-1">{totalPeople}</span>
+                    <div className="flex items-center">
+                        <Users className="h-4 w-4 text-gray-500" />
+                        <span className="text-xs ml-1">{totalPeople}</span>
+                    </div>
                 </div>
+                <div className="items-center mt-2 px-2 bg-slate-100 rounded-full w-fit ">
+                    <span className="text-xs font-medium">Total: {booking.totalAmount}$</span>
                 </div>
             </div>
             </div>
 
             <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={(e) => {
+              if (!isEditable) e.preventDefault(); 
+              form.handleSubmit(onSubmit)(e);
+            }} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                     <FormField
                     control={form.control}
@@ -139,7 +167,9 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
                     render={({ field }) => (
                         <FormItem className="space-y-1">
                         <FormLabel className="text-gray-700">
-                            Booking Code <span className="text-red-500">*</span>
+                            Booking Code {booking.status !== "CANCELED" && (
+                                <span className="text-red-500">* </span>
+                            )}
                         </FormLabel>
                         <FormControl>
                             <Input disabled={!isEditable} placeholder="SM-123456" {...field} />
@@ -154,7 +184,9 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
                     render={({ field }) => (
                         <FormItem className="space-y-1">
                         <FormLabel className="text-gray-700" >
-                            Full Name <span className="text-red-500">*</span>
+                            Full Name {booking.status !== "CANCELED" && (
+                                <span className="text-red-500">* </span>
+                            )}
                         </FormLabel>
                         <FormControl>
                             <Input disabled={!isEditable} placeholder="Ngoc Anh" {...field}/>
@@ -171,7 +203,9 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
                         render={({ field }) => (
                         <FormItem className="space-y-1">
                                 <FormLabel className="text-gray-700">
-                                    Email <span className="text-red-500">*</span>
+                                    Email {booking.status !== "CANCELED" && (
+                                        <span className="text-red-500">* </span>
+                                    )}
                                 </FormLabel>
                             <FormControl>
                                 <Input disabled={!isEditable} placeholder="pans@gmail.com" {...field} />
@@ -186,7 +220,9 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
                         render={({ field }) => (
                         <FormItem className="space-y-1">
                             <FormLabel className="text-gray-700">
-                                Phone Number <span className="text-red-500">*</span>
+                                Phone Number {booking.status !== "CANCELED" && (
+                                <span className="text-red-500">* </span>
+                            )}
                             </FormLabel>
                             <FormControl>
                                 <Input disabled={!isEditable} placeholder="+84 356 998 " {...field} />
@@ -223,11 +259,16 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
                     </div>
                 )}
 
+               {isEditable && (
                 <div className="flex justify-end mt-4">
-                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                        Send
+                    <Button
+                    type="submit"
+                    className="bg-blue-600 hover:bg-blue-700"
+                    >
+                    Send 
                     </Button>
                 </div>
+            )}
                
             </form>
             </Form>
