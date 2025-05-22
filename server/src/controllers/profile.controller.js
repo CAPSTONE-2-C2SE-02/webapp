@@ -184,61 +184,6 @@ class ProfileController {
         }
     };
 
-    // [GET] /api/v1/profiles/search?name=
-
-    // db.users.createIndex({ fullName: "text" }) để tìm kiếm
-    async searchProfiles(req, res) {
-        try {
-            const searchQuery = req.query.name?.trim();
-            if (!searchQuery) {
-                return res.status(StatusCodes.BAD_REQUEST).json({
-                    success: false,
-                    error: "Search query is required",
-                });
-            }
-
-            const formattedQuery = searchQuery.replace(/[^a-zA-Z0-9 ]/g, " ");
-
-            let profiles = [];
-
-            profiles = await User.find(
-                { $text: { $search: searchQuery } },
-                { score: { $meta: "textScore" } }
-            ).select("-password")
-                .sort({ score: { $meta: "textScore" } })
-            // .populate("followers", "_id username fullName profilePicture")
-            // .populate("following", "_id username fullName profilePicture")
-
-            if (profiles.length === 0) {
-                profiles = await User.find({
-                    $or: [
-                        { fullName: { $regex: formattedQuery, $options: "i" } },
-                    ],
-                }).select("-password")
-                // .populate("followers", "_id username fullName profilePicture")
-                // .populate("following", "_id username fullName profilePicture")
-            }
-
-            if (profiles.length === 0) {
-                return res.status(StatusCodes.NOT_FOUND).json({
-                    success: false,
-                    error: "No profile found matching the search query",
-                });
-            }
-
-            return res.status(StatusCodes.OK).json({
-                success: true,
-                result: profiles,
-            });
-
-        } catch (error) {
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-                success: false,
-                error: error.message,
-            });
-        }
-    };
-
     // [POST] /api/v1/profiles/follow/:id
     async followUser(req, res) {
         try {

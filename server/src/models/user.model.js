@@ -70,6 +70,8 @@ const userSchema = new mongoose.Schema({
     { timestamps: true }
 );
 
+userSchema.index({ username: "text", fullName: "text" });
+
 userSchema.plugin(mongooseDelete, { deletedAt: true, overrideMethods: true });
 
 const User = mongoose.model('User', userSchema);
