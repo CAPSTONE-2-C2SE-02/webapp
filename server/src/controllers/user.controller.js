@@ -284,6 +284,55 @@ class UserController {
             throw new Error(error.message);
         }
     }
+
+    // [GET] /api/v1/users/search?name=
+    async searchUser(req, res) {
+        try {
+            const searchQuery = req.query.name?.trim();
+            if (!searchQuery) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Search query is required",
+                });
+            }
+
+            const formattedQuery = searchQuery.replace(/[^a-zA-Z0-9 ]/g, " ");
+
+            let profiles = await User.find(
+                { $text: { $search: searchQuery } },
+                { score: { $meta: "textScore" } }
+            )
+                .select("-password")
+                .sort({ score: { $meta: "textScore" } });
+
+            if (profiles.length === 0) {
+                profiles = await User.find({
+                    $or: [
+                        { fullName: { $regex: formattedQuery, $options: "i" } },
+                        { username: { $regex: formattedQuery, $options: "i" } }
+                    ],
+                }).select("-password");
+            }
+
+            if (profiles.length === 0) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "No profile found matching the search query",
+                });
+            }
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: profiles,
+            });
+
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
 };
 
 export default new UserController;

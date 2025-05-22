@@ -23,11 +23,11 @@ const checkExpiredBookings = async () => {
             timeoutAt: { $lte: now },
         });
 
-        // Quét các booking thanh toán sau (isPayLater: true) nhưng chưa thanh toán trước 24h so với startDate
+        // Quét các booking thanh toán sau (isPayLater: true) nhưng chưa thanh toán trước 48h so với startDate
         const payLaterExpiredBookings = await Booking.find({
             isPayLater: true,
             paymentStatus: "PENDING",
-            startDate: { $lte: new Date(now.getTime() + 24 * 60 * 60 * 1000) },
+            startDate: { $lte: new Date(now.getTime() + 48 * 60 * 60 * 1000) },
         });
 
         const allExpiredBookings = [...expiredBookings, ...payLaterExpiredBookings];

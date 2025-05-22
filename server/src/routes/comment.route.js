@@ -168,6 +168,7 @@ const router = express.Router();
 // Routes
 router.post("/", authenticated, validate(commentSchema), commentController.createComment);
 router.get("/:postId", commentController.getCommentsByPost);
+router.get("/:postId/count", commentController.getCommentCount);
 router.put("/:id", authenticated, validate(commentSchema), checkOwnerComment, commentController.updateComment);
 router.delete("/:id", authenticated, commentController.deleteComment);
 router.post("/like", authenticated, commentController.likeComment);

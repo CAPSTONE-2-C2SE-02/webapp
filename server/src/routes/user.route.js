@@ -180,6 +180,7 @@ const router = express.Router();
 
 router.post("/register/traveler", validate(userSchema), userController.registerTraveler);
 router.post("/register/tour-guide", validate(userSchema), userController.registerTourGuide);
+router.get("/search", userController.searchUser);
 router.get("", authenticated, authorize("ADMIN"), userController.getAllUsers);
 router.get("/auth-user", authenticated, userController.getAuthUser);
 router.get("/profile/:username", userController.getUserByUsername);

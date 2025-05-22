@@ -25,20 +25,20 @@ class CommentController {
 
             const userId = user._id;
 
-            const newComment = await Comment({
+            const newComment = new Comment({
                 postId,
                 author: userId,
                 content,
                 parentComment,
             });
 
+            await newComment.save();
+
             if (parentComment) {
                 await Comment.findByIdAndUpdate(parentComment, {
                     $push: { childComments: newComment._id },
                 })
             }
-
-            await newComment.save();
 
             // Send notification
             if (user._id.toString() != post.createdBy.toString()) {
@@ -72,25 +72,47 @@ class CommentController {
     async getCommentsByPost(req, res) {
         try {
             const { postId } = req.params;
-            const comments = await Comment.find({ postId, parentComment: null })
-                .populate("author", "username fullName profilePicture")
-                .populate("likes", "username fullName")
-                .populate({
-                    path: 'childComments',
-                    populate: {
-                        path: 'childComments',
-                    },
-                    populate: {
+
+            const populateComments = async (comments) => {
+                const populatedComments = await Comment.populate(comments, [
+                    {
                         path: 'author',
                         select: 'username fullName profilePicture'
                     },
-                    options: { sort: { createdAt: -1 } }
-                })
+                    {
+                        path: 'likes',
+                        select: 'username fullName'
+                    },
+                    {
+                        path: 'childComments',
+                        populate: {
+                            path: 'author',
+                            select: 'username fullName profilePicture'
+                        }
+                    }
+                ]);
+
+                // Đệ quy populate cho các childComments
+                for (let comment of populatedComments) {
+                    if (comment.childComments && comment.childComments.length > 0) {
+                        comment.childComments = await populateComments(comment.childComments);
+                        // Sắp xếp childComments theo thời gian tạo
+                        comment.childComments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    }
+                }
+
+                return populatedComments;
+            };
+
+            const rootComments = await Comment.find({ postId, parentComment: null })
                 .sort({ createdAt: -1 });
+
+            // Populate đệ quy cho tất cả comments
+            const populatedComments = await populateComments(rootComments);
 
             return res.status(StatusCodes.OK).json({
                 success: true,
-                result: comments
+                result: populatedComments
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, error: error.message });
@@ -183,6 +205,47 @@ class CommentController {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
                 success: false,
                 error: error.message,
+            });
+        }
+    }
+
+    // [GET] /api/v1/comments/:postId/count
+    async getCommentCount(req, res) {
+        try {
+            const { postId } = req.params;
+
+            const post = await Post.findById(postId);
+            if (!post) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "Post not found"
+                });
+            }
+
+            // Đếm tổng số comment (bao gồm cả reply)
+            const totalComments = await Comment.countDocuments({ postId });
+
+            // Đếm số comment gốc (không có parent)
+            const rootComments = await Comment.countDocuments({
+                postId,
+                parentComment: null
+            });
+
+            // Đếm số reply (có parent)
+            const replyComments = totalComments - rootComments;
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: {
+                    totalComments,
+                    rootComments,
+                    replyComments
+                }
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message
             });
         }
     }

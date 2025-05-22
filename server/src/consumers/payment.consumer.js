@@ -204,7 +204,7 @@ async function processVnpayCallback(vnpParams, res) {
     </div>
 `;
 
-            await sendEmail(traveler.email, subject, html);
+            await sendEmail(booking.email, subject, html);
 
             return res.status(StatusCodes.OK).json({
                 success: true,
