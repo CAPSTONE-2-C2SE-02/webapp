@@ -1,5 +1,5 @@
-import { MapPin, Clock, Users, Star, ImagePlus, X, Loader2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MapPin, Clock, Users, Star, ImagePlus, X } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Booking, Review } from "@/lib/types";
@@ -21,6 +21,8 @@ import { createReview, updateReview } from "@/services/tours/review-api";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { AxiosError } from "axios";
+import { getAbsoluteAddress } from "../utils/convert";
+import LoaderSpin from "../utils/loader-spin";
 
 interface ReviewTourProps {
   booking: Booking;
@@ -69,7 +71,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
     }
   }, [reviewData, form]);
 
-  const { mutate: createReviewMutation} = useMutation({
+  const { mutate: createReviewMutation, isPending: isCreatingReview } = useMutation({
     mutationFn: createReview,
     onSuccess: (data) => {
       if (data.success) {
@@ -78,12 +80,15 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
         onOpenChange(false);
       }
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.error || "Failed to create review. Please try again.");
+    onError: (error) => {
+      if (error instanceof AxiosError) {
+        toast.error(error?.response?.data?.error || "Failed to create review. Please try again.");
+      }
+      console.error("Create review error:", error);
     },
   });
 
-  const { mutate: updateReviewMutation } = useMutation({
+  const { mutate: updateReviewMutation, isPending: isUpdatingReview } = useMutation({
     mutationFn: ({ reviewId, data }: { reviewId: string; data: Partial<CreateReviewValues> }) => updateReview(reviewId, data),
     onSuccess: (data) => {
       if (data.success) {
@@ -133,14 +138,15 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
   const handleCloseDialog = () => {
     onOpenChange(false);
   };
-  const departure= booking.tourId.departureLocation.split(",")[0].trim();
-  const destination = booking.tourId.destination.split(",")[0].trim();
 
   return (
     <Dialog open={open} onOpenChange={handleCloseDialog}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl">Review</DialogTitle>
+          <DialogTitle className="text-primary">Review</DialogTitle>
+          <DialogDescription>
+            Please provide your feedback for the tour and tour guide.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="border rounded-lg overflow-hidden flex bg-white shadow-sm mb-4">
@@ -153,27 +159,27 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
           </div>
 
           <div className="flex-1 p-4">
-            <h3 className="font-medium text-sm">{booking.tourId.title}</h3>
+            <h3 className="font-semibold text-sm text-primary line-clamp-2">{booking.tourId.title}</h3>
             <p className="text-xs text-gray-500 mt-1">
               {format(new Date(booking.startDate), "dd/MM/yyyy")} -{" "}
               {format(new Date(booking.endDate), "dd/MM/yyyy")}
             </p>
 
             <div className="flex items-center mt-2">
-              <MapPin className="h-3 w-3 text-emerald-500" />
-              <span className="text-xs text-emerald-500 ml-1">
-                 {departure} - {destination}
+              <MapPin className="h-3 w-3 text-teal-600" />
+              <span className="text-xs text-teal-600 ml-1">
+                 {getAbsoluteAddress(booking.tourId.destination, booking.tourId.departureLocation)}
               </span>
             </div>
 
             <div className="flex items-center mt-2 space-x-4">
               <div className="flex items-center">
-                <Clock className="h-4 w-4 text-gray-500" />
+                <Clock className="h-4 w-4 text-teal-600" />
                 <span className="text-xs ml-1">{booking.tourId.duration} Days</span>
               </div>
 
               <div className="flex items-center">
-                <Users className="h-4 w-4 text-gray-500" />
+                <Users className="h-4 w-4 text-teal-600" />
                 <span className="text-xs ml-1">{totalPeople}</span>
               </div>
             </div>
@@ -221,7 +227,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                       disabled={!editable }
                       placeholder="Type your message here."
                       {...field}
-                      className="min-h-[100px]"
+                      className="min-h-[100px] resize-none"
                     />
                   </FormControl>
                   <FormMessage />
@@ -268,7 +274,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                       disabled={!editable }
                       placeholder="Type your message here."
                       {...field}
-                      className="min-h-[100px]"
+                      className="min-h-[100px] resize-none"
                     />
                   </FormControl>
                   <FormMessage />
@@ -287,7 +293,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                   <FormControl>
                     <div className="flex flex-wrap gap-2">
                     {editable && (
-                      <label className="w-[120px] h-[120px] border-2 border-dashed rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
+                      <label className="w-[120px] h-[120px] p-2 border-2 border-dashed rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
                         <ImagePlus className="h-6 w-6 text-gray-400" />
                         <span className="text-xs text-gray-500 text-center mt-1">
                           Upload your image here or select Browse
@@ -357,17 +363,19 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
 
             <div className="flex justify-end mt-4">
               {editable ? (
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  Send
+                <Button type="submit" disabled={isCreatingReview || isUpdatingReview}>
+                  {isCreatingReview || isUpdatingReview ? (
+                    <LoaderSpin text={isCreatingReview ? "Creating..." : "Updating..."} />
+                  ) : "Send" }
                 </Button>
               ) : (
                 <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setEditable(true)}>
-                  Edit
-                </Button>
-                <Button variant="destructive" onClick={handleDelete}>
-                  Delete
-                </Button>
+                  <Button variant="outline" onClick={() => setEditable(true)}>
+                    Edit
+                  </Button>
+                  <Button variant="destructive" onClick={handleDelete}>
+                    Delete
+                  </Button>
                 </div>
               )}
             </div>

@@ -1,4 +1,4 @@
-import { Calendar, ChevronDown, FileClock, Loader2, LogOut, PlaneTakeoff, Settings, UserRoundPen } from "lucide-react";
+import { Calendar, ChevronDown, History, Loader2, LogOut, PlaneTakeoff, Settings, UserRoundPen } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Link, useNavigate } from "react-router";
@@ -78,13 +78,14 @@ export default function UserNav() {
               Profile
             </Link>
           </DropdownMenuItem>
+          {userInfo?.role === "TRAVELER" && (
             <DropdownMenuItem asChild>
-              <Link to="/history-booking">
-                <FileClock />
+              <Link to="/booking-history">
+                <History />
                 Booking History
               </Link>
             </DropdownMenuItem>
-          
+          )}
           {userInfo?.role === "TOUR_GUIDE" && (
             <DropdownMenuItem asChild>
               <Link to="/tour-management">
@@ -110,7 +111,7 @@ export default function UserNav() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Button variant="ghost" onClick={handleLogout}>
+          <Button variant="outline" onClick={handleLogout} className="w-full">
             {isLoading ? <Loader2 className="mr-2 size-4 animate-spin" /> : <LogOut />}
             Log out
           </Button>

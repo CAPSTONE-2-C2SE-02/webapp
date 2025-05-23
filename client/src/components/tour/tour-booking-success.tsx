@@ -15,7 +15,7 @@ const TourBookingSuccess = () => {
       </div>
 
       <Button asChild className="w-full">
-        <Link to={'/history-booking'}>
+        <Link to={'/booking-history'}>
           See Detail
         </Link>
       </Button>

@@ -170,20 +170,28 @@ class TourController {
 
             const scheduleData = JSON.parse(schedule);
 
-            let imageUrls = tour.imageUrls;
-            if (req.files && req.files.length > 0) {
-                imageUrls = await uploadImages(req.files);
+            let imageUrls = [];
+            if (request.existingImages) {
+                imageUrls = Array.isArray(request.existingImages)
+                    ? request.existingImages.filter(Boolean)
+                    : [request.existingImages];
             }
 
-            await Tour.findByIdAndUpdate(
+            if (req.files && req.files.length > 0) {
+                const newImageUrls = await uploadImages(req.files);
+                imageUrls = [...imageUrls, ...newImageUrls];
+            }
+
+            const updatedTour = await Tour.findByIdAndUpdate(
                 id,
-                { $set: { ...request, schedule: scheduleData, imageUrls } },
+                { $set: { ...request, schedule: scheduleData, imageUrls: imageUrls } },
                 { new: true }
-            );
+            ).populate("author", "_id username fullName profilePicture ranking rating");
 
             return res.status(StatusCodes.OK).json({
                 success: true,
                 message: "Tour has been updated",
+                result: updatedTour,
             });
 
         } catch (error) {

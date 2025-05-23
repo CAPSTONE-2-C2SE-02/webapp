@@ -50,7 +50,7 @@ const ProfileLayout = () => {
     
     return (
         <div className="w-full flex flex-col gap-5">
-            <div className="relative w-full mt-5 px-2 pt-2 rounded-2xl bg-white">
+            <div className="relative w-full mt-5 px-2 pt-2 rounded-2xl bg-white border">
                 {/* cover picture */}
                 <div className="h-[300px] w-full rounded-xl overflow-hidden">
                     {user?.coverPhoto ? (
@@ -70,7 +70,7 @@ const ProfileLayout = () => {
                     </div>
                 )}
                 {/* <img src="https://placehold.co/1920x400" className="rounded-t-2xl" /> */}
-                <div className="shadow-xl flex flex-col bg-white !rounded-b-3xl rounded-t-[100px] pt-2 px-2 pb-5 -translate-y-40 max-w-[220px] absolute left-10">
+                <div className="flex flex-col bg-white shadow-[5px_5px_oklch(0.392_0.0844_240.76)] border border-primary/40 !rounded-b-3xl rounded-t-[100px] pt-2 px-2 pb-5 -translate-y-40 max-w-[220px] absolute left-10">
                     <Avatar className="size-48 border border-border">
                         <AvatarImage src={user.profilePicture} className="object-cover"/>
                         <AvatarFallback className="bg-teal-100 text-primary">{user.fullName?.charAt(0)}</AvatarFallback>

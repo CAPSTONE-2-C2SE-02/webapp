@@ -282,10 +282,19 @@ class ReviewController {
             if (reviewTour !== undefined) review.reviewTour = reviewTour;
             if (reviewTourGuide !== undefined) review.reviewTourGuide = reviewTourGuide;
 
-            if (req.files) {
-                const imageUrls = await uploadImages(req.files);
-                review.imageUrls = imageUrls;
+            const existingImages = req.body.existingImages;
+            let imageUrls = [];
+            if (existingImages) {
+                imageUrls = Array.isArray(existingImages)
+                    ? existingImages.filter(Boolean)
+                    : [existingImages];
             }
+            if (req.files && req.files.length > 0) {
+                const newImageUrls = await uploadImages(req.files);
+                imageUrls = [...imageUrls, ...newImageUrls];
+            }
+
+            review.imageUrls = imageUrls;
 
             await review.save();
 

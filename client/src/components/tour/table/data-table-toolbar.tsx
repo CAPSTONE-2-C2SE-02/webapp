@@ -112,7 +112,7 @@ export default function DataTableToolBar<TData>({
             Create new tour
           </Button>
         </Link>
-        <Link to={"/history-booking"}>
+        <Link to={"/booking-history"}>
           <Button className="w-full sm:w-auto">
             <HistoryIcon className="h-4 w-4" />
             Booking History

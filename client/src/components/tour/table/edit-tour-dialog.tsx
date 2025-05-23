@@ -24,6 +24,9 @@ import { ImagePlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import useUpdateTour from "@/hooks/useUpdateTour";
+import LoaderSpin from "@/components/utils/loader-spin";
+import { toast } from "sonner";
 
 interface EditTourDialogProps {
   isOpen: boolean;
@@ -40,6 +43,7 @@ const EditTourDialog = ({
     tour.imageUrls
   );
   const [newImages, setNewImages] = useState<File[]>([]);
+  const { mutate: updateTour, isPending: isUpdating } = useUpdateTour();
 
   const form = useForm<CreateTourValues>({
     resolver: zodResolver(createTourSchema),
@@ -61,6 +65,31 @@ const EditTourDialog = ({
       ),
     },
   });
+
+  // Update form values when tour prop changes
+  useEffect(() => {
+    if (isOpen) {
+      form.reset({
+        title: tour.title,
+        introduction: tour.introduction,
+        destination: tour.destination,
+        departureLocation: tour.departureLocation,
+        duration: tour.duration,
+        priceForAdult: tour.priceForAdult,
+        priceForYoung: tour.priceForYoung,
+        priceForChildren: tour.priceForChildren,
+        maxParticipants: tour.maxParticipants,
+        schedule: tour.schedule,
+        include: tour.include.join("\n"),
+        notInclude: tour.notInclude.join("\n"),
+        images: tour.imageUrls.map(
+          (image) => new File([image], image, { type: "image/jpeg" })
+        ),
+      });
+      setExistingImages(tour.imageUrls);
+      setNewImages([]);
+    }
+  }, [tour, isOpen, form]);
 
   const duration = form.watch("duration");
   const schedule = form.watch("schedule");
@@ -103,7 +132,51 @@ const EditTourDialog = ({
   };
 
   const onSubmitUpdate = async (values: CreateTourValues) => {
-    console.log(values);
+    try {
+      // Validate schedule completion
+      if (values.schedule?.some(day => !day.title || !day.description)) {
+          toast.error("Please fill in all schedule details for each day");
+          return;
+      }
+
+      // Validate images
+      if (!values.images || values.images.length === 0) {
+          toast.error("Please upload at least one image");
+          return;
+      }
+
+      const formData = new FormData();
+      
+      formData.append("title", values.title);
+      formData.append("introduction", values.introduction);
+      formData.append("destination", values.destination);
+      formData.append("departureLocation", values.departureLocation);
+      formData.append("duration", values.duration.toString());
+      formData.append("priceForAdult", values.priceForAdult.toString());
+      formData.append("priceForYoung", values.priceForYoung.toString());
+      formData.append("priceForChildren", values.priceForChildren.toString());
+      formData.append("maxParticipants", values.maxParticipants.toString());
+      formData.append("schedule", JSON.stringify(values.schedule));
+      formData.append("include", values.include);
+      formData.append("notInclude", values.notInclude);
+      newImages.forEach((file) => {
+        formData.append("images", file);
+      });
+      existingImages.forEach((image) => {
+        formData.append("existingImages", image);
+      });
+
+      updateTour({ id: tour._id, formData }, {
+        onSuccess: () => {
+          onOpenChange(false);
+          form.reset();
+          setNewImages([]);
+        }
+      });
+    } catch (error) {
+      console.error("Tour creation failed:", error);
+      toast.error("Failed to create tour. Please try again.");
+    }
   }
 
   return (
@@ -536,8 +609,12 @@ const EditTourDialog = ({
                 }}>
                   Cancel
                 </Button>
-                <Button type="submit" className="w-full h-full">
-                  Update
+                <Button type="submit" className="w-full h-full" disabled={isUpdating}>
+                  {isUpdating ? (
+                    <LoaderSpin text="Updating..." />
+                  ) : (
+                    "Update"
+                  )}
                 </Button>
               </div>
             </div>

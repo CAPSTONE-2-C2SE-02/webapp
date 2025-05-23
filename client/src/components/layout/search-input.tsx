@@ -6,6 +6,7 @@ import { Skeleton } from "../ui/skeleton";
 import TourSearchItem from "../tour/tour-search-item";
 import PostSearchItem from "../post/post-search-item";
 import useSearch from "@/hooks/useSearch";
+import UserSearchItem from "../user/user-search-item";
 
 const SearchInput = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,6 +17,10 @@ const SearchInput = () => {
   const location = useLocation();
 
   const { data, isLoading } = useSearch(debouncedSearch);
+
+  const posts = data?.posts || [];
+  const tours = data?.tours || [];
+  const users = data?.users || [];
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -35,7 +40,7 @@ const SearchInput = () => {
   }, [location]);
 
   const navigateToSearchPage = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && searchQuery) {
       navigate(`/search?q=${searchQuery}`);
     }
   };
@@ -68,23 +73,31 @@ const SearchInput = () => {
               <Skeleton className="w-full h-10 rounded-md" />
             </div>
           )}
-          {(data?.posts || data?.tours) && (
+          {(posts || tours || users) && (
             <>
-              {data?.posts?.length > 0 || data?.tours?.length > 0 ? (
+              {posts?.length > 0 || tours?.length > 0 || users?.length > 0 ? (
                 <div className="flex flex-col gap-1 mt-2">
-                  {data.tours.length > 0 && (
+                  {tours.length > 0 && (
                     <>
                       <span className="text-xs font-medium text-primary">Tours</span>
-                      {data.tours.slice(0, 3).map((tour) => (
+                      {tours.slice(0, 3).map((tour) => (
                         <TourSearchItem key={tour._id} tour={tour} />
                       ))}
                     </>
                   )}
-                  {data.posts.length > 0 && (
+                  {posts.length > 0 && (
                     <>
                       <span className="text-xs font-medium text-primary">Posts</span>
-                      {data.posts.slice(0, 3).map((post) => (
+                      {posts.slice(0, 3).map((post) => (
                         <PostSearchItem key={post._id} post={post} />
+                      ))}
+                    </>
+                  )}
+                  {users.length > 0 && (
+                    <>
+                      <span className="text-xs font-medium text-primary">Users</span>
+                      {users.slice(0, 3).map((user) => (
+                        <UserSearchItem key={user._id} user={user} />
                       ))}
                     </>
                   )}
