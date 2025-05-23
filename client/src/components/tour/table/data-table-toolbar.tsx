@@ -108,8 +108,8 @@ export default function DataTableToolBar<TData>({
         </Select>
         <Link to={"/tours/create"}>
           <Button className="w-full sm:w-auto">
-              <PlusIcon className="h-4 w-4" />
-              Create new tour
+            <PlusIcon className="h-4 w-4" />
+            Create new tour
           </Button>
         </Link>
         <Link to={"/history-booking"}>

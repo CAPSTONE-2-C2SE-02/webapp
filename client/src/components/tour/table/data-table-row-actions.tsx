@@ -5,6 +5,8 @@ import { Ellipsis, Trash2 } from "lucide-react";
 import { useState } from "react";
 import DeleteTourDialog from "./delete-tour-dialog";
 import { Link } from "react-router";
+import { Tour } from "@/lib/types";
+import EditTourDialog from "./edit-tour-dialog";
 
 interface WithId<T> {
   _id: T;
@@ -17,8 +19,9 @@ interface DataTableRowActionsProps<TData>
 
 const DataTableRowActions = <TData extends WithId<string>>({ row }: DataTableRowActionsProps<TData>) => {
   "use no memo";
-  const tourId = row.original._id as string;
+  const tour = row.original as unknown as Tour;
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   return (
     <>
@@ -30,11 +33,11 @@ const DataTableRowActions = <TData extends WithId<string>>({ row }: DataTableRow
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40 font-medium">
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
             Edit
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to={`/tours/${tourId}`} target="_blank">
+            <Link to={`/tours/${tour._id}`} target="_blank">
               View
             </Link>
           </DropdownMenuItem>
@@ -51,7 +54,12 @@ const DataTableRowActions = <TData extends WithId<string>>({ row }: DataTableRow
       <DeleteTourDialog 
         isOpen={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        tourId={tourId}
+        tourId={tour._id}
+      />
+      <EditTourDialog
+        isOpen={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        tour={tour}
       />
     </>
   )

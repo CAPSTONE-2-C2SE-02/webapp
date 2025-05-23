@@ -193,6 +193,11 @@ export type Notification =
     type: "FOLLOW";
     relatedModel: "User";
     relatedId: UserInfo;
+  })
+  | (BaseNotification & {
+    type: "CONFIRM" | "REVIEW";
+    relatedModel: "Booking";
+    relatedId: Booking;
   });
 
 export type AuthUserInfo = {

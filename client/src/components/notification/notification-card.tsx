@@ -27,6 +27,9 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete }: Notification
       case "COMMENT":
       case "LIKE":
         return `${auth?.username}/post/${notification.relatedId._id}`
+      case "CONFIRM":
+      case "REVIEW":
+        return `history-booking`
       default:
         return ""
     }

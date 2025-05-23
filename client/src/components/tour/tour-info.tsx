@@ -24,7 +24,7 @@ export default function TourInfo({ tour }: TourInfoProps) {
         }}
       />
       <h1 className="text-3xl font-bold mb-4 text-start text-primary max-w-[92%]">{tour.title}</h1>
-      <div className="grid grid-cols-2 gap-2 mb-4 text-sm bg-slate-50/60 p-3 rounded-md border border-primary shadow-[3px_4px_oklch(0.392_0.0844_240.76)]">
+      <div className="grid grid-cols-2 gap-2 mb-4 mr-1 text-sm bg-slate-50/60 p-3 rounded-md border shadow-[3px_4px_oklch(0.392_0.0844_240.76)]">
         <div className="flex items-center gap-2 text-primary">
           <MapPin className="size-4" />
           <span className="font-medium"><span className="text-teal-500">{getAbsoluteAddress(tour.destination, tour.departureLocation)}</span></span>
