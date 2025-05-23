@@ -1,4 +1,4 @@
-import { MapPin, Clock, Users } from "lucide-react"
+import { MapPin, Clock, Users, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Booking } from "@/lib/types"
 import { format } from "date-fns";
@@ -13,6 +13,7 @@ export interface TourBookingInfoCardProps {
   onComplete: (bookingId: string) => void;
   onReview: (bookingId: string) => void;
   onViewCancel: (Booking: string) => void;
+  isPaymentPending?: boolean;
 }
 
 const TourBookingInfoCard = ({
@@ -22,22 +23,26 @@ const TourBookingInfoCard = ({
   onComplete,
   onReview,
   onViewCancel,
+  isPaymentPending = false,
 }: TourBookingInfoCardProps) => {
   const totalPeople = booking.adults + booking.youths + booking.children;
-  const isPending = booking.paymentStatus === "PENDING";
+  const isPending = booking.paymentStatus === "PENDING" && booking.status === "PENDING";
   const isPaid = booking.paymentStatus === "PAID" && booking.status === "PAID" || booking.status === "WAITING_CONFIRM";
-  const isCompleted = booking.status === "COMPLETED";
-  const isCanceled = booking.status === "CANCELED";
+  const isCompleted = booking.status === "COMPLETED" && booking.paymentStatus === "PAID";
+  const isCanceled = booking.status === "CANCELED" || booking.paymentStatus === "TIMEOUT";
   const userInfo = useAppSelector((state) => state.auth.userInfo);
   const role = userInfo?.role; 
 
+  const departure= booking.tourId.departureLocation.split(",")[0].trim();
+  const destination = booking.tourId.destination.split(",")[0].trim();
+
   return (
     <div className="border rounded-lg overflow-hidden flex bg-white shadow-sm">
-      <div className="w-56 p-2 ">
+      <div className="w-56 h-40 p-2 ">
         <img
           src={booking.tourId.imageUrls[0]}
           alt={booking.tourId.title}
-          className="h-full rounded-md"
+          className="h-full w-full rounded-md object-cover"
         />
       </div>
 
@@ -56,7 +61,7 @@ const TourBookingInfoCard = ({
 
           <div className="flex items-center mt-2">
             <MapPin className="h-4 w-4 text-emerald-500" />
-            <span className="text-xs text-emerald-500 ml-1">{booking.tourId.departureLocation} - {booking.tourId.destination}</span>
+            <span className="text-xs text-emerald-500 ml-1"> {departure} - {destination}</span>
           </div>
         </div>
 
@@ -73,7 +78,7 @@ const TourBookingInfoCard = ({
             </div>
           </div>
         </div>
-        <div className="items-center px-2 py- bg-slate-100 rounded-full w-fit">
+        <div className="items-center px-2 bg-slate-100 rounded-full w-fit">
                 <span className="text-xs font-medium">Total: {booking.totalAmount}$</span>
           </div>
       </div>
@@ -86,8 +91,15 @@ const TourBookingInfoCard = ({
                 Cancel
               </Button>
               {role === "TRAVELER" && (
-                <Button size="sm" variant="default" className="text-xs h-8" onClick={() => onPayment(booking._id)}>
-                  Payment
+                <Button size="sm" variant="default" className="text-xs h-8" onClick={() => onPayment(booking._id)} disabled={isPaymentPending}>
+                  {isPaymentPending ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin mr-1" />
+                    Loading...
+                  </>
+                ) : (
+                  "Payment"
+                )}
                 </Button>
               )}
             </>

@@ -122,6 +122,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
     } else {
       createReviewMutation(payload);
     }
+  
   };
 
   const handleDelete = () => {
@@ -132,6 +133,8 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
   const handleCloseDialog = () => {
     onOpenChange(false);
   };
+  const departure= booking.tourId.departureLocation.split(",")[0].trim();
+  const destination = booking.tourId.destination.split(",")[0].trim();
 
   return (
     <Dialog open={open} onOpenChange={handleCloseDialog}>
@@ -159,7 +162,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
             <div className="flex items-center mt-2">
               <MapPin className="h-3 w-3 text-emerald-500" />
               <span className="text-xs text-emerald-500 ml-1">
-                {booking.tourId.departureLocation} - {booking.tourId.destination}
+                 {departure} - {destination}
               </span>
             </div>
 

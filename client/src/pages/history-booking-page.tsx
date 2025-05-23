@@ -1,25 +1,16 @@
 
 import CancelTourModal from "@/components/modals/cancel-tour-modal";
 import ReviewTourModal from "@/components/modals/review-tour-modal";
-import TourCardSkeleton from "@/components/skeleton/tour-card-skeleton";
 import TourBookingInfoCard from "@/components/tour/tour-booking-info-card"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/hooks/redux";
 import { Booking, Review } from "@/lib/types";
 import { confirmCompleteTourByTourGuide, confirmCompleteTourByTraveler } from "@/services/bookings/booking-api";
+import { useGetPaymentBooking } from "@/services/bookings/booking-mutation";
 import { fetchReviewByBookingId } from "@/services/tours/review-api";
 import { fetchTourGuideBookings, fetchTravelerBookings } from "@/services/users/user-api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const HistoryBookingPage = () => {
@@ -34,6 +25,9 @@ const HistoryBookingPage = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelBooking, setCancelBooking] = useState<Booking | null>(null);
   const [isEditable, setIsEditable] = useState(true);
+  const [paymentBookingId, setPaymentBookingId] = useState<string>("");
+
+  const { data: paymentURL, isPending: isGetPaymentUrl } = useGetPaymentBooking(paymentBookingId);
 
   const { data: bookings, isLoading, error } = useQuery<Booking[], Error>({
     queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
@@ -62,31 +56,15 @@ const HistoryBookingPage = () => {
   };
 
   const handlePayment = async (bookingId: string) => {
-    queryClient.setQueryData<Booking[]>(
-      [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
-      (oldBookings) => {
-        if (!oldBookings) return oldBookings;
-        return oldBookings.map((booking) =>
-          booking._id === bookingId
-            ? { ...booking, status: "PAID", paymentStatus: "PAID" }
-            : booking
-        );
-      }
-    );
-    toast.success("Payment completed successfully");
+    const booking = bookings?.find((b) => b._id === bookingId);
+    if (!booking) {
+      toast.error("Booking not found.");
+      return;
+    }
+    setPaymentBookingId(bookingId);
   };
 
   const handleComplete = async (bookingId: string) => {
-    // queryClient.setQueryData<Booking[]>(
-    //   [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
-    //   (oldBookings) => {
-    //     if (!oldBookings) return oldBookings;
-    //     return oldBookings.map((booking) =>
-    //       booking._id === bookingId ? { ...booking, status: "COMPLETED" } : booking
-    //     );
-    //   }
-    // );
-    // toast.success("Tour completed successfully");
     try {
       if (role === "TRAVELER") {
         await confirmCompleteTourByTraveler(bookingId);
@@ -135,6 +113,14 @@ const HistoryBookingPage = () => {
     setIsReviewModalOpen(true);
   };
 
+  useEffect(() => {
+    if (paymentURL?.success && paymentURL.result) {
+      window.location.href = paymentURL.result.paymentUrl;
+    } else if (paymentURL && !paymentURL.success) {
+      toast.error("Not found payment URL. Please try again.");
+    }
+  }, [paymentURL]);
+
   if (isLoading) {
     return <div className="text-center py-10 bg-slate-300">
       Loading...
@@ -156,17 +142,21 @@ const HistoryBookingPage = () => {
   // filter booking by tab
   const filteredBookings = bookings?.filter((booking) => {
     if (activeTab === "waitingForPayment") {
-      return booking.paymentStatus === "PENDING";
+      return booking.paymentStatus === "PENDING" && booking.status === "PENDING";
     }
     if (activeTab === "waitingForTourCompletion") {
       return booking.paymentStatus === "PAID" && booking.status === "PAID" || booking.status === "WAITING_CONFIRM";
     }
     if (activeTab === "completed") {
-      return booking.status === "COMPLETED" ;
+      return booking.status === "COMPLETED" && booking.paymentStatus === "PAID";
     }
     if (activeTab === "canceled") {
-      return booking.status === "CANCELED" ;
+      return booking.status === "CANCELED" || booking.paymentStatus === "TIMEOUT";
     }
+    if (activeTab === "notCompleted"){
+      return booking.status === "NOT_COMPLETED"
+    }
+
     return true;
   });
   return (
@@ -199,9 +189,15 @@ const HistoryBookingPage = () => {
             >
               Canceled
             </TabsTrigger>
+            <TabsTrigger
+              value="notCompleted"
+              className="rounded-b-none py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none font-medium text-sm"
+            >
+              Not Completed
+            </TabsTrigger>
           </TabsList>
 
-          {["waitingForPayment", "waitingForTourCompletion", "completed", "canceled"].map((tab) => (
+          {["waitingForPayment", "waitingForTourCompletion", "completed", "canceled", "notCompleted"].map((tab) => (
             <TabsContent key={tab} value={tab} className="px-4 space-y-4">
               {filteredBookings && filteredBookings.length > 0 ? (
                 filteredBookings.map((booking) => (
@@ -224,32 +220,6 @@ const HistoryBookingPage = () => {
           ))}
         </Tabs>
       </div>
-      <div className="items-center w-full text-primary">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#" isActive>
-                1
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">2</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
       {selectedBooking && (
         <ReviewTourModal
           booking={selectedBooking}
@@ -268,9 +238,12 @@ const HistoryBookingPage = () => {
           open={isCancelModalOpen}
           onOpenChange={(open) => {
             setIsCancelModalOpen(open);
+            if (!open && cancelBooking.status !== "CANCELED") {
+              setActiveTab("canceled"); 
+            }
             if (!open) setCancelBooking(null);
           }}
-          isEditable={true}
+          isEditable={cancelBooking.status === "PENDING" || cancelBooking.status === "PAID"}
         />
       )}
     </div>

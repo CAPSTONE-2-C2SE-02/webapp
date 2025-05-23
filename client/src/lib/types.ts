@@ -254,7 +254,7 @@ export interface Booking {
   children: number;
   totalAmount: number;
   paymentStatus: "PENDING" | "TIMEOUT" | "FAILED" | "PAID" | "REFUNDED";
-  status: "PENDING" | "PAID" | "FAILED" | "CANCELED" | "TIMEOUT" | "COMPLETED" | "WAITING_CONFIRM";
+  status: "PENDING" | "PAID" | "FAILED" | "CANCELED" | "TIMEOUT" | "COMPLETED" | "WAITING_CONFIRM" | "NOT_COMPLETED"
   isReview: boolean;
   fullName: string;
   phoneNumber: string;
