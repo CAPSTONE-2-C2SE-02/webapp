@@ -5,16 +5,19 @@ import useLocationSearch from "@/hooks/useLocationSearch";
 type LocationSelectProps = {
   onChange: (val: string) => void;
   placeholder: string;
+  value?: string;
 };
 
-const LocationSelect = ({ onChange, placeholder }: LocationSelectProps) => {
+const LocationSelect = ({ onChange, placeholder, value }: LocationSelectProps) => {
   const [query, setQuery] = useState<string>("");
   const [isFocused, setIsFocused] = useState(false);
   const { data: locations, isLoading, isError } = useLocationSearch(query);
 
   useEffect(() => {
-    
-  }, []);
+    if (value) {
+      setQuery(value);
+    }
+  }, [value]);
 
   return (
     <div className="relative">

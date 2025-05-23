@@ -125,7 +125,7 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
       <div className="sticky top-[88px] space-y-4">
         {/* tour guide info */}
         <div className="pr-1">
-          <Card className="shadow-[4px_4px_oklch(0.392_0.0844_240.76)] border-primary">
+          <Card className="shadow-[4px_4px_oklch(0.392_0.0844_240.76)] border">
             <CardHeader className="py-3 pb-0">
               <CardTitle className="text-center text-base text-primary">Tour Guide</CardTitle>
               <CardDescription className="sr-only">Tour Booking Section</CardDescription>

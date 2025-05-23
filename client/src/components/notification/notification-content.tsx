@@ -14,6 +14,9 @@ const NotificationContent = ({ notification }: { notification: Notification }) =
         return 'has just booked your tour'
       case "COMMENT":
         return `commented on your post ${notification?.relatedId?.content[0] ? `"${notification?.relatedId?.content[0]}"` : ""}`
+      case "CONFIRM":
+      case "REVIEW":
+        return notification.message
       default:
         return null;
     }
