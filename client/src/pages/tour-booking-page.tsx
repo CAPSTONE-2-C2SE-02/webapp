@@ -94,7 +94,7 @@ const TourBookingPage = () => {
   useEffect(() => {
     if (paymentURL?.success && paymentURL.result) {
       if (isReserve) {
-        navigate("/history-booking", { replace: true });
+        navigate("/booking-history", { replace: true });
       } else {
         window.location.href = paymentURL.result.paymentUrl;
       }
@@ -142,7 +142,7 @@ const TourBookingPage = () => {
                         Country <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Viet Name" {...field} />
+                        <Input placeholder="Viet Nam" {...field} />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>

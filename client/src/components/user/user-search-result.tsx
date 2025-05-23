@@ -1,18 +1,18 @@
-import TourCardSkeleton from "@/components/skeleton/tour-card-skeleton";
-import TourCard from "@/components/tour/tour-card";
-import { Tour } from "@/lib/types"
+import { UserInfo } from "@/lib/types";
+import UserCardSkeleton from "../skeleton/user-card-skeleton";
+import UserCard from "./user-card";
 
-interface TourBookmarkProps {
-  data: Tour[] | undefined;
+interface UserSearchResultProps {
+  data: UserInfo[] | undefined;
   status: "error" | "success" | "pending";
 }
 
-const TourBookmark = ({ data, status }: TourBookmarkProps) => {
+const UserSearchResult = ({ data, status }: UserSearchResultProps) => {
   if (status === "pending") {
     return (
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }).map((_, index) => (
-          <TourCardSkeleton key={index} />
+          <UserCardSkeleton key={index} />
         ))}
       </div>
     )
@@ -21,7 +21,7 @@ const TourBookmark = ({ data, status }: TourBookmarkProps) => {
   if (status === "error") {
     return (
       <p className="text-center text-destructive text-sm">
-        An error occurred while loading.
+        An error occurred while loading users.
       </p>
     )
   }
@@ -29,18 +29,18 @@ const TourBookmark = ({ data, status }: TourBookmarkProps) => {
   if (status === "success" && !data?.length) {
     return (
       <p className="text-center text-muted-foreground text-sm">
-        No tours found.
+        No users found.
       </p>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-      {data?.map((tour) => (
-        <TourCard key={tour._id} tour={tour} />
+    <div className="grid grid-cols-1 gap-3">
+      {data?.map((user) => (
+        <UserCard key={user._id} user={user} />
       ))}
     </div>
   )
 }
 
-export default TourBookmark
+export default UserSearchResult

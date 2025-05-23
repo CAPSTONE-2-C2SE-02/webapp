@@ -21,6 +21,15 @@ export const tourApi = rootApi.injectEndpoints({
 
 export const { useCreateTourMutation } = tourApi;
 
+export const updateTour = async (id: string, formData: FormData): Promise<ApiResponse<Tour>> => {
+  const response = await axiosInstance.put(`/tours/${id}`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    }
+  });
+  return response.data;
+};
+
 // get all tours created by author
 export const fetchAllPostTourGuide = async (): Promise<ApiResponse<Tour[]>> => {
   const response = await axiosInstance.get('/tours/my-tours');

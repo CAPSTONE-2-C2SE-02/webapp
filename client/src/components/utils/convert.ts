@@ -7,7 +7,7 @@ export const convertRoleName = (role: string) => {
 export const getAbsoluteAddress = (
   destination: string | undefined,
   departureLocation: string | undefined
-) => `${destination?.split(",")[0]} - ${departureLocation?.split(",")[0]}`;
+) => ` ${departureLocation?.split(",")[0]} - ${destination?.split(",")[0]}`;
 
 export const generateRatingText = (rating: number | null | undefined): string => {
   if (!rating) return "No Rating";

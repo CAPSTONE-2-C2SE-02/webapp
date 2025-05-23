@@ -21,7 +21,7 @@ const PostBookmark = ({ data, status }: PostBookmarkProps) => {
   if (status === "error") {
     return (
       <p className="text-center text-destructive text-sm">
-        An error occurred while loading bookmarks.
+        An error occurred while loading.
       </p>
     )
   }
@@ -29,7 +29,7 @@ const PostBookmark = ({ data, status }: PostBookmarkProps) => {
   if (status === "success" && !data?.length) {
     return (
       <p className="text-center text-muted-foreground text-sm">
-        You don&apos;t have any bookmarks yet.
+        No posts found.
       </p>
     )
   }

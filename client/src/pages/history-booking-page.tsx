@@ -1,22 +1,22 @@
-
 import CancelTourModal from "@/components/modals/cancel-tour-modal";
 import ReviewTourModal from "@/components/modals/review-tour-modal";
 import TourBookingInfoCard from "@/components/tour/tour-booking-info-card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAppSelector } from "@/hooks/redux";
+import MetaData from "@/components/utils/meta-data";
+import useAuthInfo from "@/hooks/useAuth";
 import { Booking, Review } from "@/lib/types";
 import { confirmCompleteTourByTourGuide, confirmCompleteTourByTraveler } from "@/services/bookings/booking-api";
-import { useGetPaymentBooking } from "@/services/bookings/booking-mutation";
 import { fetchReviewByBookingId } from "@/services/tours/review-api";
 import { fetchTourGuideBookings, fetchTravelerBookings } from "@/services/users/user-api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { AxiosError } from "axios";
+import { useState } from "react";
 import { toast } from "sonner";
 
 const HistoryBookingPage = () => {
-  const userInfo = useAppSelector((state) => state.auth.userInfo);
-  const userId = userInfo?._id;
-  const role = userInfo?.role;
+  const authInfo = useAuthInfo();
+  const userId = authInfo?._id;
+  const role = authInfo?.role;
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("waitingForPayment");
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -25,9 +25,6 @@ const HistoryBookingPage = () => {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [cancelBooking, setCancelBooking] = useState<Booking | null>(null);
   const [isEditable, setIsEditable] = useState(true);
-  const [paymentBookingId, setPaymentBookingId] = useState<string>("");
-
-  const { data: paymentURL, isPending: isGetPaymentUrl } = useGetPaymentBooking(paymentBookingId);
 
   const { data: bookings, isLoading, error } = useQuery<Booking[], Error>({
     queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
@@ -45,6 +42,7 @@ const HistoryBookingPage = () => {
     setCancelBooking(booking);
     setIsCancelModalOpen(true);
   };
+
   const handleViewCancel = (bookingId: string) => {
     const booking = bookings?.find((b) => b._id === bookingId);
     if (!booking) {
@@ -55,13 +53,12 @@ const HistoryBookingPage = () => {
     setIsCancelModalOpen(true);
   };
 
-  const handlePayment = async (bookingId: string) => {
-    const booking = bookings?.find((b) => b._id === bookingId);
-    if (!booking) {
-      toast.error("Booking not found.");
-      return;
+  const handlePayment = async (paymentURL: string) => {
+    if (paymentURL) {
+      window.location.href = paymentURL;
+    } else {
+      toast.error("Not found payment URL. Please try again.");
     }
-    setPaymentBookingId(bookingId);
   };
 
   const handleComplete = async (bookingId: string) => {
@@ -77,9 +74,10 @@ const HistoryBookingPage = () => {
       queryClient.invalidateQueries({
         queryKey: [role === "TRAVELER" ? "travelerBookings" : "tourGuideBookings"],
       });
-    } catch (error: any) {
-      const msg = error?.response?.data?.error || "Failed to complete tour";
-      toast.error(msg);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        toast.error(error?.response?.data?.error || "Failed to complete tour");
+      }
       console.error("Confirm complete error:", error);
     }
   };
@@ -92,11 +90,9 @@ const HistoryBookingPage = () => {
     }
 
     setSelectedBooking(booking);
-    console.log("Booking isReview:", booking.isReview);
     if (booking.isReview) {
       try {
         const review = await fetchReviewByBookingId(booking._id);
-        console.log("Fetched Review:", review);
         setReviewData(review);
         setIsEditable(false);
       } catch (error) {
@@ -112,14 +108,6 @@ const HistoryBookingPage = () => {
 
     setIsReviewModalOpen(true);
   };
-
-  useEffect(() => {
-    if (paymentURL?.success && paymentURL.result) {
-      window.location.href = paymentURL.result.paymentUrl;
-    } else if (paymentURL && !paymentURL.success) {
-      toast.error("Not found payment URL. Please try again.");
-    }
-  }, [paymentURL]);
 
   if (isLoading) {
     return <div className="text-center py-10 bg-slate-300">
@@ -159,46 +147,37 @@ const HistoryBookingPage = () => {
 
     return true;
   });
+
   return (
-    <div className="my-8 w-full flex flex-col items-start gap-3 bg-white rounded-xl pb-5 mb-5">
-      <div className="pt-5 pl-5 font-semibold text-3xl">History Booking</div>
+    <div className="my-4 p-3 w-full flex flex-col items-start gap-0 bg-white rounded-xl border">
+      <MetaData title="Booking History" />
+      <div className="pb-3 w-full">
+        <div className="bg-teal-50 text-primary py-2 px-5 mr-1 rounded-lg border text-center border-primary shadow-[4px_4px_oklch(0.392_0.0844_240.76)] font-bold text-2xl">
+          Booking History
+        </div>
+      </div>
       <div className="flex w-full rounded-none">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full p-1 items-center">
-          <TabsList className="flex bg-transparent p-2 justify-start border-b border-border rounded-none">
-            <TabsTrigger
-              value="waitingForPayment"
-              className="rounded-b-none py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none font-medium text-sm"
-            >
-              Waiting for payment
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full items-center">
+          <TabsList className="grid grid-cols-5 bg-primary/10 text-black">
+            <TabsTrigger value="waitingForPayment" className="data-[state=active]:text-primary">
+              Pending Payment
             </TabsTrigger>
-            <TabsTrigger
-              value="waitingForTourCompletion"
-              className="rounded-none py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none font-medium text-sm"
-            >
-              Waiting for tour completion
+            <TabsTrigger value="waitingForTourCompletion" className="data-[state=active]:text-primary">
+              Upcoming
             </TabsTrigger>
-            <TabsTrigger
-              value="completed"
-              className="rounded-none py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none font-medium text-sm"
-            >
+            <TabsTrigger value="completed">
               Completed
             </TabsTrigger>
-            <TabsTrigger
-              value="canceled"
-              className="rounded-b-none py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none font-medium text-sm"
-            >
+            <TabsTrigger value="canceled">
               Canceled
             </TabsTrigger>
-            <TabsTrigger
-              value="notCompleted"
-              className="rounded-b-none py-2 data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:shadow-none font-medium text-sm"
-            >
-              Not Completed
+            <TabsTrigger value="notCompleted">
+              Incomplete
             </TabsTrigger>
           </TabsList>
 
           {["waitingForPayment", "waitingForTourCompletion", "completed", "canceled", "notCompleted"].map((tab) => (
-            <TabsContent key={tab} value={tab} className="px-4 space-y-4">
+            <TabsContent key={tab} value={tab} className="space-y-4">
               {filteredBookings && filteredBookings.length > 0 ? (
                 filteredBookings.map((booking) => (
                   <TourBookingInfoCard

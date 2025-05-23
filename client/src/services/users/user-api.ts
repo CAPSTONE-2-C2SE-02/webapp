@@ -175,3 +175,8 @@ export const fetchUserById = async (userId: string): Promise<UserSelectedState> 
   const response = await axiosInstance.get(`/users/${userId}`);
   return response.data.result;
 };
+
+export const searchUser = async (query: string): Promise<ApiResponse<UserInfo[]>> => {
+  const response = await axiosInstance.get(`/users/search?q=${query}`);
+  return response.data;
+};

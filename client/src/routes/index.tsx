@@ -75,7 +75,7 @@ const routes = createBrowserRouter([
         children: [
           { path: "/tours/:tourId/book", element: <TourBookingPage /> },
           // History Booking
-          { path: "/history-booking", element: <HistoryBookingPage /> },
+          { path: "/booking-history", element: <HistoryBookingPage /> },
           // Payment Status
           { path: "/payment-status", element: <PaymentStatusPage /> },
           // Bookmarks Route
