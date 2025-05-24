@@ -1,5 +1,7 @@
+import BotChatPopup from "@/components/BotChatPopup";
 import Chatbot from "@/components/chat/chatbot";
 import Header from "@/components/layout/header";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAppSelector } from "@/hooks/redux";
 import { useGetUserAuthQuery } from "@/services/root-api";
 import { setAuthUser } from "@/stores/slices/auth-slice";
@@ -26,7 +28,17 @@ const MainLayout = () => {
       <Header />
       <main className="max-w-7xl w-full mx-auto px-2 lg:px-0">
         <Outlet />
-        <Chatbot />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {/* <BotChatPopup /> */}
+              <Chatbot />
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-sky-700 text-white">
+              <p className="text-sm">Chat with our assistant</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </main>
     </div>
   )

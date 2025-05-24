@@ -1,8 +1,8 @@
 pinecone
-python-dotenv
+python-dotenv 
 sentence-transformers
 langchain
-transformers_stream_generator 
+transformers_stream_generator
 transformers
 accelerate
 torch
@@ -11,3 +11,5 @@ tiktoken
 Flask
 flask_cors
 jsonify
+openai
+readline

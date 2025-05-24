@@ -1,26 +1,62 @@
-import { BotMessageSquare, Minus, Send } from "lucide-react";
+import { Bot, BotMessageSquare, Minus, Send, User } from "lucide-react";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ScrollArea } from "../ui/scroll-area";
+import { cn } from "@/lib/utils";
+
+interface Message {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant';
+  timestamp: Date;
+}
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<string[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const handleSendMessage = () => {
-    if (inputValue.trim() === "") return;
-    setMessages([...messages, inputValue]);
-    setInputValue("");
+    if (!inputValue.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: inputValue,
+      role: 'user',
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue('');
   };
 
-  const scrollToBottom = useCallback(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), []);
+  const scrollToBottom = useCallback(() => scrollAreaRef.current?.scrollIntoView({ behavior: "smooth" }), []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0) {
+      setMessages([
+        {
+          id: '1',
+          content: "Hi! I'm a Tripconnect calendar assistant. I can help you find tours, book tickets, or answer questions. Where would you like to get started",
+          role: 'assistant',
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  }, [isOpen, messages.length]);
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -56,13 +92,40 @@ const Chatbot = () => {
             </Button>
           </div>
           <ScrollArea className="h-[380px] w-full p-2">
-            <div className="space-y-1">
-              {messages.map((message, index) => (
-                <div key={index} className="flex justify-end">
-                  <p className="bg-primary/90 text-white rounded-xl rounded-br-sm text-sm px-3 py-2 max-w-[80%]">{message}</p>
+            <div className="space-y-2">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={cn(
+                    'flex items-start gap-2',
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
+                  )}
+                >
+                  {message.role === 'assistant' && (
+                    <Bot className="h-6 w-6 text-primary mt-1" />
+                  )}
+                  <div
+                    className={cn(
+                      'max-w-[80%] rounded-lg px-3 py-2',
+                      message.role === 'user'
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 text-gray-900'
+                    )}
+                  >
+                    <p className="text-sm">{message.content}</p>
+                    <span className="text-xs opacity-70 block">
+                      {message.timestamp.toLocaleTimeString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
+                  {message.role === 'user' && (
+                    <User className="h-6 w-6 text-primary mt-1" />
+                  )}
                 </div>
               ))}
-              <div ref={messagesEndRef} />
+              <div ref={scrollAreaRef} />
             </div>
           </ScrollArea>
           <div className="bg-primary rounded-b-2xl rounded-t-md px-4 py-2 flex items-center justify-between">
@@ -71,6 +134,7 @@ const Chatbot = () => {
               placeholder="Type your message here..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyPress}
             />
             <Button
               className="rounded-full text-white w-8 h-8"
