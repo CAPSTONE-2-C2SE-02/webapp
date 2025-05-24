@@ -237,7 +237,7 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
                     name="reason"
                     render={({ field }) => (
                     <FormItem>
-                        <FormLabel className="font-medium">Tour Review</FormLabel>
+                        <FormLabel className="font-medium">Reason</FormLabel>
                         <FormControl>
                             <Textarea
                                 placeholder="Type your message here."
