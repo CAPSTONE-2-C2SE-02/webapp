@@ -46,3 +46,11 @@ export const formatPostDate = (date: Date): string => {
 
   return format(date, 'MMM d, yyyy \'at\' HH:mm');
 };
+
+export const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
+  }).format(amount);
+};

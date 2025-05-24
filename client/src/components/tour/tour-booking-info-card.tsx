@@ -9,12 +9,12 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { Link } from "react-router";
-import { getAbsoluteAddress } from "../utils/convert";
+import { formatCurrency, getAbsoluteAddress } from "../utils/convert";
 import useAuthInfo from "@/hooks/useAuth";
 import { useGetPaymentBooking } from "@/services/bookings/booking-mutation";
-import TourBookingBillDialog from "./tour-booking-bill-dialog";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import TourBookingInvoiceDialog from "./tour-booking-invoice-dialog";
 
 export interface TourBookingInfoCardProps {
   booking: Booking;
@@ -67,92 +67,121 @@ const TourBookingInfoCard = ({
 
   return (
     <>
-    <div className="border rounded-lg overflow-hidden flex bg-white shadow-sm p-3 gap-4 relative">
-      <div className="w-56 h-40 overflow-hidden rounded-md group">
-        <img
-          src={booking.tourId.imageUrls[0]}
-          alt={booking.tourId.title}
-          className="h-full w-full object-cover group-hover:scale-105 transition-all duration-300"
-        />
-      </div>
+      <div className="border rounded-lg overflow-hidden flex bg-white shadow-sm p-3 gap-4 relative">
+        <div className="w-56 h-40 overflow-hidden rounded-md group">
+          <img
+            src={booking.tourId.imageUrls[0]}
+            alt={booking.tourId.title}
+            className="h-full w-full object-cover group-hover:scale-105 transition-all duration-300"
+          />
+        </div>
 
-      <div className="flex-1 flex flex-col justify-center gap-4">
-        <div>
-          <Link
-            to={`/tours/${booking.tourId._id}`}
-            className="hover:underline font-medium text-sm"
-          >
-            {booking.tourId.title}
-          </Link>
-          <p className="text-xs text-primary font-semibold mt-1">
-            {format(new Date(booking.startDate), "dd/MM/yyyy")} -{" "}
-            {format(new Date(booking.endDate), "dd/MM/yyyy")}
-          </p>
+        <div className="flex-1 flex flex-col justify-center gap-4">
+          <div>
+            <Link
+              to={`/tours/${booking.tourId._id}`}
+              className="hover:underline font-medium text-sm"
+            >
+              {booking.tourId.title}
+            </Link>
+            <p className="text-xs text-primary font-semibold mt-1">
+              {format(new Date(booking.startDate), "dd/MM/yyyy")} -{" "}
+              {format(new Date(booking.endDate), "dd/MM/yyyy")}
+            </p>
 
-          <div className="flex items-center mt-2">
-            <MapPin className="h-4 w-4 text-teal-500" />
-            <span className="text-xs text-teal-500 ml-1 font-medium">
-              {getAbsoluteAddress(booking.tourId.destination, booking.tourId.departureLocation)}
+            <div className="flex items-center mt-2">
+              <MapPin className="h-4 w-4 text-teal-600" />
+              <span className="text-xs text-teal-600 ml-1 font-medium">
+                {getAbsoluteAddress(booking.tourId.destination, booking.tourId.departureLocation)}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4 font-medium">
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 text-gray-500 stroke-teal-600" />
+                <span className="text-xs ml-1">
+                  {booking.tourId.duration} Days
+                </span>
+              </div>
+
+              <div className="flex items-center">
+                <Users className="h-4 w-4 text-gray-500  stroke-teal-600" />
+                <span className="text-xs ml-1">{totalPeople}</span>
+              </div>
+            </div>
+          </div>
+          <div className="items-center px-2 bg-slate-100 rounded-full w-fit">
+            <span className="text-xs font-medium">
+              Total: {formatCurrency(booking.totalAmount)}
             </span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4 font-medium">
-            <div className="flex items-center">
-              <Clock className="h-4 w-4 text-gray-500 stroke-teal-500" />
-              <span className="text-xs ml-1">
-                {booking.tourId.duration} Days
-              </span>
-            </div>
-
-            <div className="flex items-center">
-              <Users className="h-4 w-4 text-gray-500  stroke-teal-500" />
-              <span className="text-xs ml-1">{totalPeople}</span>
-            </div>
-          </div>
-        </div>
-        <div className="items-center px-2 bg-slate-100 rounded-full w-fit">
-          <span className="text-xs font-medium">
-            Total: {booking.totalAmount} VND
-          </span>
-        </div>
-      </div>
-
-      <div className="flex space-x-2 items-end">
-        {isPending && (
-          <>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs h-8"
-              onClick={() => onCancel(booking._id)}
-            >
-              Cancel
-            </Button>
-            {role === "TRAVELER" && (
+        <div className="flex space-x-2 items-end">
+          {isPending && (
+            <>
               <Button
+                variant="outline"
                 size="sm"
-                variant="default"
                 className="text-xs h-8"
-                onClick={handleNavigatePayment}
-                disabled={isPaymentPending}
+                onClick={() => onCancel(booking._id)}
               >
-                {isPaymentPending ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin mr-1" />
-                    Loading...
-                  </>
-                ) : (
-                  "Payment"
-                )}
+                Cancel
               </Button>
-            )}
-          </>
-        )}
+              {role === "TRAVELER" && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="text-xs h-8"
+                  onClick={handleNavigatePayment}
+                  disabled={isPaymentPending}
+                >
+                  {isPaymentPending ? (
+                    <>
+                      <Loader2 className="size-4 animate-spin mr-1" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Payment"
+                  )}
+                </Button>
+              )}
+            </>
+          )}
 
-        {isPaid && (
-          <>
+          {isPaid && (
+            <>
+              {role === "TOUR_GUIDE" && booking.status === "WAITING_CONFIRM" ? (
+                <Button size="sm" variant="default" className="text-xs h-8" onClick={confirmAgainCompleteTour}>
+                  Waiting traveler confirm complete tour
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-8"
+                    onClick={() => onCancel(booking._id)}
+                  >
+                    Cancel
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant="default"
+                    className="text-xs h-8"
+                    onClick={() => onComplete(booking._id)}
+                  >
+                    Complete Tour
+                  </Button>
+                </>
+              )}
+            </>
+          )}
+
+          {(isPaid || isCompleted) && (
             <Button
               size="icon"
               variant="ghost"
@@ -162,78 +191,52 @@ const TourBookingInfoCard = ({
             >
               <CircleAlert />
             </Button>
-            {role === "TOUR_GUIDE" && booking.status === "WAITING_CONFIRM" ? (
-              <Button size="sm" variant="default" className="text-xs h-8" onClick={confirmAgainCompleteTour}>
-                Waiting traveler confirm complete tour
-              </Button>
-            ) : (
-              <>
+          )}
+
+          {isCompleted && role === "TRAVELER" && (
+            <>
+              {!booking.isReview ? (
                 <Button
                   variant="outline"
                   size="sm"
                   className="text-xs h-8"
-                  onClick={() => onCancel(booking._id)}
+                  onClick={() => onReview(booking._id)}
                 >
-                  Cancel
+                  Review
                 </Button>
-
+              ) : (
                 <Button
+                  variant="secondary"
                   size="sm"
-                  variant="default"
                   className="text-xs h-8"
-                  onClick={() => onComplete(booking._id)}
+                  onClick={() => onReview(booking._id)}
                 >
-                  Complete Tour
+                  Reviewed
                 </Button>
-              </>
-            )}
-          </>
-        )}
-
-        {isCompleted && role === "TRAVELER" && (
-          <>
-            {!booking.isReview ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => onReview(booking._id)}
-              >
-                Review
-              </Button>
-            ) : (
-              <Button
-                variant="secondary"
-                size="sm"
-                className="text-xs h-8"
-                onClick={() => onReview(booking._id)}
-              >
-                Reviewed
-              </Button>
-            )}
-          </>
-        )}
-        {isCanceled && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <Button
-                  variant="outline"
-                  className="text-red-500 font-semibold"
-                  onClick={() => onViewCancel(booking._id)}
-                >
-                  Canceled
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>click to view Cancel Reason</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
+              )}
+            </>
+          )}
+          {isCanceled && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Button
+                    variant="outline"
+                    className="text-red-500 font-semibold"
+                    onClick={() => onViewCancel(booking._id)}
+                  >
+                    Canceled
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>click to view Cancel Reason</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
       </div>
-    </div>
-      <TourBookingBillDialog
+      <TourBookingInvoiceDialog
         isOpen={isBillDialogOpen}
         onOpenChange={setIsBillDialogOpen}
         booking={booking}

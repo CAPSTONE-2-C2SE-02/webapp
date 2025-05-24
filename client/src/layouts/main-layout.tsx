@@ -1,4 +1,3 @@
-import BotChatPopup from "@/components/BotChatPopup";
 import Chatbot from "@/components/chat/chatbot";
 import Header from "@/components/layout/header";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -31,7 +30,6 @@ const MainLayout = () => {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              {/* <BotChatPopup /> */}
               <Chatbot />
             </TooltipTrigger>
             <TooltipContent side="left" className="bg-sky-700 text-white">

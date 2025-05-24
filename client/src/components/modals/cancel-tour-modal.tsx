@@ -21,6 +21,8 @@ import { createCancel } from "@/services/bookings/booking-api";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { useAppSelector } from "@/hooks/redux";
+import { AxiosError } from "axios";
+import { formatCurrency } from "../utils/convert";
 
 interface CancelTourProps {
   booking: Booking;
@@ -84,8 +86,10 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
             onOpenChange(false);
           }
         },
-        onError: (error: any) => {
-          toast.error(error?.response?.data?.error || "Failed to cancel tour. Please try again.");
+        onError: (error) => {
+            if (error instanceof AxiosError) {
+                toast.error(error?.response?.data?.error || "Failed to cancel tour. Please try again.");
+            }
         },
       });
 
@@ -125,152 +129,148 @@ const CancelTourModal = ({ booking, open, onOpenChange, isEditable }: CancelTour
             </div>
 
             <div className="flex-1 p-4">
-                <h3 className="font-medium text-sm">{booking.tourId.title}</h3>
+                <h3 className="font-medium text-sm text-primary">{booking.tourId.title}</h3>
                 <p className="text-xs text-gray-500 mt-1">
                     {format(new Date(booking.startDate), "dd/MM/yyyy")} -{" "}
                     {format(new Date(booking.endDate), "dd/MM/yyyy")}
                 </p>
 
                 <div className="flex items-center mt-2">
-                    <MapPin className="h-3 w-3 text-emerald-500" />
-                    <span className="text-xs text-emerald-500 ml-1">
+                    <MapPin className="h-3 w-3 text-teal-600" />
+                    <span className="text-xs text-teal-600 ml-1">
                         {departure} - {destination}
                     </span>
                 </div>
 
                 <div className="flex items-center mt-2 space-x-4">
                     <div className="flex items-center">
-                        <Clock className="h-4 w-4 text-gray-500" />
+                        <Clock className="h-4 w-4 text-teal-600" />
                         <span className="text-xs ml-1">{booking.tourId.duration} Days</span>
                     </div>
 
                     <div className="flex items-center">
-                        <Users className="h-4 w-4 text-gray-500" />
+                        <Users className="h-4 w-4 text-teal-600" />
                         <span className="text-xs ml-1">{totalPeople}</span>
                     </div>
                 </div>
-                <div className="items-center mt-2 px-2 bg-slate-100 rounded-full w-fit ">
-                    <span className="text-xs font-medium">Total: {booking.totalAmount}$</span>
+                <div className="items-center mt-2 px-2 bg-slate-100 rounded-full w-fit shadow-sm">
+                    <span className="text-xs font-medium">Total: {formatCurrency(booking.totalAmount)}</span>
                 </div>
             </div>
             </div>
 
             <Form {...form}>
-            <form onSubmit={(e) => {
-              if (!isEditable) e.preventDefault(); 
-              form.handleSubmit(onSubmit)(e);
-            }} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                    control={form.control}
-                    name="secretKey"
-                    render={({ field }) => (
-                        <FormItem className="space-y-1">
-                        <FormLabel className="text-gray-700">
-                            Booking Code {booking.status !== "CANCELED" && (
-                                <span className="text-red-500">* </span>
-                            )}
-                        </FormLabel>
-                        <FormControl>
-                            <Input disabled={!isEditable} placeholder="SM-123456" {...field} />
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                        </FormItem>
-                    )}
-                    />
-                    <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                        <FormItem className="space-y-1">
-                        <FormLabel className="text-gray-700" >
-                            Full Name {booking.status !== "CANCELED" && (
-                                <span className="text-red-500">* </span>
-                            )}
-                        </FormLabel>
-                        <FormControl>
-                            <Input disabled={!isEditable} placeholder="Ngoc Anh" {...field}/>
-                        </FormControl>
-                        <FormMessage className="text-xs" />
-                        </FormItem>
-                    )}
-                    />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField
+                <form onSubmit={(e) => {
+                if (!isEditable) e.preventDefault(); 
+                form.handleSubmit(onSubmit)(e);
+                }} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
                         control={form.control}
-                        name="email"
+                        name="secretKey"
                         render={({ field }) => (
-                        <FormItem className="space-y-1">
-                                <FormLabel className="text-gray-700">
-                                    Email {booking.status !== "CANCELED" && (
-                                        <span className="text-red-500">* </span>
-                                    )}
-                                </FormLabel>
-                            <FormControl>
-                                <Input disabled={!isEditable} placeholder="pans@gmail.com" {...field} />
-                            </FormControl>
-                            <FormMessage className="text-xs" />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="phoneNumber"
-                        render={({ field }) => (
-                        <FormItem className="space-y-1">
+                            <FormItem className="space-y-1">
                             <FormLabel className="text-gray-700">
-                                Phone Number {booking.status !== "CANCELED" && (
-                                <span className="text-red-500">* </span>
-                            )}
+                                Booking Code {booking.status !== "CANCELED" && (
+                                    <span className="text-red-500">* </span>
+                                )}
                             </FormLabel>
                             <FormControl>
-                                <Input disabled={!isEditable} placeholder="+84 356 998 " {...field} />
+                                <Input disabled={!isEditable} placeholder="SM-123456" {...field} />
                             </FormControl>
                             <FormMessage className="text-xs" />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="fullName"
+                        render={({ field }) => (
+                            <FormItem className="space-y-1">
+                            <FormLabel className="text-gray-700" >
+                                Full Name {booking.status !== "CANCELED" && (
+                                    <span className="text-red-500">* </span>
+                                )}
+                            </FormLabel>
+                            <FormControl>
+                                <Input disabled={!isEditable} placeholder="Ngoc Anh" {...field}/>
+                            </FormControl>
+                            <FormMessage className="text-xs" />
+                            </FormItem>
+                        )}
+                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                            <FormItem className="space-y-1">
+                                    <FormLabel className="text-gray-700">
+                                        Email {booking.status !== "CANCELED" && (
+                                            <span className="text-red-500">* </span>
+                                        )}
+                                    </FormLabel>
+                                <FormControl>
+                                    <Input disabled={!isEditable} placeholder="pans@gmail.com" {...field} />
+                                </FormControl>
+                                <FormMessage className="text-xs" />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="phoneNumber"
+                            render={({ field }) => (
+                            <FormItem className="space-y-1">
+                                <FormLabel className="text-gray-700">
+                                    Phone Number {booking.status !== "CANCELED" && (
+                                    <span className="text-red-500">* </span>
+                                )}
+                                </FormLabel>
+                                <FormControl>
+                                    <Input disabled={!isEditable} placeholder="+84 356 998 " {...field} />
+                                </FormControl>
+                                <FormMessage className="text-xs" />
+                            </FormItem>
+                            )}
+                        />
+                    </div>
+                    <FormField
+                        control={form.control}
+                        name="reason"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel className="font-medium">Reason</FormLabel>
+                            <FormControl>
+                                <Textarea
+                                    placeholder="Type your message here."
+                                    {...field}
+                                    className="min-h-[100px]"
+                                    disabled={!isEditable}
+                                />
+                            </FormControl>
+                            <FormMessage />
                         </FormItem>
                         )}
                     />
-                </div>
-                <FormField
-                    control={form.control}
-                    name="reason"
-                    render={({ field }) => (
-                    <FormItem>
-                        <FormLabel className="font-medium">Reason</FormLabel>
-                        <FormControl>
-                            <Textarea
-                                placeholder="Type your message here."
-                                {...field}
-                                className="min-h-[100px]"
-                                disabled={!isEditable}
-                            />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
+                    {isEditable && (
+                        <div>
+                            <p className="italic font-light"> 
+                                <span className="text-red-500">* </span> 
+                                Note: phone number and email must match booking information 
+                            </p>
+                        </div>
                     )}
-                />
-                {isEditable && (
-                    <div>
-                        <p className="italic font-light"> 
-                            <span className="text-red-500">* </span> 
-                            Note: phone number and email must match booking information 
-                        </p>
-                    </div>
-                )}
 
-               {isEditable && (
-                <div className="flex justify-end mt-4">
-                    <Button
-                    type="submit"
-                    className="bg-blue-600 hover:bg-blue-700"
-                    >
-                    Send 
-                    </Button>
-                </div>
-            )}
-               
-            </form>
+                {isEditable && (
+                        <div className="flex justify-end mt-4">
+                            <Button type="submit">
+                                Send Request
+                            </Button>
+                        </div>
+                    )}
+                </form>
             </Form>
         </DialogContent>
         </Dialog>

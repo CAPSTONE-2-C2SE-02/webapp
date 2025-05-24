@@ -249,7 +249,15 @@ export interface Booking {
     destination: string;
     imageUrls: string[];
     duration: string;
-    image?: string;
+    priceForAdult: number;
+    priceForYoung: number;
+    priceForChildren: number;
+  };
+  tourGuideId: {
+    _id: string;
+    fullName: string;
+    email: string;
+    phoneNumber: string;
   };
   travelerId: string;
   startDate: string;
@@ -264,8 +272,14 @@ export interface Booking {
   fullName: string;
   phoneNumber: string;
   email: string;
+  address: string;
+  city: string;
+  note: string;
+  country: string;
   secretKey: string;
   cancellationReason: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TourBookingInfoCardProps {
