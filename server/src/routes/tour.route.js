@@ -330,6 +330,7 @@ const router = express.Router();
 router.post("/", authenticated, upload.array("images"), authorize("TOUR_GUIDE"), validate(tourSchema), tourController.createTour);
 router.get("/", tourController.getAllTours);
 router.get("/my-tours", authenticated, authorize("TOUR_GUIDE"), tourController.getMyTours);
+router.get("/tour-booking-complete", authenticated, tourController.getTourBookingComplete);
 router.get("/profile/:username", tourController.getAllToursByUsername);
 router.get("/search", tourController.searchTours);
 router.get("/:id", optionalAuth, tourController.getTourById);

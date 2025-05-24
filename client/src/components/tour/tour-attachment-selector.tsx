@@ -7,7 +7,9 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Tour } from "@/lib/types";
 import useDebounce from "@/hooks/useDebounce";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllPostTourGuide } from "@/services/tours/tour-api";
+import { fetchAllPostTourGuide, fetchTourBookingComplete } from "@/services/tours/tour-api";
+import useAuthInfo from "@/hooks/useAuth";
+import { getAbsoluteAddress } from "../utils/convert";
 
 interface TourAttachmentSelectorProps {
   isShow: boolean;
@@ -16,9 +18,10 @@ interface TourAttachmentSelectorProps {
 }
 
 const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSelectorProps) => {
+  const auth = useAuthInfo();
   const { data: tours, isLoading, isError, error } = useQuery({
     queryKey: ["tours", "tours-author"],
-    queryFn: fetchAllPostTourGuide,
+    queryFn: auth?.role === "TOUR_GUIDE" ? fetchAllPostTourGuide : fetchTourBookingComplete,
   });
 
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -51,7 +54,7 @@ const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSele
       </div>
 
       {/* search box */}
-      <div className="relative mb-4 px-1">
+      <div className="relative mb-2 px-1">
         <Input
           className="pl-10 pr-10 py-2 w-full bg-gray-100 border-0 outline-none"
           placeholder="Search tour"
@@ -80,11 +83,16 @@ const TourAttachmentSelector = ({ isShow, onBack, onSelect }: TourAttachmentSele
           </div>
         )}
         {filteredTours?.map((tour) => (
-          <div key={tour._id} className="border-b py-3 px-3 cursor-pointer" onClick={() => handleSelectTour(tour)}>
-            <h3 className="font-semibold text-primary">{tour.title}</h3>
-            <div className="flex items-center text-gray-500 text-sm mt-1">
-              <MapPin className="h-4 w-4 mr-1" />
-              {tour.destination}
+          <div key={tour._id} className="border-t py-3 px-3 cursor-pointer flex items-center gap-2 hover:bg-gray-100" onClick={() => handleSelectTour(tour)}>
+            <div className="w-14 h-12 overflow-hidden rounded-sm">
+              <img src={tour.imageUrls[0]} alt={tour.title} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-primary">{tour.title}</h3>
+              <div className="flex items-center text-teal-600 font-medium text-sm">
+                <MapPin className="h-4 w-4 mr-1" />
+                {getAbsoluteAddress(tour.destination, tour.departureLocation)}
+              </div>
             </div>
           </div>
         ))}

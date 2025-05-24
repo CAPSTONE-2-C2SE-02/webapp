@@ -15,6 +15,7 @@ import { useGetPaymentBooking } from "@/services/bookings/booking-mutation";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import TourBookingInvoiceDialog from "./tour-booking-invoice-dialog";
+import CreatePostModal from "../modals/create-post-modal";
 
 export interface TourBookingInfoCardProps {
   booking: Booking;
@@ -39,6 +40,7 @@ const TourBookingInfoCard = ({
   const role = authInfo?.role;
   const queryClient = useQueryClient();
   const [isBillDialogOpen, setIsBillDialogOpen] = useState(false);
+  const [isCreatePostOpen, setIsCreatePostOpen] = useState(false);
 
   const { data: paymentURL, status } = useGetPaymentBooking(booking._id);
 
@@ -184,7 +186,7 @@ const TourBookingInfoCard = ({
           {(isPaid || isCompleted) && (
             <Button
               size="icon"
-              variant="ghost"
+              variant="outline"
               className="text-primary text-xs h-8 absolute right-3 top-3"
               aria-label="Booking Detail"
               onClick={() => setIsBillDialogOpen(true)}
@@ -195,12 +197,22 @@ const TourBookingInfoCard = ({
 
           {isCompleted && role === "TRAVELER" && (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-8"
+                onClick={() => setIsCreatePostOpen(true)}
+                aria-label="Write a post about this tour"
+              >
+                Write a post
+              </Button>
               {!booking.isReview ? (
                 <Button
                   variant="outline"
                   size="sm"
                   className="text-xs h-8"
                   onClick={() => onReview(booking._id)}
+                  aria-label="Review this tour"
                 >
                   Review
                 </Button>
@@ -210,6 +222,7 @@ const TourBookingInfoCard = ({
                   size="sm"
                   className="text-xs h-8"
                   onClick={() => onReview(booking._id)}
+                  aria-label="View review"
                 >
                   Reviewed
                 </Button>
@@ -241,6 +254,7 @@ const TourBookingInfoCard = ({
         onOpenChange={setIsBillDialogOpen}
         booking={booking}
       />
+      <CreatePostModal isOpen={isCreatePostOpen} onOpenChange={setIsCreatePostOpen} />
     </>
   );
 };

@@ -6,6 +6,7 @@ import Interactions from "../models/interactions.model.js";
 import axios from "axios";
 import Bookmark from "../models/bookmark.model.js";
 import Notification from "../models/notification.model.js";
+import Booking from "../models/booking.model.js";
 
 class TourController {
 
@@ -332,6 +333,43 @@ class TourController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 result: tours
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    // [GET] /api/v1/tours/tour-booking-complete
+    // get all tours that travler has booked and completed
+    async getTourBookingComplete(req, res) {
+        try {
+            const user = await User.findOne({ _id: req.user.userId });
+            if (!user) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "User not found",
+                });
+            }
+
+            const bookings = await Booking.find({
+                travelerId: user._id,
+                status: "COMPLETED"
+            }).populate({
+                path: "tourId",
+                populate: {
+                    path: "author",
+                    select: "_id username fullName profilePicture ranking rating"
+                }
+            }).sort({ createdAt: -1 });
+
+            const completedTours = bookings.map(booking => booking.tourId);
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: completedTours
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Hash, Image, Loader2, MapPin, Smile, X } from "lucide-react";
+import { BookCheck, Hash, Image, Loader2, MapPin, Smile, X } from "lucide-react";
 import { Description } from "@radix-ui/react-dialog";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -363,11 +363,6 @@ const CreatePostModal = ({
                   <Button size={"icon"} variant={"ghost"} onClick={() => setIsShowTagInput(prev => !prev)}>
                     <Hash className="size-5" />
                   </Button>
-                  {auth?.role === "TOUR_GUIDE" && (
-                    <Button size={"icon"} variant={"ghost"} onClick={() => setShowTourSelector(true)}>
-                      <MapPin className="size-5" />
-                    </Button>
-                  )}
 
                   <Popover open={isOpenEmoji} onOpenChange={setIsOpenEmoji}>
                     <PopoverTrigger asChild>
@@ -391,6 +386,17 @@ const CreatePostModal = ({
                       </EmojiPicker>
                     </PopoverContent>
                   </Popover>
+
+                  {auth?.role === "TOUR_GUIDE" && (
+                    <Button size={"icon"} variant={"ghost"} onClick={() => setShowTourSelector(true)}>
+                      <MapPin className="size-5" />
+                    </Button>
+                  )}
+                  {auth?.role === "TRAVELER" && (
+                    <Button size={"icon"} variant={"ghost"} onClick={() => setShowTourSelector(true)}>
+                      <BookCheck className="size-5" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
