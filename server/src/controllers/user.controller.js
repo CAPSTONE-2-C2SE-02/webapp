@@ -285,10 +285,10 @@ class UserController {
         }
     }
 
-    // [GET] /api/v1/users/search?q=
+    // [GET] /api/v1/users/search?name=
     async searchUser(req, res) {
         try {
-            const searchQuery = req.query.q?.trim();
+            const searchQuery = req.query.name?.trim();
             if (!searchQuery) {
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
@@ -312,6 +312,13 @@ class UserController {
                         { username: { $regex: formattedQuery, $options: "i" } }
                     ],
                 }).select("-password");
+            }
+
+            if (profiles.length === 0) {
+                return res.status(StatusCodes.NOT_FOUND).json({
+                    success: false,
+                    error: "No profile found matching the search query",
+                });
             }
 
             return res.status(StatusCodes.OK).json({

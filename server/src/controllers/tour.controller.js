@@ -1,11 +1,11 @@
+import axios from "axios";
 import { StatusCodes } from "http-status-codes";
+import Bookmark from "../models/bookmark.model.js";
+import Interactions from "../models/interactions.model.js";
+import Notification from "../models/notification.model.js";
 import Tour from "../models/tour.model.js";
 import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
-import Interactions from "../models/interactions.model.js";
-import axios from "axios";
-import Bookmark from "../models/bookmark.model.js";
-import Notification from "../models/notification.model.js";
 
 class TourController {
 
