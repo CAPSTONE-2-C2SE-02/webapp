@@ -81,7 +81,7 @@ const ProfileLayout = () => {
                             {user.role === "TOUR_GUIDE" && (
                                 <div className="flex items-center justify-center">
                                     <Star className="w-4 h-4 mx-1 stroke-amber-400 fill-amber-400" />
-                                    <span className="font-medium text-black text-sm">{user.rating > 0 && user.rating} {generateRatingText(user.rating)}</span>
+                                    <span className="font-medium text-black text-sm">{user.rating > 0 && user.rating.toFixed(1)} {generateRatingText(user.rating)}</span>
                                 </div>
                             )}
                             <div className="flex items-center justify-center">

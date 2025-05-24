@@ -82,7 +82,7 @@ interface UpdateReviewResponse {
   message: string;
 }
 
-export const updateReview = async (reviewId: string, data: Partial<CreateReviewValues>) => {
+export const updateReview = async (reviewId: string, data: Partial<CreateReviewValues> & { existingImages?: string[]; removedImages?: string[] }) => {
   const formData = new FormData();
 
   if (data.ratingForTour !== undefined) {
@@ -105,6 +105,18 @@ export const updateReview = async (reviewId: string, data: Partial<CreateReviewV
     })
   }
 
+  if (data.existingImages) {
+    data.existingImages.forEach((imageUrl) => {
+      formData.append("existingImages", imageUrl);
+    });
+  }
+
+  if (data.removedImages) {
+    data.removedImages.forEach((imageUrl) => {
+      formData.append("removedImages", imageUrl);
+    });
+  }
+
   const response = await axiosInstance.put<UpdateReviewResponse>(`/reviews/${reviewId}`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
@@ -113,3 +125,17 @@ export const updateReview = async (reviewId: string, data: Partial<CreateReviewV
 
   return response.data;
 }
+
+export const deleteReview = async (reviewId: string): Promise<ApiResponse<null>> => {
+  try {
+    const response = await axiosInstance.delete<ApiResponse<null>>(`/reviews/${reviewId}`);
+    return response.data;
+  } catch (error) {
+    if (error instanceof AxiosError) {
+      throw new Error(
+        `Delete failed review: ${error.response?.data?.error || error.message}`
+      );
+    }
+    throw new Error(`Delete failed review: ${(error as Error).message}`);
+  }
+};

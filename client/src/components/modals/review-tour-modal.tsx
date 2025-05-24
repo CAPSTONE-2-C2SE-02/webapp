@@ -1,5 +1,5 @@
 import { MapPin, Clock, Users, Star, ImagePlus, X } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Booking, Review } from "@/lib/types";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/form";
 import { createReviewSchema, CreateReviewValues } from "@/lib/validations";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createReview, updateReview } from "@/services/tours/review-api";
+import { createReview, deleteReview, fetchReviewByBookingId, updateReview } from "@/services/tours/review-api";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { AxiosError } from "axios";
@@ -28,13 +28,25 @@ interface ReviewTourProps {
   booking: Booking;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  reviewData?: Review | null; // Add reviewData prop
-  isEditable: boolean; 
+  reviewData?: Review | null; 
+  isEditable: boolean;
 }
 
 const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }: ReviewTourProps) => {
   const queryClient = useQueryClient();
   const [editable, setEditable] = useState(isEditable);
+  const [reviewExists, setReviewExists] = useState(true);
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [formState, setFormState] = useState<{
+    existingImages: string[];
+    images: File[];
+    removedImages: string[];
+  }>({
+    existingImages: [],
+    images: [],
+    removedImages: [],
+  });
   const form = useForm<CreateReviewValues>({
     resolver: zodResolver(createReviewSchema),
     defaultValues: {
@@ -45,6 +57,8 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
       imageUrls: [],
     },
   });
+
+  const { watch } = form;
 
   useEffect(() => {
     setEditable(isEditable);
@@ -60,6 +74,12 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
         reviewTourGuide: reviewData.reviewTourGuide,
         imageUrls: reviewData.imageUrls || [],
       });
+      setFormState({
+        existingImages: reviewData.imageUrls || [],
+        images: [],
+        removedImages: [],
+      });
+      setHasChanges(false);
     } else {
       form.reset({
         ratingForTour: 5,
@@ -68,8 +88,68 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
         reviewTourGuide: "",
         imageUrls: [],
       });
+      setFormState({
+        existingImages: [],
+        images: [],
+        removedImages: [],
+      });
+      setHasChanges(false);
     }
   }, [reviewData, form]);
+
+  // Watch for changes in the form fields
+  useEffect(() => {
+    const subscription = watch((value) => {
+      if (!reviewData) return; 
+      const hasFormChanged =
+        value.ratingForTour !== reviewData.ratingForTour ||
+        value.ratingForTourGuide !== reviewData.ratingForTourGuide ||
+        value.reviewTour !== reviewData.reviewTour ||
+        value.reviewTourGuide !== reviewData.reviewTourGuide ||
+        formState.existingImages.length !== reviewData.imageUrls?.length ||
+        formState.images.length > 0 ||
+        formState.removedImages.length > 0;
+
+      setHasChanges(hasFormChanged);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [watch, reviewData, formState]);
+
+  // Check if the review exists when the modal opens
+ useEffect(() => {
+    const checkReviewStatus = async () => {
+      if (open && booking._id) {
+        try {
+          const review = await fetchReviewByBookingId(booking._id);
+          if (booking.isReview) {
+            if (!review) {
+              setReviewExists(false);
+              setTimeout(() => {
+                if (!isConfirmDeleteOpen) {
+                  onOpenChange(false);
+                }
+              }, 30000); 
+            } else {
+              setReviewExists(true);
+            }
+          } else {
+            setReviewExists(true);
+          }
+        } catch (error) {
+          setReviewExists(false);
+          toast.error("Unable to load review information. Please try again.");
+          setTimeout(() => {
+            if (!isConfirmDeleteOpen) {
+              onOpenChange(false);
+            }
+          }, 30000);
+        }
+      }
+    };
+
+    checkReviewStatus();
+  }, [open, booking._id, booking.isReview, onOpenChange, isConfirmDeleteOpen]);
 
   const { mutate: createReviewMutation, isPending: isCreatingReview } = useMutation({
     mutationFn: createReview,
@@ -89,7 +169,7 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
   });
 
   const { mutate: updateReviewMutation, isPending: isUpdatingReview } = useMutation({
-    mutationFn: ({ reviewId, data }: { reviewId: string; data: Partial<CreateReviewValues> }) => updateReview(reviewId, data),
+    mutationFn: ({ reviewId, data }: { reviewId: string; data: Partial<CreateReviewValues> & { existingImages?: string[]; removedImages?: string[] } }) => updateReview(reviewId, data),
     onSuccess: (data) => {
       if (data.success) {
         toast.success("Review updated successfully");
@@ -107,6 +187,28 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
     },
   });
 
+  const { mutate: deleteReviewMutation, isPending: isDeletingReview } = useMutation({
+  mutationFn: deleteReview,
+  onSuccess: (data) => {
+    if (data.success) {
+      toast.success("Deleted review successfully");
+      queryClient.invalidateQueries({ queryKey: ["travelerBookings"] });
+      queryClient.invalidateQueries({ queryKey: ["reviews", booking.tourId._id] });
+      queryClient.invalidateQueries({ queryKey: ["review", reviewData?._id] });
+      setReviewExists(false); 
+      setIsConfirmDeleteOpen(false); 
+      onOpenChange(false); 
+    }
+  },
+  onError: (error) => {
+    console.error("Delete fail review:", error);
+    if (error instanceof AxiosError) {
+      toast.error(error?.response?.data?.error || "Delete fail review. please try again.");
+    }
+    setIsConfirmDeleteOpen(false);
+  },
+});
+
   const totalPeople = booking.adults + booking.youths + booking.children;
 
   const onSubmit = async (values: CreateReviewValues) => {
@@ -116,30 +218,106 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
       ...values,
       imageUrls: [...existingUrls, ...files],
       bookingId: booking._id,
+      existingImages: formState.existingImages, 
+      removedImages: formState.removedImages,
     };
   
     if (reviewData && reviewData._id) {
       console.log("Update payload:", payload);
       updateReviewMutation({
         reviewId: reviewData._id,
-        data: {...values, imageUrls: [...existingUrls, ...files]},
+        data: payload,
       });
     } else {
       createReviewMutation(payload);
     }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      const remainingSlots = 5 - (formState.existingImages.length + formState.images.length);
+      if (remainingSlots <= 0) {
+        toast.error("You can only upload up to 5 images.");
+        return;
+      }
+      const newImages = files.slice(0, remainingSlots);
+      setFormState((prev) => ({
+        ...prev,
+        images: [...prev.images, ...newImages],
+      }));
+      form.setValue("imageUrls", [...formState.existingImages, ...formState.images, ...newImages]);
+    }
+  };
+
+  const handleRemoveImage = (index: number, isExisting: boolean) => {
+    if (isExisting) {
+      const imageToRemove = formState.existingImages[index];
+      setFormState((prev) => ({
+        ...prev,
+        existingImages: prev.existingImages.filter((_, i) => i !== index),
+        removedImages: [...prev.removedImages, imageToRemove],
+      }));
+      form.setValue("imageUrls", [
+        ...formState.existingImages.filter((_, i) => i !== index),
+        ...formState.images,
+      ]);
+    } else {
+      setFormState((prev) => ({
+        ...prev,
+        images: prev.images.filter((_, i) => i !== index),
+      }));
+      form.setValue("imageUrls", [
+        ...formState.existingImages,
+        ...formState.images.filter((_, i) => i !== index),
+      ]);
+    }
+  };
   
-  };
-
   const handleDelete = () => {
-    console.log("Delete review for booking:", booking._id);
-    onOpenChange(false);
+    if (reviewData?._id) {
+      setIsConfirmDeleteOpen(true); 
+    }
   };
 
+  const confirmDelete = () => {
+    if (reviewData?._id) {
+      deleteReviewMutation(reviewData._id); 
+    }
+  };
+
+  const cancelDelete = () => {
+    setIsConfirmDeleteOpen(false); 
+  };
+  // Close the dialog when the user clicks outside of it
   const handleCloseDialog = () => {
     onOpenChange(false);
   };
 
+  if (!reviewExists) {
+    return (
+      <Dialog open={open} onOpenChange={handleCloseDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="text-primary text-center">Notification</DialogTitle>
+            <DialogDescription className="sr-only">
+              Review has been deleted.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <p className="text-center text-gray-500">
+              The review for this tour has been removed. Please contact support for more information.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  
+
   return (
+    <>
     <Dialog open={open} onOpenChange={handleCloseDialog}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -290,72 +468,76 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
                   <FormLabel className="font-medium">
                     Upload Images 
                   </FormLabel>
-                  <FormControl>
-                    <div className="flex flex-wrap gap-2">
-                    {editable && (
-                      <label className="w-[120px] h-[120px] p-2 border-2 border-dashed rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
-                        <ImagePlus className="h-6 w-6 text-gray-400" />
-                        <span className="text-xs text-gray-500 text-center mt-1">
-                          Upload your image here or select Browse
-                        </span>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          disabled={!editable}
-                          multiple
-                          onChange={(e) => {
-                            const files = Array.from(e.target.files || []);
-                            if (files.length > 0) {
-                              const remainingSlots = 5 - (field.value?.length || 0);
-                              if (remainingSlots <= 0) {
-                                toast.error("You can only upload up to 5 images.");
-                                return;
-                              }
-                              const newImages = files.slice(0, remainingSlots);
-                              field.onChange([...(field.value || []), ...newImages]);
-                            }
-                          }}
-                        />
-                      </label>
-                    )}
-                      {field.value && field.value.length > 0 && (
-                        <Carousel className="flex-1 overflow-x-auto">
-                          <CarouselContent>
-                          {field.value.map((image, index) => {
-                                    const src = typeof image === "string" ? image : URL.createObjectURL(image);
-
-                                    return (
-                                      <CarouselItem key={index} className="basis-auto">
-                                        <div className="relative w-[120px] h-[120px] overflow-hidden rounded-md border">
-                                          {editable && (
-                                            <Button
-                                              type="button"
-                                              variant="destructive"
-                                              size="icon"
-                                              className="absolute right-1 top-1 h-6 w-6"
-                                              onClick={() => {
-                                                const updatedImages = field.value.filter((_, i) => i !== index);
-                                                field.onChange(updatedImages);
-                                              }}
-                                            >
-                                              <X className="h-4 w-4" />
-                                            </Button>
-                                          )}
-                                          <img
-                                            src={src}
-                                            alt={`Uploaded image ${index + 1}`}
-                                            className="object-cover w-full h-full"
-                                          />
-                                        </div>
-                                      </CarouselItem>
-                                    );
-                                  })}
-                                  </CarouselContent>
-                                </Carousel>
-                              )}
-                            </div>
-                          </FormControl>
+                    <FormControl>
+                        <div className="flex flex-wrap gap-2">
+                          {editable && (
+                            <label className="w-[120px] h-[120px] p-2 border-2 border-dashed rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
+                              <ImagePlus className="h-6 w-6 text-gray-400" />
+                              <span className="text-xs text-gray-500 text-center mt-1">
+                                Upload your image here or select Browse
+                              </span>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                disabled={!editable}
+                                multiple
+                                onChange={handleImageUpload}
+                              />
+                            </label>
+                          )}
+                          {[...formState.existingImages, ...formState.images].length > 0 && (
+                            <Carousel className="flex-1 overflow-x-auto">
+                              <CarouselContent>
+                                {formState.existingImages.map((image, index) => (
+                                  <CarouselItem key={`existing-${index}`} className="basis-auto">
+                                    <div className="relative w-[120px] h-[120px] overflow-hidden rounded-md border">
+                                      {editable && (
+                                        <Button
+                                          type="button"
+                                          variant="destructive"
+                                          size="icon"
+                                          className="absolute right-1 top-1 h-6 w-6"
+                                          onClick={() => handleRemoveImage(index, true)}
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </Button>
+                                      )}
+                                      <img
+                                        src={image}
+                                        alt={`Existing image ${index + 1}`}
+                                        className="object-cover w-full h-full"
+                                      />
+                                    </div>
+                                  </CarouselItem>
+                                ))}
+                                {formState.images.map((image, index) => (
+                                  <CarouselItem key={`new-${index}`} className="basis-auto">
+                                    <div className="relative w-[120px] h-[120px] overflow-hidden rounded-md border">
+                                      {editable && (
+                                        <Button
+                                          type="button"
+                                          variant="destructive"
+                                          size="icon"
+                                          className="absolute right-1 top-1 h-6 w-6"
+                                          onClick={() => handleRemoveImage(index, false)}
+                                        >
+                                          <X className="h-4 w-4" />
+                                        </Button>
+                                      )}
+                                      <img
+                                        src={URL.createObjectURL(image)}
+                                        alt={`Uploaded image ${index + 1}`}
+                                        className="object-cover w-full h-full"
+                                      />
+                                    </div>
+                                  </CarouselItem>
+                                ))}
+                              </CarouselContent>
+                            </Carousel>
+                          )}
+                        </div>
+                      </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -363,18 +545,25 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
 
             <div className="flex justify-end mt-4">
               {editable ? (
+                (reviewData ? hasChanges : true) ? (
                 <Button type="submit" disabled={isCreatingReview || isUpdatingReview}>
                   {isCreatingReview || isUpdatingReview ? (
                     <LoaderSpin text={isCreatingReview ? "Creating..." : "Updating..."} />
                   ) : "Send" }
                 </Button>
+                ) : null
               ) : (
                 <div className="flex gap-2">
                   <Button variant="outline" onClick={() => setEditable(true)}>
                     Edit
                   </Button>
-                  <Button variant="destructive" onClick={handleDelete}>
-                    Delete
+                  <Button 
+                    type="button"
+                    variant="destructive" 
+                    onClick={handleDelete}
+                    disabled={isDeletingReview}
+                  >
+                    {isDeletingReview ? <LoaderSpin text="Deleting..." /> : "Delete"}
                   </Button>
                 </div>
               )}
@@ -383,6 +572,29 @@ const ReviewTourModal = ({ booking, open, onOpenChange, reviewData, isEditable }
         </Form>
       </DialogContent>
     </Dialog>
+    <Dialog open={isConfirmDeleteOpen} onOpenChange={setIsConfirmDeleteOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this review? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={cancelDelete}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={confirmDelete}
+              disabled={isDeletingReview}
+            >
+              {isDeletingReview ? <LoaderSpin text="Deleting..." /> : "Yes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
