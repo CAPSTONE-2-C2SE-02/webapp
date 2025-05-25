@@ -3,7 +3,7 @@ import { ArrowRight, MapPin, Star, UsersRound, CircleDollarSign, CalendarClock }
 import { Button } from "../ui/button";
 import { Link } from "react-router";
 import useAuthInfo from "@/hooks/useAuth";
-import { generateRatingText, getAbsoluteAddress } from "../utils/convert";
+import { formatCurrency, generateRatingText, getAbsoluteAddress } from "../utils/convert";
 import BookMarkButton from "@/components/utils/book-mark-button";
 
 interface TourCardProps {
@@ -88,7 +88,7 @@ const TourCard = ({ tour, type = "grid" }: TourCardProps) => {
                   </span>
                 </div>
                 <span className="text-primary text-base font-semibold">
-                  ${tour.priceForAdult}
+                  {formatCurrency(tour.priceForAdult)}
                 </span>
               </div>
               <Button
@@ -167,7 +167,7 @@ const TourCard = ({ tour, type = "grid" }: TourCardProps) => {
                     <div className="flex items-center gap-2">
                       <CircleDollarSign className="h-[18px] w-[18px] text-primary" />
                       <span className="text-xs font-medium">
-                        {tour.priceForAdult}
+                        {formatCurrency(tour.priceForAdult)}
                       </span>
                     </div>
                   </div>

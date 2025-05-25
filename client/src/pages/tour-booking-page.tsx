@@ -5,6 +5,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
+import { formatCurrency } from "@/components/utils/convert";
 import MetaData from "@/components/utils/meta-data";
 import ScrollToTopOnMount from "@/components/utils/scroll-to-top-mount";
 import useAuthInfo from "@/hooks/useAuth";
@@ -302,22 +303,22 @@ const TourBookingPage = () => {
               </p>
               <div className="py-5 px-2 border-t border-b border-primary/40 space-y-2">
                 <div className="flex justify-between text-sm font-medium">
-                  <span>Adults - <span className="bg-teal-400/50 px-2 py-0.5 rounded-sm">${state?.tour?.priceForAdult}</span></span>
+                  <span>Adults - <span className="bg-teal-400/50 px-2 py-0.5 rounded-sm">{formatCurrency(state?.tour?.priceForAdult)}</span></span>
                   <span>{state?.adults}</span>
                 </div>
                 <div className="flex justify-between text-sm font-medium">
-                  <span>Young - <span className="bg-teal-400/50 px-2 py-0.5 rounded-sm">${state?.tour?.priceForYoung}</span></span>
+                  <span>Young - <span className="bg-teal-400/50 px-2 py-0.5 rounded-sm">{formatCurrency(state?.tour?.priceForYoung)}</span></span>
                   <span>{state?.youths}</span>
                 </div>
                 <div className="flex justify-between text-sm font-medium">
-                  <span>Children - <span className="bg-teal-400/50 px-2 py-0.5 rounded-sm">${state?.tour?.priceForChildren}</span></span>
+                  <span>Children - <span className="bg-teal-400/50 px-2 py-0.5 rounded-sm">{formatCurrency(state?.tour?.priceForChildren)}</span></span>
                   <span>{state?.children}</span>
                 </div>
               </div>
               <div className="flex justify-between text-sm font-medium py-3 px-4 bg-white rounded-md border border-border">
                 <span>Total</span>
                 <span className="text-primary font-bold">
-                  ${state?.total}
+                  {formatCurrency(state?.total)}
                 </span>
               </div>
 
