@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { addMinutes } from "date-fns";
 import dayjs from 'dayjs';
 import { StatusCodes } from "http-status-codes";
@@ -8,7 +9,6 @@ import Tour from "../models/tour.model.js";
 import User from "../models/user.model.js";
 import { isDateBusy, releaseBookedDates, setBookedDates } from "../services/calendar.service.js";
 import { sendToQueue } from "../services/queue.service.js";
-import crypto from "crypto";
 
 class BookingController {
 
@@ -48,6 +48,56 @@ class BookingController {
                 success: false,
                 error: "Start date must be at least 2 days from today.",
             });
+        }
+
+        // Kiểm tra trạng thái của traveler
+        const traveler = await User.findById(travelerId);
+        if (!traveler.active) {
+            // Nếu user đang bị phạt, không cho phép booking
+            const unlockTime = traveler.inactiveAt ? new Date(traveler.inactiveAt.getTime() + 7 * 24 * 60 * 60 * 1000) : null;
+            return res.status(StatusCodes.FORBIDDEN).json({
+                success: false,
+                error: `Your account is temporarily locked for booking until ${unlockTime ? unlockTime.toLocaleString() : "unknown"}.`,
+            });
+        }
+
+        // Nếu là booking payment later, kiểm tra số booking chưa thanh toán liên tiếp
+        if (isPayLater) {
+            // Lấy các booking payment later chưa thanh toán của user
+            const timeoutBookings = await Booking.find({
+                travelerId,
+                isPayLater: true,
+                paymentStatus: "TIMEOUT",
+                status: "CANCELED"
+            }).sort({ createdAt: -1 }).limit(3);
+
+            // Kiểm tra liên tiếp: nếu 3 booking gần nhất đều chưa thanh toán
+            if (timeoutBookings.length >= 3) {
+                // Gửi notification warning
+                await notificationController.sendNotification({
+                    body: {
+                        type: "WARNING",
+                        senderId: null,
+                        receiverId: travelerId,
+                        relatedModel: "User",
+                        message: "You have made 3 consecutive 'pay later' bookings without payment. Your account is temporarily locked for 7 days.",
+                    },
+                }, {
+                    status: () => ({
+                        json: () => { },
+                    }),
+                });
+
+                // Set active = false và inactiveAt = now
+                traveler.active = false;
+                traveler.inactiveAt = new Date();
+                await traveler.save();
+
+                return res.status(StatusCodes.FORBIDDEN).json({
+                    success: false,
+                    error: "You have made 3 consecutive 'pay later' bookings without payment. Your account is temporarily locked for 7 days.",
+                });
+            }
         }
 
         let tourGuideId;

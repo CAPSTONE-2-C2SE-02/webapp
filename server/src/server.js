@@ -11,7 +11,7 @@ import { swaggerSpec, swaggerUi } from "./config/swagger.config.js";
 import connectMongoDB from "./config/db.config.js";
 import routes from "./routes/index.js";
 
-import { checkExpiredBookings, updateTourGuideRanking, autoUpdateBookingStatus } from "./jobs/cron.job.js";
+import { checkExpiredBookings, updateTourGuideRanking, autoUpdateBookingStatus, unlockInactiveUsers, checkUserPayLaterViolations } from "./jobs/cron.job.js";
 
 import { consumeNotifications } from "./consumers/notification.consumer.js";
 
@@ -59,6 +59,8 @@ const startServer = () => {
   checkExpiredBookings();
   updateTourGuideRanking();
   autoUpdateBookingStatus();
+  unlockInactiveUsers();
+  checkUserPayLaterViolations();
 
   // Consumer notification
   // consumeNotifications().catch(console.error);
