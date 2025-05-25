@@ -89,6 +89,10 @@ const bookingSchema = new mongoose.Schema({
     secretKey: {
         type: String,
     },
+    inactiveAt: {
+        type: Date,
+        default: null
+    },
 },
     { timestamps: true, versionKey: false }
 )

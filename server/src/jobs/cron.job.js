@@ -1,9 +1,9 @@
 import cron from "node-cron";
-import Booking from "../models/booking.model.js";
-import Tour from "../models/tour.model.js";
-import Ranking from "../models/ranking.model.js";
-import User from "../models/user.model.js";
 import notificationController from "../controllers/notification.controller.js";
+import Booking from "../models/booking.model.js";
+import Ranking from "../models/ranking.model.js";
+import Tour from "../models/tour.model.js";
+import User from "../models/user.model.js";
 import { releaseBookedDates } from "../services/calendar.service.js";
 import { updateTourGuideRankingAndRating } from "../services/ranking.service.js";
 
@@ -146,10 +146,89 @@ const autoUpdateBookingStatus = async () => {
     }
 };
 
+const unlockInactiveUsers = async () => {
+    try {
+        const now = new Date();
+        // Tìm user bị khóa và đã quá 7 ngày
+        const usersToUnlock = await User.find({
+            active: false,
+            inactiveAt: { $lte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000) }
+        });
+
+        for (const user of usersToUnlock) {
+            user.active = true;
+            user.inactiveAt = null;
+            await user.save();
+
+            // Gửi notification mở khóa
+            await notificationController.sendNotification({
+                body: {
+                    type: "WARNING",
+                    senderId: null,
+                    receiverId: user._id,
+                    relatedModel: "User",
+                    message: "Your account has been unlocked. You can now book tours again.",
+                },
+            }, {
+                status: () => ({
+                    json: () => { },
+                }),
+            });
+        }
+        if (usersToUnlock.length > 0) {
+            console.log(`✅ Unlocked ${usersToUnlock.length} users after penalty period.`);
+        }
+    } catch (error) {
+        console.error("❌ Error in unlockInactiveUsers:", error);
+    }
+};
+
+const checkUserPayLaterViolations = async () => {
+    try {
+        const users = await User.find({ active: true }); // chỉ kiểm tra user đang active
+        for (const user of users) {
+            // Lấy 3 booking gần nhất của user bị TIMEOUT và CANCELED với isPayLater
+            const timeoutBookings = await Booking.find({
+                travelerId: user._id,
+                isPayLater: true,
+                paymentStatus: "TIMEOUT",
+                status: "CANCELED"
+            }).sort({ createdAt: -1 }).limit(3);
+
+            // Nếu đủ 3 booking liên tiếp như vậy thì phạt
+            if (timeoutBookings.length === 3) {
+                user.active = false;
+                user.inactiveAt = new Date();
+                await user.save();
+
+                // Gửi notification warning
+                await notificationController.sendNotification({
+                    body: {
+                        type: "WARNING",
+                        senderId: null,
+                        receiverId: user._id,
+                        relatedModel: "User",
+                        message: "You have made 3 consecutive 'pay later' bookings that were canceled due to payment timeout. Your account is temporarily locked for 7 days.",
+                    },
+                }, {
+                    status: () => ({
+                        json: () => { },
+                    }),
+                });
+            }
+        }
+    } catch (error) {
+        console.error("❌ Error in checkUserPayLaterViolations:", error);
+    }
+};
+
+
 // Đặt lịch cho từng job
 cron.schedule("*/1 * * * *", checkExpiredBookings); // mỗi phút kiểm tra booking hết hạn
 cron.schedule("0 * * * *", updateTourGuideRanking); // mỗi giờ cập nhật ranking
 cron.schedule("*/1 * * * *", autoUpdateBookingStatus); // mỗi phút tự động hoàn thành và không hoàn thành booking
+cron.schedule("*/1 * * * *", unlockInactiveUsers);
+cron.schedule("*/1 * * * *", checkUserPayLaterViolations);
 
-export { checkExpiredBookings, updateTourGuideRanking, autoUpdateBookingStatus };
+export { autoUpdateBookingStatus, checkExpiredBookings, checkUserPayLaterViolations, unlockInactiveUsers, updateTourGuideRanking };
 
