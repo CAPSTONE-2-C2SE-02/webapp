@@ -30,6 +30,8 @@ const NotificationCard = ({ notification, onMarkAsRead, onDelete }: Notification
       case "CONFIRM":
       case "REVIEW":
         return `booking-history`
+      case "WARNING":
+        return "";
       default:
         return ""
     }
