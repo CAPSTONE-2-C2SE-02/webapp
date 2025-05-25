@@ -90,6 +90,13 @@
   ::selection {
     @apply bg-teal-100 text-teal-700;
   }
+
+  .mapboxgl-popup-close-button {
+    @apply px-1.5;
+  }
+  .mapboxgl-popup-content {
+    @apply p-2!;
+  }
 }
 
 @layer utilities {
