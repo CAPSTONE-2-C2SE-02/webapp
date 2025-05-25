@@ -9,6 +9,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { Toaster } from './components/ui/sonner.tsx';
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { SocketProvider } from './context/socket-context.tsx';
+import { MapProvider } from 'react-map-gl/mapbox';
 
 const queryClient = new QueryClient();
 
@@ -19,7 +20,9 @@ createRoot(document.getElementById('root')!).render(
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
             <SocketProvider>
-              <AppRoutes />
+              <MapProvider>
+                <AppRoutes />
+              </MapProvider>
             </SocketProvider>
             <Toaster position="bottom-right" duration={2000} />
           </PersistGate>

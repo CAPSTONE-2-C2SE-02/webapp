@@ -99,3 +99,9 @@ export const deleteTourById = async (id: string): Promise<ApiResponse<string>> =
   const response = await axiosInstance.delete(`/tours/${id}`);
   return response.data;
 };
+
+// get all tours that traveler has booked and completed
+export const fetchTourBookingComplete = async (): Promise<ApiResponse<Tour[]>> => {
+  const response = await axiosInstance.get('/tours/tour-booking-complete');
+  return response.data;
+};

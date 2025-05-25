@@ -19,6 +19,7 @@ import { Link, useNavigate } from "react-router";
 import useGetBusyDates from "@/hooks/useGetBusyDates";
 import useAuthInfo from "@/hooks/useAuth";
 import HoverUserCard from "../user/hover-user-card";
+import { formatCurrency } from "../utils/convert";
 
 interface TourBookingSectionProps {
   tourData: Tour;
@@ -255,7 +256,7 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                         <div className="flex items-center justify-between">
                           <FormLabel className="text-base">
                             <span className="text-primary">Adult (age 18–65)</span>
-                            <div className="text-sm text-muted-foreground">${tourData.priceForAdult}</div>
+                            <div className="text-sm text-muted-foreground">{formatCurrency(tourData.priceForAdult)}</div>
                           </FormLabel>
                           <div className="flex items-center gap-2">
                             <Button
@@ -291,7 +292,7 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                         <div className="flex items-center justify-between">
                           <FormLabel className="text-base">
                             <span className="text-primary">Youth (age 12–17)</span>
-                            <div className="text-sm text-muted-foreground">${tourData.priceForYoung}</div>
+                            <div className="text-sm text-muted-foreground">{formatCurrency(tourData.priceForYoung)}</div>
                           </FormLabel>
                           <div className="flex items-center gap-2">
                             <Button
@@ -327,7 +328,7 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                         <div className="flex items-center justify-between">
                           <FormLabel className="text-base">
                             <span className="text-primary">Children (age 0–11)</span>
-                            <div className="text-sm text-muted-foreground">${tourData.priceForChildren}</div>
+                            <div className="text-sm text-muted-foreground">{formatCurrency(tourData.priceForChildren)}</div>
                           </FormLabel>
                           <div className="flex items-center gap-2">
                             <Button
@@ -375,7 +376,7 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
                 <div className="bg-muted/90 p-3 rounded-md">
                   <div className="flex items-center justify-between">
                     <span className="text-base font-medium">Total Price</span>
-                    <span className="text-lg font-semibold text-primary">$ {totalPrice}</span>
+                    <span className="text-lg font-semibold text-primary">{formatCurrency(totalPrice)}</span>
                   </div>
                 </div>
                 

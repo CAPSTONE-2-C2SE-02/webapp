@@ -142,7 +142,7 @@ class BookingController {
 
             const bookings = await Booking.find({ travelerId: user._id })
                 .populate("travelerId", "fullName email phoneNumber")
-                .populate("tourId", "title departureLocation destination duration imageUrls")
+                .populate("tourId", "title departureLocation destination duration imageUrls priceForAdult priceForYoung priceForChildren")
                 .populate("tourGuideId", "fullName email phoneNumber");
 
             return res.status(StatusCodes.OK).json({ success: true, result: bookings });
