@@ -198,6 +198,10 @@ export type Notification =
     type: "CONFIRM" | "REVIEW";
     relatedModel: "Booking";
     relatedId: Booking;
+  })
+  | (BaseNotification & {
+    type: "WARNING";
+    relatedModel: "User";
   });
 
 export type AuthUserInfo = {

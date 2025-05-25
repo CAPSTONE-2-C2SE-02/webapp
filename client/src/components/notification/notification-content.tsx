@@ -16,7 +16,9 @@ const NotificationContent = ({ notification }: { notification: Notification }) =
         return `commented on your post ${notification?.relatedId?.content[0] ? `"${notification?.relatedId?.content[0]}"` : ""}`
       case "CONFIRM":
       case "REVIEW":
-        return notification.message
+        return notification.message;
+      case "WARNING":
+        return notification.message || "You have a new warning";
       default:
         return null;
     }
