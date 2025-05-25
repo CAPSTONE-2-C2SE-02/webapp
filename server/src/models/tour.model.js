@@ -19,6 +19,12 @@ const tourSchema = new mongoose.Schema({
     departureLocation: {
         type: String
     },
+    destinationLat: {
+        type: String
+    },
+    destinationLon: {
+        type: String
+    },
     schedule: [
         {
             day: Number,

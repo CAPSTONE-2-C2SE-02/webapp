@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 export interface LocationResult {
   name: string;
   display_name: string;
+  lat: string;
+  lon: string;
 }
 
 const fetchLocations = async (query: string): Promise<LocationResult[]> => {
