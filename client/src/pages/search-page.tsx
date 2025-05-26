@@ -54,12 +54,6 @@ const SearchPage = () => {
           </ScrollArea>
         </TabsContent>
       </Tabs>
-      {posts.length === 0 && tours.length === 0 && users.length === 0 && (
-        <div className="bg-white border border-border rounded-lg p-5 h-fit w-1/2">
-          <h3 className="text-lg font-semibold text-primary text-center">No results found for "{searchQuery}"</h3>
-          <p className="text-xs text-center text-muted-foreground">Search results only include things visible to you.</p>
-        </div>
-      )}
     </div>
   )
 }

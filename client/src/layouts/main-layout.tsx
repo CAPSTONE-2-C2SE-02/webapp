@@ -1,5 +1,6 @@
 import Chatbot from "@/components/chat/chatbot";
 import Header from "@/components/layout/header";
+import ScrollUpButton from "@/components/layout/scroll-up-button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAppSelector } from "@/hooks/redux";
 import { useGetUserAuthQuery } from "@/services/root-api";
@@ -27,6 +28,7 @@ const MainLayout = () => {
       <Header />
       <main className="max-w-7xl w-full mx-auto px-2 lg:px-0">
         <Outlet />
+        <ScrollUpButton />
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>

@@ -19,7 +19,7 @@ interface TourFilterPanelProps {
 
 const MAX_LENGTH = 21;
 const MIN_LENGTH = 1;
-const MAX_PRICE = 1500000;
+const MAX_PRICE = 3000000;
 const MIN_PRICE = 0;
 
 const TourFilterPanel = ({ priceRange, setPriceRange, lengthRange, setLengthRange, minRating, setMinRating, onReset }: TourFilterPanelProps) => {

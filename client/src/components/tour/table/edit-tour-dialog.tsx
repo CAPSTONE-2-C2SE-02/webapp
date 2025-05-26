@@ -51,6 +51,8 @@ const EditTourDialog = ({
       title: tour.title,
       introduction: tour.introduction,
       destination: tour.destination,
+      destinationLat: tour.destinationLat,
+      destinationLon: tour.destinationLon,
       departureLocation: tour.departureLocation,
       duration: tour.duration,
       priceForAdult: tour.priceForAdult,
@@ -73,6 +75,8 @@ const EditTourDialog = ({
         title: tour.title,
         introduction: tour.introduction,
         destination: tour.destination,
+        destinationLat: tour.destinationLat,
+        destinationLon: tour.destinationLon,
         departureLocation: tour.departureLocation,
         duration: tour.duration,
         priceForAdult: tour.priceForAdult,
@@ -147,18 +151,25 @@ const EditTourDialog = ({
 
       const formData = new FormData();
       
-      formData.append("title", values.title);
-      formData.append("introduction", values.introduction);
-      formData.append("destination", values.destination);
-      formData.append("departureLocation", values.departureLocation);
-      formData.append("duration", values.duration.toString());
-      formData.append("priceForAdult", values.priceForAdult.toString());
-      formData.append("priceForYoung", values.priceForYoung.toString());
-      formData.append("priceForChildren", values.priceForChildren.toString());
-      formData.append("maxParticipants", values.maxParticipants.toString());
-      formData.append("schedule", JSON.stringify(values.schedule));
-      formData.append("include", values.include);
-      formData.append("notInclude", values.notInclude);
+      Object.entries(values).forEach(([key, value]) => {
+        if (key === "images" && Array.isArray(value)) {
+          console.log("images debugging");
+        } else if (key === "include") {
+          const includesList = (value as string).split("\n").filter(item => item.trim() !== "");
+          includesList.forEach(item => {
+              formData.append("include", item);
+          });
+        } else if (key === "notInclude") {
+          const notIncludesList = (value as string).split("\n").filter(item => item.trim() !== "");
+          notIncludesList.forEach(item => {
+              formData.append("notInclude", item);
+          });
+        } else if (key === "schedule") {
+          formData.append("schedule", JSON.stringify(value));
+        } else {
+          formData.append(key, value as string | Blob);
+        }
+      });
       newImages.forEach((file) => {
         formData.append("images", file);
       });
@@ -221,7 +232,7 @@ const EditTourDialog = ({
                       </FormLabel>
                       <FormControl>
                         <LocationSelect
-                          onChange={field.onChange}
+                          onChange={(location) => field.onChange(location.display_name)}
                           placeholder="e.g. Hoi An"
                           value={field.value}
                         />
@@ -240,7 +251,13 @@ const EditTourDialog = ({
                       </FormLabel>
                       <FormControl>
                         <LocationSelect
-                          onChange={field.onChange}
+                          onChange={(location) => {
+                            if (location) {
+                                field.onChange(location.display_name);
+                                form.setValue("destinationLat", location.lat);
+                                form.setValue("destinationLon", location.lon);
+                            }
+                          }}
                           placeholder="e.g. Da Nang"
                           value={field.value}
                         />

@@ -4,7 +4,6 @@ import {
   Clock,
   Forward,
   Heart,
-  MessageSquareMore,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { useMemo, useState } from "react";
@@ -29,7 +28,6 @@ const PostCard = ({ postData }: { postData: Post }) => {
 
   const { isLightboxOpen, setIsLightboxOpen, currentImageIndex, setCurrentImageIndex, openLightbox, closeLightbox } = useLightBox();
   const [isSharePostModelOpen, setIsSharePostModelOpen] = useState(false);
-  const [isCommentModelOpen, setIsCommentPostModelOpen] = useState(false);
   const [postUrl, setPostUrl] = useState<string>("");
 
   const showSharePost = (postId: string) => {
@@ -173,18 +171,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
               </div>
             </Button>
             {/* Commend Modal */}
-            <Button
-              variant={"ghost"}
-              className="text-primary py-3 px-3.5 gap-4"
-              onClick={() => setIsCommentPostModelOpen(true)}
-            >
-              <div className="flex items-center gap-1.5">
-                <MessageSquareMore className="size-5" />
-                <span className="text-sm font-medium leading-none">
-                  Comment
-                </span>
-              </div>
-            </Button>
+            <CommentPostModal postId={postData._id} />
             <Button
               variant={"ghost"}
               className="text-primary py-3 px-3.5 gap-4"
@@ -199,13 +186,6 @@ const PostCard = ({ postData }: { postData: Post }) => {
         </CardContent>
         {/* <CardFooter className="border-t border-slate-200"></CardFooter> */}
       </Card>
-
-      {/* Comment Modal */}
-      <CommentPostModal
-        isOpen={isCommentModelOpen}
-        onOpenChange={setIsCommentPostModelOpen}
-        postId={postData._id}
-      />
 
       {/* Share Modal */}
       <SharePostModal

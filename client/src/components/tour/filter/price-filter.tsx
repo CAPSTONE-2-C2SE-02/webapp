@@ -9,7 +9,7 @@ interface PriceFilterProps {
   onApply: () => void;
 }
 
-const MAX_PRICE = 1500000;
+const MAX_PRICE = 3000000;
 const MIN_PRICE = 0;
 
 const PriceFilter = ({ priceRange, setPriceRange, onApply }: PriceFilterProps) => {

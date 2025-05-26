@@ -11,9 +11,10 @@ import { useAppSelector } from "@/hooks/redux";
 interface CommentProps {
   comment: Comment;
   onAddReply: (parentId: string, content: string) => void;
+  level?: number;
 }
 
-const CommentCard = ({ comment, onAddReply }: CommentProps) => {
+const CommentCard = ({ comment, onAddReply, level = 1 }: CommentProps) => {
   const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
   const [isReplying, setIsReplying] = useState<boolean>(false);
   const [replyComment, setReplyComment] = useState<string>("");
@@ -71,7 +72,7 @@ const CommentCard = ({ comment, onAddReply }: CommentProps) => {
           </div>
           <p className="mb-1">{comment.content}</p>
           {/* comment action */}
-          {isAuthenticated && (
+          {isAuthenticated && level < 3 && (
             <div className="flex items-center gap-2">
               <Button size={"icon"} variant={"ghost"} className="w-6 h-6 px-1 py-0 text-xs">
                 <Heart className="size-3" />
@@ -92,13 +93,14 @@ const CommentCard = ({ comment, onAddReply }: CommentProps) => {
               comment={replyComment}
               key={replyComment._id}
               onAddReply={onAddReply}
+              level={level + 1}
             />
           ))}
         </div>
       )}
 
       {/* reply comment input */}
-      {isAuthenticated && isReplying && (
+      {isAuthenticated && isReplying && level < 3 && (
         <div className="relative flex items-center justify-start gap-3 pr-2 ml-8">
           <Avatar className="border w-9 h-9">
             <AvatarImage src={userInfo?.profilePicture} alt="avatar" />

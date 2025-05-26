@@ -54,6 +54,8 @@ export const createTourSchema = z.object({
   title: z.string().min(1, "Name of Tour is required"),
   departureLocation: z.string().min(1, "Departure Location is required"),
   destination: z.string().min(1, "Destination is required"),
+  destinationLat: z.string(),
+  destinationLon: z.string(),
   duration: z.number().min(1, "Duration is required"),
   priceForAdult: z.number().min(0, "Price for Adult must be a positive number"),
   priceForYoung: z.number().min(0, "Price for Young must be a positive number"),

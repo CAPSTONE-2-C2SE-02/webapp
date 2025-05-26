@@ -12,7 +12,7 @@ import { useState } from "react";
 
 const MAX_LENGTH = 21;
 const MIN_LENGTH = 1;
-const MAX_PRICE = 1500000;
+const MAX_PRICE = 3000000;
 const MIN_PRICE = 0;
 
 const ToursPage = () => {

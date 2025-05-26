@@ -112,7 +112,10 @@ const SetBusySchedulePage = () => {
                     modifiersClassNames={{
                       busy: " bg-slate-100 text-primary font-bold ",
                     }}
-                    disabled={busyDatesSet}
+                    disabled={(date) => {
+                      if (date < new Date()) return true;
+                      return busyDatesSet.some((busyDate) => isSameDay(busyDate, date));
+                    }}
                   />
                 </div>
 
