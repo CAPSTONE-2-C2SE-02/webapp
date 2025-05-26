@@ -147,18 +147,25 @@ const EditTourDialog = ({
 
       const formData = new FormData();
       
-      formData.append("title", values.title);
-      formData.append("introduction", values.introduction);
-      formData.append("destination", values.destination);
-      formData.append("departureLocation", values.departureLocation);
-      formData.append("duration", values.duration.toString());
-      formData.append("priceForAdult", values.priceForAdult.toString());
-      formData.append("priceForYoung", values.priceForYoung.toString());
-      formData.append("priceForChildren", values.priceForChildren.toString());
-      formData.append("maxParticipants", values.maxParticipants.toString());
-      formData.append("schedule", JSON.stringify(values.schedule));
-      formData.append("include", values.include);
-      formData.append("notInclude", values.notInclude);
+      Object.entries(values).forEach(([key, value]) => {
+        if (key === "images" && Array.isArray(value)) {
+          console.log("images debugging");
+        } else if (key === "include") {
+          const includesList = (value as string).split("\n").filter(item => item.trim() !== "");
+          includesList.forEach(item => {
+              formData.append("include", item);
+          });
+        } else if (key === "notInclude") {
+          const notIncludesList = (value as string).split("\n").filter(item => item.trim() !== "");
+          notIncludesList.forEach(item => {
+              formData.append("notInclude", item);
+          });
+        } else if (key === "schedule") {
+          formData.append("schedule", JSON.stringify(value));
+        } else {
+          formData.append(key, value as string | Blob);
+        }
+      });
       newImages.forEach((file) => {
         formData.append("images", file);
       });

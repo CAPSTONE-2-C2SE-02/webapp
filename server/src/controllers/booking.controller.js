@@ -9,6 +9,8 @@ import Tour from "../models/tour.model.js";
 import User from "../models/user.model.js";
 import { isDateBusy, releaseBookedDates, setBookedDates } from "../services/calendar.service.js";
 import { sendToQueue } from "../services/queue.service.js";
+import Interactions from "../models/interactions.model.js";
+import { recordInteraction } from "../services/interaction.service.js";
 
 class BookingController {
 
@@ -318,6 +320,9 @@ class BookingController {
                 }),
             });
 
+            // create a new interaction
+            await recordInteraction(travelerId, booking.tourId, "BOOK");
+
             return res.status(200).json({ success: true, message: "Tour confirmed by traveler" });
         } catch (error) {
             return res.status(500).json({ success: false, error: error.message });
@@ -392,6 +397,11 @@ class BookingController {
                     json: () => { },
                 }),
             });
+
+            // delete the interaction
+            if (isTraveler) {
+                await deleteInteraction(userId, booking.tourId, "BOOK");
+            }
 
             return res.status(StatusCodes.OK).json({
                 success: true,

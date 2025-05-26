@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import Post from "../models/post.model.js";
 import Tour from "../models/tour.model.js";
 import Bookmark from "../models/bookmark.model.js";
+import { deleteInteraction, recordInteraction } from "../services/interaction.service.js";
 
 class BookmarkController {
   // [GET] /:itemType/:itemId
@@ -75,7 +76,10 @@ class BookmarkController {
         itemType
       });
       await newBookmark.save();
-      
+
+      // create a new interaction
+      await recordInteraction(userId, itemId, "FAVORITE");
+
       return res.status(StatusCodes.CREATED).json({
         success: true,
         message: `${itemName} saved successfully`
@@ -105,6 +109,9 @@ class BookmarkController {
           error: "Bookmark not found"
         });
       }
+
+      // delete the interaction
+      await deleteInteraction(userId, itemId, "FAVORITE");
 
       return res.status(StatusCodes.OK).json({
         success: true,

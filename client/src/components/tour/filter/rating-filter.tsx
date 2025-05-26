@@ -34,7 +34,7 @@ const RatingFilter = ({ minRating, setMinRating }: RatingFilterProps) => {
                     }`}
                   />
                 ))}
-                {rating < 5 && <span className="ml-2 text-primary">& above</span>}
+                {rating < 5 && <span className="ml-2 text-primary"> above</span>}
               </Label>
             </div>
             <span className="text-sm text-gray-500">12</span>

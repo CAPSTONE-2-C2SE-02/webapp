@@ -1,6 +1,6 @@
-import { Loader2, SendHorizonal } from "lucide-react"
+import { Loader2, MessageSquareMore, SendHorizonal } from "lucide-react"
 import { Button } from "../ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "../ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar"
 import { Input } from "../ui/input"
 import { useState } from "react"
@@ -13,13 +13,12 @@ import useAuthInfo from "@/hooks/useAuth"
 import { useAppSelector } from "@/hooks/redux"
 
 interface CommentPostModalProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
   postId: string;
 }
 
-const CommentPostModal = ({ isOpen, onOpenChange, postId }: CommentPostModalProps) => {
+const CommentPostModal = ({ postId }: CommentPostModalProps) => {
   const [comment, setComment] = useState("");
+  const [isCommentModelOpen, setIsCommentPostModelOpen] = useState(false);
   const queryClient = useQueryClient();
   const auth = useAuthInfo();
   const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
@@ -27,7 +26,7 @@ const CommentPostModal = ({ isOpen, onOpenChange, postId }: CommentPostModalProp
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["comments", postId],
     queryFn: () => getCommentsByPostId(postId),
-    enabled: !!postId && isOpen,
+    enabled: !!postId,
     refetchOnWindowFocus: false,
   });
 
@@ -110,12 +109,38 @@ const CommentPostModal = ({ isOpen, onOpenChange, postId }: CommentPostModalProp
     }
   };
 
+  const totalComments = () => {
+    let count = 0;
+    const stack = [...comments];
+    while (stack.length > 0) {
+      const comment = stack.pop();
+      if (!comment) continue;
+      count += 1;
+      if (comment.childComments) stack.push(...comment.childComments);
+    }
+    return count;
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isCommentModelOpen} onOpenChange={setIsCommentPostModelOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant={"ghost"}
+          className="text-primary py-3 px-3.5 gap-4"
+        >
+          <div className="flex items-center gap-1.5">
+            <MessageSquareMore className="size-5" />
+            <span className="text-sm font-medium leading-none">
+              Comments
+            </span>
+            <span className="text-sm py-1 px-1.5 rounded-xl bg-primary/20 text-primary leading-none">{totalComments()}</span>
+          </div>
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-md md:max-w-2xl p-5 max-h-[calc(100vh-48px)] h-auto overflow-hidden gap-4 pb-6">
         <DialogHeader className="space-y-4">
           <DialogTitle className="text-center text-primary">
-            Comments
+            Comments <span className="text-sm text-muted-foreground">({totalComments()})</span>
           </DialogTitle>
           <DialogDescription className="sr-only">
             Make changes to your profile here. Click save when you're done.
@@ -164,7 +189,7 @@ const CommentPostModal = ({ isOpen, onOpenChange, postId }: CommentPostModalProp
           <ScrollArea className="max-h-[calc(100vh-240px)] w-full">
             <div className="space-y-5 py-1">
               {comments.map((comment) => (
-                <CommentCard comment={comment} key={comment._id} onAddReply={handleAddReply} />
+                <CommentCard comment={comment} key={comment._id} onAddReply={handleAddReply} level={1} />
               ))}
             </div>
           </ScrollArea>

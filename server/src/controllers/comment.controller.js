@@ -23,6 +23,26 @@ class CommentController {
                 });
             }
 
+            // Check nesting level
+            let depth = 1;
+            let currentParent = parentComment;
+            while (currentParent) {
+                const parent = await Comment.findById(currentParent);
+                if (!parent) break;
+                depth++;
+                if (parent.parentComment) {
+                    currentParent = parent.parentComment;
+                } else {
+                    break;
+                }
+            }
+            if (depth > 3) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    error: "Maximum nesting level (3) for replies exceeded."
+                });
+            }
+
             const userId = user._id;
 
             const newComment = new Comment({

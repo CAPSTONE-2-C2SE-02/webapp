@@ -23,6 +23,11 @@ const NAV_ITEMS = [
     href: "/messages",
     icon: MessageCircle,
     placeholder: "Messages"
+  },
+  {
+    href: "/bookmarks",
+    icon: Bookmark,
+    placeholder: "Saved"
   }
 ]
 
@@ -69,11 +74,6 @@ const Header = () => {
           {isAuthenticated ? (
             <>
               <NotificationSheet />
-              <Link to="/bookmarks">
-                <Button variant="outline" className="rounded-xl size-10">
-                  <Bookmark className="size-5" />
-                </Button>
-              </Link>
               <UserNav />
             </>
           ) : (
