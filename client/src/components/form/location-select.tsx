@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Input } from "../ui/input";
 import useLocationSearch from "@/hooks/useLocationSearch";
+import { PinIcon } from "lucide-react";
+import { LocationResult } from "@/lib/types";
 
 type LocationSelectProps = {
-  onChange: (val: string) => void;
+  onChange: (val: LocationResult) => void;
   placeholder: string;
   value?: string;
 };
@@ -37,12 +39,12 @@ const LocationSelect = ({ onChange, placeholder, value }: LocationSelectProps) =
               key={`${location.name}-${index}`}
               className="p-2 hover:bg-gray-100 cursor-pointer"
               onClick={() => {
-                onChange(location.display_name);
+                onChange(location);
                 setQuery(location.name);
                 setIsFocused(false);
               }}
             >
-              <div className="text-sm font-semibold text-gray-800">{location.name}</div>
+              <div className="text-sm font-semibold text-gray-800 flex items-center mb-0.5"><PinIcon className="w-3 h-3 mr-1 text-teal-600 fill-current" />{location.name}</div>
               <div className="text-xs text-gray-500">{location.display_name}</div>
             </li>
           ))}

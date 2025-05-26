@@ -60,6 +60,8 @@ export type Tour = {
   rating: number;
   departureLocation: string;
   destination: string;
+  destinationLat: string;
+  destinationLon: string;
   priceForAdult: number;
   priceForYoung: number;
   priceForChildren: number;
@@ -348,4 +350,24 @@ export interface BookmarkInfo {
 export interface BookmarkUser {
   _id: string;
   user: string;
+}
+
+export interface LocationResult {
+  name: string;
+  display_name: string;
+  lat: string;
+  lon: string;
+}
+
+export interface TourMarker {
+  _id: string;
+  title: string;
+  destination: string;
+  departureLocation: string;
+  destinationLon: string;
+  destinationLat: string;
+  priceForAdult: number;
+  duration: number;
+  imageUrls: string[];
+  rating: number;
 }

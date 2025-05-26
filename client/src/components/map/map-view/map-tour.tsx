@@ -1,25 +1,31 @@
-import { Marker, MarkerEvent, Popup, useMap } from "react-map-gl/mapbox"
+import { Marker, MarkerEvent, useMap } from "react-map-gl/mapbox"
 import MapContainer from "../map-container"
 import { MarkerData } from "../type";
-import { useState } from "react";
+import { Tour } from "@/lib/types";
+import { useMemo } from "react";
 
-const MapTour = () => {
+const MapTour = ({ tourData }: { tourData: Tour }) => {
   const { tour } = useMap();
-  const [selectedMarker, setSelectedMarker] = useState<MarkerData | null>(null);
+
+  const tourCoordinates = useMemo(() => {
+    return {
+      longitude: Number(tourData.destinationLon || 106.6),
+      latitude: Number(tourData.destinationLat || 16.678),
+    }
+  }, [tourData])
 
   const handleMarkerClick = (
     e: MarkerEvent<MouseEvent>,
     marker: MarkerData
   ) => {
     e.originalEvent.stopPropagation();
-    setSelectedMarker(marker);
     if (tour) {
       tour.flyTo({
         center: [marker.longitude, marker.latitude],
         zoom: 13,
         duration: 1000,
         essential: true,
-        offset: [0, -30], // Adjust the offset to position the marker better
+        offset: [0, -30],
       });
     }
   };
@@ -29,32 +35,18 @@ const MapTour = () => {
       <MapContainer
         mapType="tour"
         initialViewState={{
-          longitude: 105.0125700,
-          latitude: 22.8372564,
+          longitude: tourCoordinates.longitude,
+          latitude: tourCoordinates.latitude,
           zoom: 8,
         }}
         navControl={false}
       >
         <Marker
-          longitude={105.0125700}
-          latitude={22.8372564}
+          longitude={tourCoordinates.longitude}
+          latitude={tourCoordinates.latitude}
           color="#0c4a6e"
-          onClick={(e) => handleMarkerClick(e, { longitude: 105.0125700, latitude: 22.8372564 })}
+          onClick={(e) => handleMarkerClick(e, tourCoordinates)}
         />
-        {selectedMarker && (
-          <Popup
-            longitude={selectedMarker.longitude}
-            latitude={selectedMarker.latitude}
-            closeButton={true}
-            closeOnClick={false}
-            onClose={() => setSelectedMarker(null)}
-            anchor="top"
-          >
-            <div className="w-full h-full">
-              <h1>Hello</h1>
-            </div>
-          </Popup>
-        )}
       </MapContainer>
     </div>
   )

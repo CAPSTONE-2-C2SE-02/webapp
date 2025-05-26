@@ -51,6 +51,8 @@ const EditTourDialog = ({
       title: tour.title,
       introduction: tour.introduction,
       destination: tour.destination,
+      destinationLat: tour.destinationLat,
+      destinationLon: tour.destinationLon,
       departureLocation: tour.departureLocation,
       duration: tour.duration,
       priceForAdult: tour.priceForAdult,
@@ -73,6 +75,8 @@ const EditTourDialog = ({
         title: tour.title,
         introduction: tour.introduction,
         destination: tour.destination,
+        destinationLat: tour.destinationLat,
+        destinationLon: tour.destinationLon,
         departureLocation: tour.departureLocation,
         duration: tour.duration,
         priceForAdult: tour.priceForAdult,
@@ -228,7 +232,7 @@ const EditTourDialog = ({
                       </FormLabel>
                       <FormControl>
                         <LocationSelect
-                          onChange={field.onChange}
+                          onChange={(location) => field.onChange(location.display_name)}
                           placeholder="e.g. Hoi An"
                           value={field.value}
                         />
@@ -247,7 +251,13 @@ const EditTourDialog = ({
                       </FormLabel>
                       <FormControl>
                         <LocationSelect
-                          onChange={field.onChange}
+                          onChange={(location) => {
+                            if (location) {
+                                field.onChange(location.display_name);
+                                form.setValue("destinationLat", location.lat);
+                                form.setValue("destinationLon", location.lon);
+                            }
+                          }}
                           placeholder="e.g. Da Nang"
                           value={field.value}
                         />

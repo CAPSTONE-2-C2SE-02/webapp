@@ -2,11 +2,10 @@ import { StatusCodes } from "http-status-codes";
 import Tour from "../models/tour.model.js";
 import User from "../models/user.model.js";
 import { uploadImages } from "../utils/uploadImage.util.js";
-import Interactions from "../models/interactions.model.js";
-import axios from "axios";
 import Bookmark from "../models/bookmark.model.js";
 import Notification from "../models/notification.model.js";
 import Booking from "../models/booking.model.js";
+import { recordInteraction } from "../services/interaction.service.js";
 
 class TourController {
 
@@ -125,22 +124,7 @@ class TourController {
 
             if (req.user?.userId) {
                 const userId = req.user?.userId;
-                const interaction = await Interactions.findOne({
-                    userId,
-                    tourId: id,
-                    interaction_type: "VIEW"
-                });
-                if (!interaction) {
-                    const newInteraction = new Interactions({
-                        userId,
-                        tourId: id,
-                        interaction_type: "VIEW"
-                    });
-                    await newInteraction.save();
-                    axios.post(`http://127.0.0.1:8020/retrain`)
-                        .then(() => console.log("Retrain queued"))
-                        .catch(err => console.error("Retrain error:", err.message));
-                }
+                await recordInteraction(userId, id, "VIEW");
             }
 
             return res.status(StatusCodes.OK).json({
@@ -370,6 +354,23 @@ class TourController {
             return res.status(StatusCodes.OK).json({
                 success: true,
                 result: completedTours
+            });
+        } catch (error) {
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    // [GET] /api/v1/tours/markers
+    async getAllToursMarkers(req, res) {
+        try {
+            const tours = await Tour.find().select("title destination departureLocation destinationLon destinationLat priceForAdult duration rating imageUrls");
+
+            return res.status(StatusCodes.OK).json({
+                success: true,
+                result: tours
             });
         } catch (error) {
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

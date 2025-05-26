@@ -33,6 +33,8 @@ const CreateNewTourForm = () => {
             title: "",
             departureLocation: "",
             destination: "",
+            destinationLat: "",
+            destinationLon: "",
             duration: 1,
             priceForAdult: 0,
             priceForYoung: 0,
@@ -193,7 +195,7 @@ const CreateNewTourForm = () => {
                                         </FormLabel>
                                         <FormControl>
                                             <LocationSelect
-                                                onChange={field.onChange}
+                                                onChange={(location) => field.onChange(location.display_name)}
                                                 placeholder="e.g. Hoi An"
                                             />
                                         </FormControl>
@@ -211,7 +213,13 @@ const CreateNewTourForm = () => {
                                         </FormLabel>
                                         <FormControl>
                                             <LocationSelect
-                                                onChange={field.onChange}
+                                                onChange={(location) => {
+                                                    if (location) {
+                                                        field.onChange(location.display_name);
+                                                        form.setValue("destinationLat", location.lat);
+                                                        form.setValue("destinationLon", location.lon);
+                                                    }
+                                                }}
                                                 placeholder="e.g. Da Nang"
                                             />
                                         </FormControl>

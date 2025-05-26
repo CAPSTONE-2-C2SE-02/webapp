@@ -90,13 +90,6 @@
   ::selection {
     @apply bg-teal-100 text-teal-700;
   }
-
-  .mapboxgl-popup-close-button {
-    @apply px-1.5;
-  }
-  .mapboxgl-popup-content {
-    @apply p-2!;
-  }
 }
 
 @layer utilities {
@@ -113,4 +106,17 @@
   .empty\:before\:content-\[attr\(data-placeholder\)\]:empty::before {
     content: attr(data-placeholder);
   }
+}
+
+.mapboxgl-popup.mapboxgl-popup-anchor-top {
+  max-width: 320px !important;
+}
+
+.mapboxgl-popup-close-button {
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+}
+.mapboxgl-popup-content {
+  padding: 0.5rem !important;
+  border-radius: 0.5rem !important;
 }

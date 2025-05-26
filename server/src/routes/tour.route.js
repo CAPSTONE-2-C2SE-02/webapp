@@ -333,6 +333,7 @@ router.get("/my-tours", authenticated, authorize("TOUR_GUIDE"), tourController.g
 router.get("/tour-booking-complete", authenticated, tourController.getTourBookingComplete);
 router.get("/profile/:username", tourController.getAllToursByUsername);
 router.get("/search", tourController.searchTours);
+router.get("/markers", tourController.getAllToursMarkers);
 router.get("/:id", optionalAuth, tourController.getTourById);
 router.put("/:id", authenticated, upload.array("images"), authorize("TOUR_GUIDE"), validate(tourSchema), checkOwnerTour, tourController.updateTour);
 router.delete("/:id", authenticated, authorize("TOUR_GUIDE"), checkOwnerTour, tourController.deleteTour);

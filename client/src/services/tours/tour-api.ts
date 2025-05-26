@@ -1,4 +1,4 @@
-import { ApiResponse, Tour, TourList } from "@/lib/types";
+import { ApiResponse, Tour, TourList, TourMarker } from "@/lib/types";
 import { rootApi } from "../root-api";
 import axiosInstance from "@/config/api";
 import publicApi from "@/config/public.api";
@@ -103,5 +103,11 @@ export const deleteTourById = async (id: string): Promise<ApiResponse<string>> =
 // get all tours that traveler has booked and completed
 export const fetchTourBookingComplete = async (): Promise<ApiResponse<Tour[]>> => {
   const response = await axiosInstance.get('/tours/tour-booking-complete');
+  return response.data;
+};
+
+// get all tours markers
+export const fetchAllToursMarkers = async (): Promise<ApiResponse<TourMarker[]>> => {
+  const response = await publicApi.get('/tours/markers');
   return response.data;
 };

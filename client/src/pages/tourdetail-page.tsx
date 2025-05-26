@@ -55,7 +55,7 @@ const TourDetailPage = () => {
                     </div>
                   </div>
                 </div>
-                <MapTour />
+                <MapTour tourData={tour} />
               </div>
               <TourReviewsSection reviews={reviews} />
             </div>
