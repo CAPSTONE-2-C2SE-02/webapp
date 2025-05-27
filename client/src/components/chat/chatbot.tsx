@@ -6,25 +6,32 @@ import { ScrollArea } from "../ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import LoadingDots from "../utils/loading-dots";
+import { useNavigate } from "react-router";
 
 interface Message {
   id: string;
   content: string;
   role: "user" | "assistant";
   timestamp: Date;
+  tours?: Tour[];
 }
 
 interface Tour {
+  id: string;
   title: string;
   duration: string;
   departure: string;
   price: string;
   description: string;
+  destination: string;
+  maxParticipants: string;
+  score: number;
 }
 
 const CHATBOT_API_URL = "http://localhost:5002/flask";
 
 const Chatbot = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
@@ -34,8 +41,13 @@ const Chatbot = () => {
 
   const formatTourList = (tours: Tour[], destination: string) => {
     return tours.map((tour, index) => {
-      return `${index + 1}. **${tour.title}** (${tour.duration})\n   - Điểm khởi hành: ${tour.departure}\n   - Giá: ${tour.price}\n   - Mô tả: ${tour.description}`;
+      return `${index + 1}. [${tour.title}](${tour.id})\n   - Điểm đến: ${tour.destination}\n   - Giá: ${tour.price} VND\n   - Thời gian: ${tour.duration}\n   - Số người tối đa: ${tour.maxParticipants} người\n   - Mô tả: ${tour.description}`;
     }).join("\n\n");
+  };
+
+  const handleTourClick = (tourId: string) => {
+    console.log("Navigating to tour:", tourId);
+    navigate(`/tours/${tourId}`);
   };
 
   const handleSendMessage = async () => {
@@ -75,9 +87,9 @@ const Chatbot = () => {
       }
 
       let content = data.message;
-      if (data.status === "success" && data.data?.tours?.length > 0) {
-        const tours = data.data.tours;
-        const destination = data.data.destination || "điểm đến không xác định";
+      if (data.status === "success" && data.tour_data?.length > 0) {
+        const tours = data.tour_data;
+        const destination = tours[0].destination || "điểm đến không xác định";
         const tourList = formatTourList(tours, destination);
         content = `Tôi tìm thấy ${tours.length} tour đến ${destination}:\n\n${tourList}`;
       } else if (data.status === "warning") {
@@ -91,6 +103,7 @@ const Chatbot = () => {
         content,
         role: "assistant",
         timestamp: new Date(),
+        tours: data.tour_data,
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
@@ -151,6 +164,62 @@ const Chatbot = () => {
     }
   };
 
+  const renderMessageContent = (message: Message) => {
+    if (message.role === "assistant" && message.tours) {
+      const paragraphs = message.content.split("\n\n");
+      return (
+        <div className="space-y-4">
+          {paragraphs.map((paragraph, i) => {
+            if (i === 0) return <p key={i} className="text-sm">{paragraph}</p>;
+            
+            // Find the tour that matches this paragraph
+            const tourMatch = paragraph.match(/\[(.*?)\]\((.*?)\)/);
+            if (tourMatch) {
+              const [_, title, id] = tourMatch;
+              const tour = message.tours?.find(t => t.id === id);
+              if (tour) {
+                return (
+                  <div key={i} className="space-y-2 bg-white rounded-lg p-3 shadow-sm">
+                    <div
+                      onClick={() => handleTourClick(tour.id)}
+                      className="text-primary hover:underline font-medium text-left w-full cursor-pointer text-base"
+                    >
+                      {tour.title}
+                    </div>
+                    <div className="space-y-1.5 text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">Điểm đến:</span>
+                        <span>{tour.destination}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">Giá:</span>
+                        <span className="text-primary font-medium">{tour.price} VND</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">Thời gian:</span>
+                        <span>{tour.duration}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">Số người tối đa:</span>
+                        <span>{tour.maxParticipants} người</span>
+                      </div>
+                      <div className="mt-2">
+                        <span className="font-medium text-gray-700 block mb-1">Mô tả:</span>
+                        <p className="text-gray-600">{tour.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+            }
+            return <p key={i} className="text-sm whitespace-pre-line">{paragraph}</p>;
+          })}
+        </div>
+      );
+    }
+    return <p className="text-sm whitespace-pre-line">{message.content}</p>;
+  };
+
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
@@ -205,8 +274,7 @@ const Chatbot = () => {
                         : "bg-gray-100 text-gray-900"
                     )}
                   >
-                    <p className="text-sm break-words">{message.content}</p>
-
+                    {renderMessageContent(message)}
                   </div>
                   {message.role === "user" && (
                     <User className="h-6 w-6 text-primary mt-1" />
@@ -216,7 +284,6 @@ const Chatbot = () => {
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="bg-gray-100 rounded-lg p-3">
-                    {/* <Loader2 className="h-4 w-4 animate-spin" /> */}
                     <LoadingDots />
                   </div>
                 </div>
