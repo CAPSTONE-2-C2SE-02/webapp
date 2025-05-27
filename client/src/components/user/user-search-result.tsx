@@ -1,6 +1,7 @@
 import { UserInfo } from "@/lib/types";
 import UserCardSkeleton from "../skeleton/user-card-skeleton";
 import UserCard from "./user-card";
+import emptyArt from "@/assets/empty-art.svg";
 
 interface UserSearchResultProps {
   data: UserInfo[] | undefined;
@@ -28,9 +29,10 @@ const UserSearchResult = ({ data, status }: UserSearchResultProps) => {
 
   if (status === "success" && !data?.length) {
     return (
-      <p className="text-center text-muted-foreground text-sm">
-        No users found.
-      </p>
+      <div className="text-center text-muted-foreground">
+        <img src={emptyArt} alt="empty" className="w-40 h-40 mx-auto" />
+        <span className="text-base">No users found.</span>
+      </div>
     )
   }
 

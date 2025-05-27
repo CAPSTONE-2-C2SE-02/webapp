@@ -11,6 +11,7 @@ import { isDateBusy, releaseBookedDates, setBookedDates } from "../services/cale
 import { sendToQueue } from "../services/queue.service.js";
 import Interactions from "../models/interactions.model.js";
 import { recordInteraction } from "../services/interaction.service.js";
+import { sendEmail } from "../services/email.service.js";
 
 class BookingController {
 
@@ -376,6 +377,28 @@ class BookingController {
             await booking.save();
 
             await releaseBookedDates(booking.tourGuideId, booking.startDate, booking.endDate);
+
+            // Gửi email thông báo hủy booking
+            const subject = "Tour Booking Cancellation Notice";
+            const html = `
+                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+                    <div style="background-color: #d0011b; color: #fff; padding: 20px; text-align: center;">
+                        <h1 style="margin: 0; font-size: 24px;">Tour Booking Cancelled</h1>
+                    </div>
+                    <div style="padding: 20px;">
+                        <h2 style="font-size: 20px; color: #d0011b;">Hello ${booking.fullName},</h2>
+                        <p style="font-size: 16px;">Your booking for the tour <strong>${booking.tourId}</strong> has been <strong>cancelled</strong>.</p>
+                        <p style="font-size: 16px;">Reason: <span style="color: #d0011b;">${reason}</span></p>
+                        <p style="font-size: 16px;">If you have any questions, please contact our support team.</p>
+                    </div>
+                    <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 14px; color: #555;">
+                        <p style="margin: 0;">Thank you for using our service!</p>
+                        <p style="margin: 0;">&copy; 2025 Tripconnect Travel Company</p>
+                    </div>
+                </div>
+            `;
+
+            await sendEmail(booking.email, subject, html);
 
             const sender = await User.findById(userId);
             const receiverId = isTraveler ? booking.tourGuideId : booking.travelerId;

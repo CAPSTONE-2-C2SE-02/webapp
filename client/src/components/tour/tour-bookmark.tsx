@@ -1,6 +1,7 @@
 import TourCardSkeleton from "@/components/skeleton/tour-card-skeleton";
 import TourCard from "@/components/tour/tour-card";
 import { Tour } from "@/lib/types"
+import emptyArt from "@/assets/empty-art.svg";
 
 interface TourBookmarkProps {
   data: Tour[] | undefined;
@@ -28,9 +29,10 @@ const TourBookmark = ({ data, status }: TourBookmarkProps) => {
 
   if (status === "success" && !data?.length) {
     return (
-      <p className="text-center text-muted-foreground text-sm">
-        No tours found.
-      </p>
+      <div className="text-center text-muted-foreground">
+        <img src={emptyArt} alt="empty" className="w-40 h-40 mx-auto" />
+        <span className="text-base">No tours found.</span>
+      </div>
     )
   }
 

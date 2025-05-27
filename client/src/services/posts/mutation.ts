@@ -37,7 +37,7 @@ export function useCreatePostMutation() {
         },
       );
 
-      toast.success("Post deleted successfully");
+      toast.success("Post created successfully");
       queryClient.invalidateQueries({ queryKey: ["rankings"] })
       queryClient.invalidateQueries({ queryKey: ["hashtags"] })
     },

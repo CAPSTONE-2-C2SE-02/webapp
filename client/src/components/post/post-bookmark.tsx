@@ -1,6 +1,7 @@
 import PostCard from "@/components/post/post-card";
 import PostCardSkeleton from "@/components/skeleton/post-card-skeleton";
 import { Post } from "@/lib/types";
+import emptyArt from "@/assets/empty-art.svg";
 
 interface PostBookmarkProps {
   data: Post[] | undefined;
@@ -28,9 +29,10 @@ const PostBookmark = ({ data, status }: PostBookmarkProps) => {
 
   if (status === "success" && !data?.length) {
     return (
-      <p className="text-center text-muted-foreground text-sm">
-        No posts found.
-      </p>
+      <div className="text-center text-muted-foreground">
+        <img src={emptyArt} alt="empty" className="w-40 h-40 mx-auto" />
+        <span className="text-base">No posts found.</span>
+      </div>
     )
   }
 

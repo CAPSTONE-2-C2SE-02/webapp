@@ -2,6 +2,7 @@ import MapTour from "@/components/map/map-view/map-tour";
 import TourBookingSection from "@/components/tour/tour-booking-section";
 import TourInfo from "@/components/tour/tour-info";
 import TourReviewsSection from "@/components/tour/tour-review-section";
+import ToursRecommend from "@/components/tour/tours-recommend";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import MetaData from "@/components/utils/meta-data";
 import ScrollToTopOnMount from "@/components/utils/scroll-to-top-mount";
@@ -59,6 +60,7 @@ const TourDetailPage = () => {
               </div>
               <TourReviewsSection reviews={reviews} />
             </div>
+            <ToursRecommend type="row" className="mt-4"/>
           </div>
           <TourBookingSection tourData={tour} />
         </div>
