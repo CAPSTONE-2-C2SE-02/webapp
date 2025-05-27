@@ -2,15 +2,16 @@ import { useGetRecommendations } from "@/services/recommend-service";
 import TourRecommendCard from "./tour-recommend-card";
 import useAuthInfo from "@/hooks/useAuth";
 import TourRecommendCardSkeleton from "@/components/skeleton/tour-recommend-card-skeleton";
+import { cn } from "@/lib/utils";
 
-const ToursRecommend = () => {
+const ToursRecommend = ({ type = "col", className } : { type: "col" | "row", className?: string }) => {
   const auth = useAuthInfo();
   const userId = auth?._id || "";
   const { data: recommendations, isLoading } = useGetRecommendations(userId || "", 3);
   return (
-    <div>
+    <div className={className}>
       <h4 className="text-base text-primary font-semibold mb-2">Recommended Tour</h4>
-      <div className="flex flex-col w-full gap-2">
+      <div className={cn("grid w-full gap-2", type === "col" ? "grid-cols-1" : "grid-cols-3")}>
         {isLoading ? (
           <>
             <TourRecommendCardSkeleton />

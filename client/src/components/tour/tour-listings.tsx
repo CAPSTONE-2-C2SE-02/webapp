@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "../ui/button";
-import { Filter, Grid, List, MapPin } from "lucide-react";
+import { Filter, Grid, List } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -152,9 +152,6 @@ const TourListing = ({
             onClick={() => setViewType("list")}
           >
             <List className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="icon">
-            <MapPin className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-2 ml-4">
             <span className="text-sm">Sort by:</span>
