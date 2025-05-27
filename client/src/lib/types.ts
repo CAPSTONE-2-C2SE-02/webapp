@@ -231,7 +231,7 @@ export interface EditProfileData {
 export interface DateEntry {
   _id: string;
   date: Date; // "YYYY-MM-DD"
-  status: 'UNAVAILABLE' | 'AVAILABLE'; // As expected by the backend
+  status: 'UNAVAILABLE' | 'AVAILABLE' | 'BOOKED'; // As expected by the backend
 }
 
 export interface Calendar {

@@ -12,4 +12,5 @@ Flask
 flask_cors
 jsonify
 openai
-readline
+pyreadline3
+fuzzywuzzy
