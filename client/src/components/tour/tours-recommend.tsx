@@ -1,10 +1,10 @@
+import TourRecommendCardSkeleton from "@/components/skeleton/tour-recommend-card-skeleton";
+import useAuthInfo from "@/hooks/useAuth";
+import { cn } from "@/lib/utils";
 import { useGetRecommendations } from "@/services/recommend-service";
 import TourRecommendCard from "./tour-recommend-card";
-import useAuthInfo from "@/hooks/useAuth";
-import TourRecommendCardSkeleton from "@/components/skeleton/tour-recommend-card-skeleton";
-import { cn } from "@/lib/utils";
 
-const ToursRecommend = ({ type = "col", className } : { type: "col" | "row", className?: string }) => {
+const ToursRecommend = ({ type = "col", className } : { type?: "col" | "row", className?: string }) => {
   const auth = useAuthInfo();
   const userId = auth?._id || "";
   const { data: recommendations, isLoading } = useGetRecommendations(userId || "", 3);

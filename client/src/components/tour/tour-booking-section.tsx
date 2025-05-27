@@ -54,7 +54,7 @@ const TourBookingSection = ({ tourData }: TourBookingSectionProps) => {
     // Update busy dates for the selected tour
     if (!datesBusy?.dates) return;
     const busyDates = datesBusy?.dates.map((date) => {
-      if (date.status === "UNAVAILABLE") {
+      if (date.status === "UNAVAILABLE" || date.status === "BOOKED") {
         return new Date(date.date);
       }
     }).filter((date) => date !== undefined);

@@ -1,18 +1,18 @@
-import { useMemo, useState } from "react"
-import { format, isSameDay } from "date-fns"
+import BusyScheduleSkeleton from "@/components/skeleton/busy-schedule-skeleton"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Trash2, CalendarRange } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/hooks/redux"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { saveBusyDatesToServer } from "@/services/users/user-api"
-import BusyScheduleSkeleton from "@/components/skeleton/busy-schedule-skeleton"
-import { toast } from "sonner"
-import { useDeleteBusyDate } from "@/services/users/user-mutation"
 import useGetBusyDates from "@/hooks/useGetBusyDates"
+import { saveBusyDatesToServer } from "@/services/users/user-api"
+import { useDeleteBusyDate } from "@/services/users/user-mutation"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { format, isSameDay } from "date-fns"
+import { CalendarRange, Trash2 } from "lucide-react"
+import { useMemo, useState } from "react"
+import { toast } from "sonner"
 
 const normalizeDate = (date: Date): Date => {
   const normalized = new Date(date);
@@ -30,6 +30,7 @@ const SetBusySchedulePage = () => {
   const [activeTab, setActiveTab] = useState("select")
 
   const { data: busyDatesData, isLoading } = useGetBusyDates(tourGuideId as string, "TOUR_GUIDE");
+  const busyDatesAble = busyDatesData?.dates && busyDatesData?.dates?.filter((date) => date.status === "UNAVAILABLE");
 
   const { mutate: saveBusyDates } = useMutation({
     mutationFn: saveBusyDatesToServer,
@@ -95,7 +96,7 @@ const SetBusySchedulePage = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="select">Select Busy Dates</TabsTrigger>
-              <TabsTrigger value="view">View Schedule {busyDatesData && busyDatesData?.dates?.length > 0 && `(${busyDatesData?.dates?.length})`}</TabsTrigger>
+              <TabsTrigger value="view">View Schedule ({busyDatesAble?.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="select">
@@ -110,7 +111,7 @@ const SetBusySchedulePage = () => {
                       busy: busyDatesSet as Date[],
                     }}
                     modifiersClassNames={{
-                      busy: " bg-slate-100 text-primary font-bold ",
+                      busy: "bg-emerald-200 text-primary font-bold ",
                     }}
                     disabled={(date) => {
                       if (date < new Date()) return true;
@@ -156,7 +157,7 @@ const SetBusySchedulePage = () => {
                         <span className="text-sm">Selected Date</span>
                       </div>
                       <div className="flex items-center">
-                        <div className="w-6 h-6 rounded-lg border mr-2 bg-slate-100 flex">
+                        <div className="w-6 h-6 rounded-lg border mr-2 bg-emerald-200 flex">
                         </div>
                         <span className="text-sm">Busy Date</span>
                       </div>
@@ -167,10 +168,10 @@ const SetBusySchedulePage = () => {
             </TabsContent>
 
             <TabsContent value="view">
-              {busyDatesData?.dates && busyDatesData?.dates?.length > 0 ? (
+              {busyDatesAble && busyDatesAble?.length > 0 ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {busyDatesData?.dates.map((date) => (
+                    {busyDatesAble?.map((date) => (
                       <div key={date._id} className="flex items-center justify-between px-3 py-2 border rounded-md">
                         <Badge variant="outline">{format(date.date, "EEEE, MMMM d, yyyy")}</Badge>
                         <Button variant="ghost" disabled={isPending} size="icon" onClick={() => removeBusyDate(date.date)}>

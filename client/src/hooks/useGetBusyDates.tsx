@@ -9,7 +9,7 @@ export default function useGetBusyDates(tourGuideId: string, role: "TOUR_GUIDE" 
       return {
         _id: busyDates._id,
         tourGuideId: busyDates.tourGuideId,
-        dates: busyDates.dates.filter((d) => d.status === "UNAVAILABLE"),
+        dates: busyDates.dates.filter((d) => d.status === "UNAVAILABLE" || d.status === "BOOKED"),
       }
     },
     enabled: role === "TOUR_GUIDE",

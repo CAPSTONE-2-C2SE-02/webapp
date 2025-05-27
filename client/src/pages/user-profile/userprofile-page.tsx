@@ -4,7 +4,7 @@ import PostCard from "@/components/post/post-card";
 import PostCardSkeleton from "@/components/skeleton/post-card-skeleton";
 import ToursRecommend from "@/components/tour/tours-recommend";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar"
+import { Calendar } from "@/components/ui/calendar";
 import { useAppSelector } from "@/hooks/redux";
 import useGetBusyDates from "@/hooks/useGetBusyDates";
 import { fetchPostByUsername } from "@/services/posts/post-api";
@@ -43,9 +43,10 @@ const UserProfilePage = () => {
   const posts = data?.pages.flatMap((page) => page.data) || []; 
 
   const { data: calendarData } = useGetBusyDates(userId, role);
+  console.log("calendarData", calendarData);
 
   const statusMap = useMemo(() => {
-    const map = new Map<string, "UNAVAILABLE" | "AVAILABLE">();
+    const map = new Map<string, "UNAVAILABLE" | "AVAILABLE" | "BOOKED">();
     calendarData?.dates.forEach((item) => {
       const formattedDate = format(new Date(item.date), "yyyy-MM-dd");
       map.set(formattedDate, item.status);
@@ -75,19 +76,19 @@ const UserProfilePage = () => {
             className={"border rounded-t-xl bg-white"}
             disabled={(date) => {
               if (date < new Date()) return true;
-              return statusMap.get(format(date, "yyyy-MM-dd")) === "UNAVAILABLE";
+              return statusMap.get(format(date, "yyyy-MM-dd")) === "UNAVAILABLE" || statusMap.get(format(date, "yyyy-MM-dd")) === "BOOKED";
             }}
             modifiers={{
               busy: (day) =>
-                statusMap.get(format(day, "yyyy-MM-dd")) === "UNAVAILABLE",
+                statusMap.get(format(day, "yyyy-MM-dd")) === "UNAVAILABLE" || statusMap.get(format(day, "yyyy-MM-dd")) === "BOOKED",
             }}
             modifiersClassNames={{
-              busy: "bg-slate-200",
+              busy: "bg-emerald-200 text-primary",
             }}
           />
           <div className="flex gap-2 p-3 justify-between bg-white -mt-1 rounded-b-xl border-x border-b">
             <div className="flex items-center">
-              <div className="w-6 h-6 rounded-lg border mr-2 bg-slate-200" />
+              <div className="w-6 h-6 rounded-lg border border-emerald-400 mr-2 bg-emerald-200" />
               <span className="text-sm">Busy</span>
             </div>
             <div className="flex items-center">
