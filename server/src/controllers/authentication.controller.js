@@ -1,12 +1,12 @@
 import { OAuth2Client } from "google-auth-library";
 import { StatusCodes } from "http-status-codes";
+import validator from "validator";
 import Role from "../enums/role.enum.js";
 import InvalidatedToken from "../models/invalidated.token.model.js";
 import RoleModel from "../models/role.model.js";
 import User from "../models/user.model.js";
 import { comparePassword } from "../utils/password.util.js";
 import { generateToken, verifyToken } from "../utils/token.util.js";
-import validator from "validator";
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 

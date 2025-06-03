@@ -197,7 +197,7 @@ export type Notification =
     relatedId: UserInfo;
   })
   | (BaseNotification & {
-    type: "CONFIRM" | "REVIEW";
+    type: "CONFIRM" | "REVIEW" | "CANCEL";
     relatedModel: "Booking";
     relatedId: Booking;
   })

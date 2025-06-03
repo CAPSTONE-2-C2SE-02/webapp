@@ -74,9 +74,6 @@ const CommentCard = ({ comment, onAddReply, level = 1 }: CommentProps) => {
           {/* comment action */}
           {isAuthenticated && level < 3 && (
             <div className="flex items-center gap-2">
-              <Button size={"icon"} variant={"ghost"} className="w-6 h-6 px-1 py-0 text-xs">
-                <Heart className="size-3" />
-              </Button>
               <Button className="h-6 px-1 py-0 text-xs" variant={"ghost"} onClick={() => { setIsReplying(!isReplying); inputReplyRef.current?.focus(); }}>
                 <CornerDownRight className="size-3" /> Reply
               </Button>
