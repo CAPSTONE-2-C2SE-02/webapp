@@ -15,7 +15,7 @@ export const signUpschema = z.object({
   fullName: z.string().min(3, "Full Name must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
-  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits"),
+  phoneNumber: z.string().min(10, "Phone number must be at least 10 digits").max(10, "Phone number cannot exceed 10 digits").optional(),
   dateOfBirth: z.date()
     .refine((date) => isValid(date), { message: "Invalid birth date" })
     .refine(

@@ -378,28 +378,54 @@ class BookingController {
 
             await releaseBookedDates(booking.tourGuideId, booking.startDate, booking.endDate);
 
-            // Gửi email thông báo hủy booking
-            const subject = "Tour Booking Cancellation Notice";
-            const html = `
-                <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
-                    <div style="background-color: #d0011b; color: #fff; padding: 20px; text-align: center;">
-                        <h1 style="margin: 0; font-size: 24px;">Tour Booking Cancelled</h1>
-                    </div>
-                    <div style="padding: 20px;">
-                        <h2 style="font-size: 20px; color: #d0011b;">Hello ${booking.fullName},</h2>
-                        <p style="font-size: 16px;">Your booking for the tour <strong>${booking.tourId}</strong> has been <strong>cancelled</strong>.</p>
-                        <p style="font-size: 16px;">Reason: <span style="color: #d0011b;">${reason}</span></p>
-                        <p style="font-size: 16px;">If you have any questions, please contact our support team.</p>
-                    </div>
-                    <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 14px; color: #555;">
-                        <p style="margin: 0;">Thank you for using our service!</p>
-                        <p style="margin: 0;">&copy; 2025 Tripconnect Travel Company</p>
-                    </div>
-                </div>
-            `;
+            // Lấy thông tin tour và user
+            const tour = await Tour.findById(booking.tourId);
+            const travelerUser = await User.findById(booking.travelerId);
+            const tourGuideUser = await User.findById(booking.tourGuideId);
 
-            await sendEmail(booking.email, subject, html);
+            // Gửi email cho traveler
+            const subjectTraveler = "Tour Booking Cancellation Notice";
+            const htmlTraveler = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #d0011b; color: #fff; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">Tour Booking Cancelled</h1>
+        </div>
+        <div style="padding: 20px;">
+            <h2 style="font-size: 20px; color: #d0011b;">Hello ${travelerUser.fullName},</h2>
+            <p style="font-size: 16px;">Your booking for the tour <strong>${tour.title}</strong> has been <strong>cancelled</strong>.</p>
+            <p style="font-size: 16px;">Reason: <span style="color: #d0011b;">${reason}</span></p>
+            <p style="font-size: 16px;">If you have any questions, please contact our support team.</p>
+        </div>
+        <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 14px; color: #555;">
+            <p style="margin: 0;">Thank you for using our service!</p>
+            <p style="margin: 0;">&copy; 2025 Tripconnect Travel Company</p>
+        </div>
+    </div>
+`;
+            await sendEmail(travelerUser.email, subjectTraveler, htmlTraveler);
 
+            // Gửi email cho tour guide
+            const subjectGuide = "Tour Booking Cancellation Notice";
+            const htmlGuide = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #d0011b; color: #fff; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">Tour Booking Cancelled</h1>
+        </div>
+        <div style="padding: 20px;">
+            <h2 style="font-size: 20px; color: #d0011b;">Hello ${tourGuideUser.fullName},</h2>
+            <p style="font-size: 16px;">A booking for your tour <strong>${tour.title}</strong> has been <strong>cancelled</strong>.</p>
+            <p style="font-size: 16px;">Reason: <span style="color: #d0011b;">${reason}</span></p>
+            <p style="font-size: 16px;">If you have any questions, please contact our support team.</p>
+        </div>
+        <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 14px; color: #555;">
+            <p style="margin: 0;">Thank you for using our service!</p>
+            <p style="margin: 0;">&copy; 2025 Tripconnect Travel Company</p>
+        </div>
+    </div>
+`;
+            await sendEmail(tourGuideUser.email, subjectGuide, htmlGuide);
+
+            // Gửi notification cho cả hai phía
             const sender = await User.findById(userId);
             const receiverId = isTraveler ? booking.tourGuideId : booking.travelerId;
             const message = isTraveler
@@ -421,10 +447,26 @@ class BookingController {
                 }),
             });
 
+            // Gửi notification cho người còn lại
+            await notificationController.sendNotification({
+                body: {
+                    type: "CANCEL",
+                    senderId: userId,
+                    receiverId: isTraveler ? booking.travelerId : booking.tourGuideId,
+                    relatedId: booking._id,
+                    relatedModel: "Booking",
+                    message,
+                },
+            }, {
+                status: () => ({
+                    json: () => { },
+                }),
+            });
+
             // delete the interaction
-            if (isTraveler) {
-                await deleteInteraction(userId, booking.tourId, "BOOK");
-            }
+            // if (isTraveler) {
+            //     await deleteInteraction(userId, booking.tourId, "BOOK");
+            // }
 
             return res.status(StatusCodes.OK).json({
                 success: true,

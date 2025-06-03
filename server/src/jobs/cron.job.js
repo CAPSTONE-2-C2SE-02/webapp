@@ -226,7 +226,7 @@ const checkUserPayLaterViolations = async () => {
 // Đặt lịch cho từng job
 cron.schedule("*/1 * * * *", checkExpiredBookings); // mỗi phút kiểm tra booking hết hạn
 cron.schedule("0 * * * *", updateTourGuideRanking); // mỗi giờ cập nhật ranking
-cron.schedule("*/1 * * * *", autoUpdateBookingStatus); // mỗi phút tự động hoàn thành và không hoàn thành booking
+cron.schedule("*/5 * * * *", autoUpdateBookingStatus); // mỗi phút tự động hoàn thành và không hoàn thành booking
 cron.schedule("*/1 * * * *", unlockInactiveUsers);
 cron.schedule("*/1 * * * *", checkUserPayLaterViolations);
 

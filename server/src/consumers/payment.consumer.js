@@ -170,6 +170,14 @@ async function processVnpayCallback(vnpParams, res) {
             <p style="font-size: 16px;">Thank you for booking your tour with us. Here are your booking details:</p>
             <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                 <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Email:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${booking.email}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">PhoneNumber:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${booking.phoneNumber}</td>
+                </tr>
+                <tr>
                     <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Tour:</td>
                     <td style="padding: 10px; border: 1px solid #ddd;">${tour.title}</td>
                 </tr>
@@ -204,7 +212,68 @@ async function processVnpayCallback(vnpParams, res) {
     </div>
 `;
 
+            // Gửi mail cho traveler
             await sendEmail(booking.email, subject, html);
+
+            // Gửi mail cho tour guide
+            const guideSubject = "Your Tour Has Been Booked!";
+            const guideHtml = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+        <div style="background-color: #4CAF50; color: #fff; padding: 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 24px;">Your Tour Has Been Booked!</h1>
+        </div>
+        <div style="padding: 20px;">
+            <h2 style="font-size: 20px; color: #4CAF50;">Hello ${tourGuide.fullName},</h2>
+            <p style="font-size: 16px;">Your tour <strong>${tour.title}</strong> has just been booked by <strong>${traveler.fullName}</strong>.</p>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Email:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${booking.email}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">PhoneNumber:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${booking.phoneNumber}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Tour:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${tour.title}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Start Date:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${formatDate(booking.startDate)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">End Date:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${formatDate(booking.endDate)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Number of People:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${booking.adults + booking.youths + booking.children}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Total Amount:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${booking.totalAmount.toLocaleString("en-US")} VND</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Traveler:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd;">${traveler.fullName} (${traveler.email})</td>
+                </tr>
+                <tr>
+                    <td style="padding: 10px; border: 1px solid #ddd; font-weight: bold;">Cancellation Code:</td>
+                    <td style="padding: 10px; border: 1px solid #ddd; color: #d0011b; font-weight: bold;">${booking.secretKey}</td>
+                </tr>
+            </table>
+            <p style="margin-top: 20px; font-size: 16px; color: #d0011b;">Note: Do not share this cancellation code with anyone!</p>
+            <p style="margin-top: 20px; font-size: 16px;">Please check your dashboard for more details.</p>
+        </div>
+        <div style="background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 14px; color: #555;">
+            <p style="margin: 0;">Thank you for using Tripconnect!</p>
+            <p style="margin: 0;">&copy; 2025 Tripconnect Travel Company</p>
+        </div>
+    </div>
+`;
+
+            await sendEmail(tourGuide.email, guideSubject, guideHtml);
 
             return res.status(StatusCodes.OK).json({
                 success: true,

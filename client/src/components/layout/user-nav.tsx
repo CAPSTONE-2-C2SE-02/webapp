@@ -1,4 +1,4 @@
-import { Calendar, ChevronDown, History, Loader2, LogOut, PlaneTakeoff, Settings, UserRoundPen } from "lucide-react";
+import { Calendar, ChevronDown, History, Loader2, LogOut, PlaneTakeoff, UserRoundPen } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { Link, useNavigate } from "react-router";
@@ -102,12 +102,6 @@ export default function UserNav() {
               </Link>
             </DropdownMenuItem>
            )}
-          <DropdownMenuItem asChild>
-            <Link to="/profile">
-              <Settings />
-              Setting
-            </Link>
-          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
