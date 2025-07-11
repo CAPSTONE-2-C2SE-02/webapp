@@ -4,6 +4,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import post-to-image styles */
+@import './lib/post-image-styles.css';
+
 @layer base {
   :root {
     --background: 0 0% 100%;

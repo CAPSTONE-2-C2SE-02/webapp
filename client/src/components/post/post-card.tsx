@@ -4,9 +4,11 @@ import {
   Clock,
   Forward,
   Heart,
+  Image,
+  Copy
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import SharePostModal from "../modals/share-post-modal";
 import TourAttachment from "../tour/tour-attachment";
@@ -21,14 +23,18 @@ import useLightBox from "@/hooks/useLightBox";
 import BookMarkButton from "@/components/utils/book-mark-button";
 import HoverUserCard from "../user/hover-user-card";
 import { formatPostDate } from "../utils/convert";
+import { convertPostToImage, downloadImage, copyImageToClipboard } from "@/lib/post-to-image";
+import { toast } from "sonner";
 
 const PostCard = ({ postData }: { postData: Post }) => {
   const auth = useAuthInfo();
   const likePostMutation = useLikePostMutation();
+  const postCardRef = useRef<HTMLDivElement>(null);
 
   const { isLightboxOpen, setIsLightboxOpen, currentImageIndex, setCurrentImageIndex, openLightbox, closeLightbox } = useLightBox();
   const [isSharePostModelOpen, setIsSharePostModelOpen] = useState(false);
   const [postUrl, setPostUrl] = useState<string>("");
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
 
   const showSharePost = (postId: string) => {
     const baseUrl = window.location.origin || "http://localhost:5173";
@@ -42,6 +48,41 @@ const PostCard = ({ postData }: { postData: Post }) => {
 
   const handleLikePost = () => {
     likePostMutation.mutate(postData._id);
+  };
+
+  const handleCopyToImage = async () => {
+    if (!postCardRef.current) {
+      toast.error("Post element not found");
+      return;
+    }
+
+    setIsGeneratingImage(true);
+    try {
+      const blob = await convertPostToImage(postCardRef.current, {
+        width: 600,
+        backgroundColor: '#ffffff',
+        scale: 2,
+        quality: 0.95,
+        format: 'png'
+      });
+
+      // Try to copy to clipboard first
+      const clipboardSuccess = await copyImageToClipboard(blob);
+      
+      if (clipboardSuccess) {
+        toast.success("Post image copied to clipboard!");
+      } else {
+        // Fallback to download if clipboard is not supported
+        const filename = `post-${postData._id}-${Date.now()}.png`;
+        downloadImage(blob, filename);
+        toast.success("Post image downloaded!");
+      }
+    } catch (error) {
+      console.error("Failed to convert post to image:", error);
+      toast.error("Failed to convert post to image. Please try again.");
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
   const postImages = useMemo(
@@ -59,7 +100,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
 
   return (
     <>
-      <Card className="overflow-hidden shadow-sm">
+      <Card ref={postCardRef} className="overflow-hidden shadow-sm">
         <CardHeader className="flex-row items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full overflow-hidden">
@@ -82,7 +123,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
               </div>
             </div>
           </div>
-          <div className="text-primary">
+          <div className="text-primary" data-hide-in-image="true">
             <BookMarkButton
               itemId={postData._id}
               itemType="post"
@@ -144,7 +185,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
             <TourAttachment tour={postData?.tourAttachment} />
           )}
           {/* Post Action */}
-          <div className="w-full flex items-center justify-between px-10 rounded-md">
+          <div className="w-full flex items-center justify-between px-8 rounded-md">
             <Button
               variant={"ghost"}
               className={cn(
@@ -180,6 +221,23 @@ const PostCard = ({ postData }: { postData: Post }) => {
               <div className="flex items-center gap-1.5">
                 <Forward className="size-5" />
                 <span className="text-sm font-medium leading-none">Share</span>
+              </div>
+            </Button>
+            <Button
+              variant={"ghost"}
+              className="text-primary py-3 px-3.5 gap-2"
+              onClick={handleCopyToImage}
+              disabled={isGeneratingImage}
+            >
+              <div className="flex items-center gap-1.5">
+                {isGeneratingImage ? (
+                  <Copy className="size-5 animate-pulse" />
+                ) : (
+                  <Image className="size-5" />
+                )}
+                <span className="text-sm font-medium leading-none">
+                  {isGeneratingImage ? "Copying..." : "Copy to Image"}
+                </span>
               </div>
             </Button>
           </div>
