@@ -116,6 +116,14 @@ const startServer = () => {
       }
     });
 
+    // WebRTC call decline event
+    socket.on("webrtc-decline", ({ to }) => {
+      const user = oneLineUses.find(user => user.userId === to);
+      if (user) {
+        io.to(user.socketId).emit("webrtc-decline");
+      }
+    });
+
     //Listen event client disconnect
     socket.on("disconnect", () => {
       global.oneLineUses = global.oneLineUses.filter(user => user.socketId !== socket.id);
