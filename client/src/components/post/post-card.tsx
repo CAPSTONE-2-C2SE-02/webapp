@@ -6,7 +6,7 @@ import {
   Heart,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import SharePostModal from "../modals/share-post-modal";
 import TourAttachment from "../tour/tour-attachment";
@@ -21,10 +21,12 @@ import useLightBox from "@/hooks/useLightBox";
 import BookMarkButton from "@/components/utils/book-mark-button";
 import HoverUserCard from "../user/hover-user-card";
 import { formatPostDate } from "../utils/convert";
+import { convertPostToImage } from "@/lib/post-to-image";
 
 const PostCard = ({ postData }: { postData: Post }) => {
   const auth = useAuthInfo();
   const likePostMutation = useLikePostMutation();
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const { isLightboxOpen, setIsLightboxOpen, currentImageIndex, setCurrentImageIndex, openLightbox, closeLightbox } = useLightBox();
   const [isSharePostModelOpen, setIsSharePostModelOpen] = useState(false);
@@ -44,6 +46,12 @@ const PostCard = ({ postData }: { postData: Post }) => {
     likePostMutation.mutate(postData._id);
   };
 
+  const handleCopyToImage = async () => {
+    if (cardRef.current) {
+      await convertPostToImage(cardRef.current);
+    }
+  };
+
   const postImages = useMemo(
     () => (
       postData?.imageUrls && postData?.imageUrls.map((image, index) => (
@@ -59,7 +67,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
 
   return (
     <>
-      <Card className="overflow-hidden shadow-sm">
+      <Card className="overflow-hidden shadow-sm" ref={cardRef}>
         <CardHeader className="flex-row items-center justify-between px-4 py-4">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-full overflow-hidden">
@@ -90,7 +98,7 @@ const PostCard = ({ postData }: { postData: Post }) => {
                 isBookmarkedByUser: postData.bookmarks.some(bookmark => bookmark.user === auth?._id),
               }}
             />
-            <PostCardAction postData={postData} />
+            <PostCardAction postData={postData} onCopyToImage={handleCopyToImage} />
           </div>
         </CardHeader>
         <CardContent className="px-4 pb-3 space-y-3">

@@ -1,4 +1,4 @@
-import { EllipsisVertical, Flag, Loader2, Pencil, Share2, Trash } from "lucide-react"
+import { EllipsisVertical, Flag, Loader2, Pencil, Share2, Trash, Image } from "lucide-react"
 import { Button } from "../ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "../ui/dropdown-menu"
 import { useAppSelector } from "@/hooks/redux";
@@ -10,9 +10,10 @@ import CreatePostModal from "../modals/create-post-modal";
 
 interface PostCardActionProps {
   postData: Post;
+  onCopyToImage?: () => void;
 }
 
-const PostCardAction = ({ postData }: PostCardActionProps) => {
+const PostCardAction = ({ postData, onCopyToImage }: PostCardActionProps) => {
   const { isAuthenticated, userInfo } = useAppSelector((state) => state.auth);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -31,6 +32,13 @@ const PostCardAction = ({ postData }: PostCardActionProps) => {
           <DropdownMenuItem className="justify-between font-medium">
             Share
             <Share2 className="size-4 text-muted-foreground" />
+          </DropdownMenuItem>
+          <DropdownMenuItem 
+            className="justify-between font-medium"
+            onClick={onCopyToImage}
+          >
+            Copy to image
+            <Image className="size-4 text-muted-foreground" />
           </DropdownMenuItem>
           {isAuthenticated && userInfo?.username === postData.createdBy.username && (
             <DropdownMenuItem 
