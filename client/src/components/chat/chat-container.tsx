@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { Image, PanelRight, Send, X } from "lucide-react";
+import { Image, PanelRight, Send, X, Video } from "lucide-react";
 import LoaderSpin from "../utils/loader-spin";
 import { ScrollArea } from "../ui/scroll-area";
 import { Input } from "../ui/input";
@@ -11,6 +11,7 @@ import MessageGroup from "./message-group";
 import { Tour, UserSelectedState } from "@/lib/types";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useSendMessageMutation } from "@/services/messages/mutation";
+import VideoCall from "./VideoCall";
 
 interface ChatContainerProps {
   user: UserSelectedState | undefined;
@@ -24,6 +25,7 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
   const hasSentTourRef = useRef(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isVideoCallOpen, setIsVideoCallOpen] = useState(false);
 
   const { messages: messagesData, isMessagesLoading } = useMessage(user?._id as string);
   const sendMessageMutation = useSendMessageMutation(user?._id as string);
@@ -89,13 +91,18 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
               </div>
             </div>
           </div>
-          <Button
-            size={"icon"}
-            onClick={() => onShowInformation(!showInformation)}
-            variant="ghost"
-          >
-            <PanelRight className="size-4 text-primary" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="icon" variant="ghost" onClick={() => setIsVideoCallOpen(true)}>
+              <Video className="size-4 text-primary" />
+            </Button>
+            <Button
+              size={"icon"}
+              onClick={() => onShowInformation(!showInformation)}
+              variant="ghost"
+            >
+              <PanelRight className="size-4 text-primary" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -200,6 +207,18 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
           </Button>
         </div>
       </div>
+
+      {/* Video Call Modal */}
+      {isVideoCallOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-white rounded-lg shadow-lg p-4 w-full max-w-lg relative">
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setIsVideoCallOpen(false)}>
+              <X className="size-5" />
+            </button>
+            <VideoCall onClose={() => setIsVideoCallOpen(false)} remoteUserId={user?._id || ""} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
