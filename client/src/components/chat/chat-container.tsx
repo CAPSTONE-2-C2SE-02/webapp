@@ -215,7 +215,7 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
             <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-700" onClick={() => setIsVideoCallOpen(false)}>
               <X className="size-5" />
             </button>
-            <VideoCall onClose={() => setIsVideoCallOpen(false)} remoteUserId={user?._id || ""} />
+            <VideoCall onClose={() => setIsVideoCallOpen(false)} remoteUserId={user?._id || ""} isCaller={true} />
           </div>
         </div>
       )}
