@@ -94,6 +94,36 @@ const startServer = () => {
       }
     });
 
+    // WebRTC signaling events
+    socket.on("webrtc-offer", ({ offer, to, from }) => {
+      const user = oneLineUses.find(user => user.userId === to);
+      if (user) {
+        io.to(user.socketId).emit("webrtc-offer", { offer, from });
+      }
+    });
+
+    socket.on("webrtc-answer", ({ answer, to, from }) => {
+      const user = oneLineUses.find(user => user.userId === to);
+      if (user) {
+        io.to(user.socketId).emit("webrtc-answer", { answer, from });
+      }
+    });
+
+    socket.on("webrtc-ice-candidate", ({ candidate, to, from }) => {
+      const user = oneLineUses.find(user => user.userId === to);
+      if (user) {
+        io.to(user.socketId).emit("webrtc-ice-candidate", { candidate, from });
+      }
+    });
+
+    // WebRTC call decline event
+    socket.on("webrtc-decline", ({ to }) => {
+      const user = oneLineUses.find(user => user.userId === to);
+      if (user) {
+        io.to(user.socketId).emit("webrtc-decline");
+      }
+    });
+
     //Listen event client disconnect
     socket.on("disconnect", () => {
       global.oneLineUses = global.oneLineUses.filter(user => user.socketId !== socket.id);
