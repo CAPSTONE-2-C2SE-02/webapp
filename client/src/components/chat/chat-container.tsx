@@ -20,6 +20,9 @@ interface ChatContainerProps {
   showInformation: boolean;
 }
 
+// Path to ringtone file in public directory
+const RINGTONE_URL = '/ringtone.mp3';
+
 const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContainerProps) => {
   const [inputValue, setInputValue] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -103,6 +106,22 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
       socket.off('webrtc-decline', handleDecline);
     };
   }, [socket]);
+
+  // Play ringtone on ringing
+  useEffect(() => {
+    let audio: HTMLAudioElement | null = null;
+    if (callStatus === 'ringing') {
+      audio = new Audio(RINGTONE_URL);
+      audio.loop = true;
+      audio.play();
+    }
+    return () => {
+      if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    };
+  }, [callStatus]);
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "" && files.length === 0) return;
