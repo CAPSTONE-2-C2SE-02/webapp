@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Image, PanelRight, Send, X } from "lucide-react";
+import LoaderSpin from "../utils/loader-spin";
 import { ScrollArea } from "../ui/scroll-area";
 import { Input } from "../ui/input";
 import useMessage from "@/hooks/useMessage";
@@ -26,6 +27,7 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
 
   const { messages: messagesData, isMessagesLoading } = useMessage(user?._id as string);
   const sendMessageMutation = useSendMessageMutation(user?._id as string);
+  const [sendError, setSendError] = useState<string | null>(null);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -46,9 +48,19 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
 
   const handleSendMessage = () => {
     if (inputValue.trim() === "" && files.length === 0) return;
-    sendMessageMutation.mutate({ content: inputValue, images: files.length ? files : undefined });
-    setInputValue("");
-    setFiles([]);
+    setSendError(null);
+    sendMessageMutation.mutate(
+      { content: inputValue, images: files.length ? files : undefined },
+      {
+        onSuccess: () => {
+          setInputValue("");
+          setFiles([]);
+        },
+        onError: (error: any) => {
+          setSendError(error?.message || "Failed to send message. Please try again.");
+        },
+      }
+    );
   };
 
   return (
@@ -101,6 +113,11 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
             {sendMessageMutation.isPending && (
               <div className="flex items-end flex-col">
                 <p className="text-center text-slate-500 px-2 text-xs animate-pulse">Sending...</p>
+              </div>
+            )}
+            {sendError && (
+              <div className="flex items-end flex-col">
+                <p className="text-center text-red-500 px-2 text-xs">{sendError}</p>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -175,7 +192,11 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
             disabled={(inputValue.trim() === "" && files.length === 0) || sendMessageMutation.isPending}
             onClick={handleSendMessage}
           >
-            <Send className="size-4" />
+            {sendMessageMutation.isPending ? (
+              <LoaderSpin className="h-4 w-4" />
+            ) : (
+              <Send className="size-4" />
+            )}
           </Button>
         </div>
       </div>
