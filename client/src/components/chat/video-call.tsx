@@ -13,10 +13,8 @@ const VideoCall: React.FC<VideoCallProps> = ({ onClose, remoteUserId, isCaller }
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [videoEnabled, setVideoEnabled] = useState(true);
-  const [callActive, setCallActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const socket = useSocket();
-  const [peerId, setPeerId] = useState<string>("");
 
   // Placeholder for peer connection
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
@@ -30,9 +28,8 @@ const VideoCall: React.FC<VideoCallProps> = ({ onClose, remoteUserId, isCaller }
           localVideoRef.current.srcObject = stream;
         }
         // TODO: Add stream to peer connection
-        setCallActive(true);
       })
-      .catch((err) => {
+      .catch(() => {
         setError("Could not access camera/microphone.");
       });
     return () => {
@@ -134,17 +131,17 @@ const VideoCall: React.FC<VideoCallProps> = ({ onClose, remoteUserId, isCaller }
       }
     });
 
-    socket.on("webrtc-answer", async ({ answer, from }: { answer: RTCSessionDescriptionInit, from: string }) => {
+    socket.on("webrtc-answer", async ({ answer }: { answer: RTCSessionDescriptionInit }) => {
       if (isCaller && peerConnectionRef.current) {
         await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
       }
     });
 
-    socket.on("webrtc-ice-candidate", async ({ candidate, from }: { candidate: RTCIceCandidateInit, from: string }) => {
+    socket.on("webrtc-ice-candidate", async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
       if (peerConnectionRef.current) {
         try {
           await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(candidate));
-        } catch (e) {
+        } catch {
           // ignore
         }
       }

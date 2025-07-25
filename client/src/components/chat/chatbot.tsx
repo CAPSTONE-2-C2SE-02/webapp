@@ -39,7 +39,7 @@ const Chatbot = () => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const formatTourList = (tours: Tour[], destination: string) => {
+  const formatTourList = (tours: Tour[]) => {
     return tours.map((tour, index) => {
       return `${index + 1}. [${tour.title}](${tour.id})\n   - Điểm đến: ${tour.destination}\n   - Giá: ${tour.price} VND\n   - Thời gian: ${tour.duration}\n   - Số người tối đa: ${tour.maxParticipants} người\n   - Mô tả: ${tour.description}`;
     }).join("\n\n");
@@ -90,7 +90,7 @@ const Chatbot = () => {
       if (data.status === "success" && data.tour_data?.length > 0) {
         const tours = data.tour_data;
         const destination = tours[0].destination || "điểm đến không xác định";
-        const tourList = formatTourList(tours, destination);
+        const tourList = formatTourList(tours);
         content = `Tôi tìm thấy ${tours.length} tour đến ${destination}:\n\n${tourList}`;
       } else if (data.status === "warning") {
         content = data.message || "Không tìm thấy tour nào phù hợp. Bạn có thể thử tìm điểm đến khác!";
@@ -175,7 +175,7 @@ const Chatbot = () => {
             // Find the tour that matches this paragraph
             const tourMatch = paragraph.match(/\[(.*?)\]\((.*?)\)/);
             if (tourMatch) {
-              const [_, title, id] = tourMatch;
+              const [, , id] = tourMatch;
               const tour = message.tours?.find(t => t.id === id);
               if (tour) {
                 return (

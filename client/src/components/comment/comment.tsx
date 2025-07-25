@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Link } from "react-router";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "../ui/button";
-import { CornerDownRight, Heart, SendHorizonal } from "lucide-react";
+import { CornerDownRight, SendHorizonal } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "../ui/input";
 import { useAppSelector } from "@/hooks/redux";

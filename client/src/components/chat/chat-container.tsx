@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Image, PanelRight, Send, X, Video } from "lucide-react";
-import LoaderSpin from "../utils/loader-spin";
 import { ScrollArea } from "../ui/scroll-area";
 import { Input } from "../ui/input";
 import useMessage from "@/hooks/useMessage";
@@ -11,7 +10,7 @@ import MessageGroup from "./message-group";
 import { Tour, UserSelectedState } from "@/lib/types";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useSendMessageMutation } from "@/services/messages/mutation";
-import VideoCall from "./VideoCall";
+import VideoCall from "./video-call";
 import { useSocket } from "@/context/socket-context";
 
 interface ChatContainerProps {
@@ -30,7 +29,7 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isVideoCallOpen, setIsVideoCallOpen] = useState(false);
-  const [incomingCall, setIncomingCall] = useState<{ from: string; offer: any } | null>(null);
+  const [incomingCall, setIncomingCall] = useState<{ from: string; offer: RTCSessionDescriptionInit } | null>(null);
   const [callStatus, setCallStatus] = useState<'idle' | 'ringing' | 'in-call' | 'ended' | 'error'>('idle');
   const [callError, setCallError] = useState<string | null>(null);
   const [isCaller, setIsCaller] = useState(false);
@@ -60,7 +59,7 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
   // Listen for incoming call offers
   useEffect(() => {
     if (!socket) return;
-    const handleOffer = ({ offer, from }: { offer: any; from: string }) => {
+    const handleOffer = ({ offer, from }: { offer: RTCSessionDescriptionInit; from: string }) => {
       setIncomingCall({ from, offer });
       setCallStatus('ringing');
     };
@@ -133,8 +132,8 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
           setInputValue("");
           setFiles([]);
         },
-        onError: (error: any) => {
-          setSendError(error?.message || "Failed to send message. Please try again.");
+        onError: () => {
+          setSendError("Failed to send message. Please try again.");
         },
       }
     );
@@ -249,6 +248,78 @@ const ChatContainer = ({ user, onShowInformation, showInformation }: ChatContain
           </div>
         </div>
       )}
+
+      {/* input box */}
+      <div className="relative p-4 border-t">
+        {/* preview images */}
+        {files.length > 0 && (
+          <div className="absolute left-3 bottom-20 p-3 rounded-lg bg-white/40 backdrop-blur-sm border border-border">
+            <div className="flex gap-2 overflow-x-auto max-w-[calc(100vw-6rem)]">
+              {files.map((file, index) => (
+                <div key={index} className="relative h-20 w-20 rounded-lg overflow-hidden border border-slate-300">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="preview"
+                    className="h-full w-full object-cover"
+                  />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-1 right-1 rounded-full h-5 w-5"
+                    onClick={() => setFiles(files.filter((_, i) => i !== index))}
+                  >
+                    <X className="size-2 text-white" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 relative">
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Type a message..."
+              className="pr-10 rounded-2xl focus-visible:ring-gray-300"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSendMessage();
+                }
+              }}
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 space-x-1 text-primary">
+              {/* hidden file input */}
+              <div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  multiple
+                  accept="image/*"
+                  onChange={e => setFiles(Array.from(e.target.files||[]))}
+                />
+                <Button
+                  variant={"ghost"}
+                  size={"icon"}
+                  className="size-8 rounded-2xl"
+                  onClick={() => fileInputRef.current?.click()}
+                  >
+                  <Image className="size-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          <Button
+            size={"icon"}
+            className="rounded-2xl"
+            disabled={(inputValue.trim() === "" && files.length === 0) || sendMessageMutation.isPending}
+            onClick={handleSendMessage}
+          >
+            <Send className="size-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
